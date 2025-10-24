@@ -1,6 +1,8 @@
 import { xml2js } from "https://deno.land/x/xml2js@1.0.0/mod.ts";
 import { capitalizeFirstLetter } from "../utils.ts";
 
+// TODO: Implement caching
+
 interface Currency {
   description: string;
   rate: number;
@@ -27,10 +29,17 @@ export default async function gengi(
     }
   }
 
+  let data = currencies
+
   if (params.code) {
     const codes = params.code.split(",");
     const filteredCodes = Object.entries(currencies).filter(([code, currency]) => codes.includes(code));
-    return new Response(JSON.stringify(Object.fromEntries(filteredCodes), null, 2));
+    data = Object.fromEntries(filteredCodes);
   }
-  return new Response(JSON.stringify(currencies, null, 2));
+
+  return new Response(JSON.stringify(data, null, 2), {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
 }
