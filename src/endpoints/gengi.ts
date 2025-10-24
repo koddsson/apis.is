@@ -1,7 +1,8 @@
 import { xml2js } from "https://deno.land/x/xml2js@1.0.0/mod.ts";
+import { capitalizeFirstLetter } from "../utils.ts";
 
 interface Currency {
-  name: string;
+  description: string;
   rate: number;
 }
 
@@ -17,14 +18,19 @@ export default async function gengi(
   const currencies: Record<string, Currency> = {};
   for (const rate of json["Rates"]["Rate"]) {
     const code = rate["CurrencyCode"]["_text"];
+    const description = rate["CurrencyDescription"]?.["_text"]?.split(',')?.reverse()?.join(' ').trim();
     currencies[code] = {
-      name: rate["Country"]["_text"],
       rate: parseFloat(rate["CurrencyRate"]["_text"]),
     };
+    if (description) {
+      currencies[code].description = capitalizeFirstLetter(description);
+    }
   }
 
   if (params.code) {
-    return new Response(JSON.stringify(currencies[params.code], null, 2));
+    const codes = params.code.split(",");
+    const filteredCodes = Object.entries(currencies).filter(([code, currency]) => codes.includes(code));
+    return new Response(JSON.stringify(Object.fromEntries(filteredCodes), null, 2));
   }
   return new Response(JSON.stringify(currencies, null, 2));
 }
