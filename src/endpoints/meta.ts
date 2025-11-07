@@ -1,33 +1,13 @@
 import { response } from "../utils.ts";
+import type { Router } from "../router.ts";
 
-interface Endpoint {
-  endpoint: string;
-  description: string;
-}
-
-export default async function meta(
-  request: Request,
-  _params: Record<string, string>,
-): Promise<Response> {
-  const endpoints: Endpoint[] = [
-    {
-      endpoint: "/x/gengi/{code}",
-      description: "Currency exchange rates from Borgun. Optional {code} parameter to filter by currency code(s), comma-separated.",
-    },
-    {
-      endpoint: "/x/meetups",
-      description: "List of Icelandic tech meetups and community groups.",
-    },
-    {
-      endpoint: "/x/car/{number}",
-      description: "Vehicle information lookup by registration number from island.is.",
-    },
-  ];
-
-  const data = {
-    endpoints,
+export default function meta(router: Router) {
+  return async function(
+    request: Request,
+    _params: Record<string, string>,
+  ): Promise<Response> {
+    const endpoints = router.getEndpoints();
+    const url = new URL(request.url);
+    return response({ endpoints }, url.searchParams.get("pretty") === "true");
   };
-
-  const url = new URL(request.url);
-  return response(data, url.searchParams.get("pretty") === "true");
 }

@@ -8,7 +8,7 @@ interface Currency {
   rate: number;
 }
 
-export default async function gengi(
+async function gengi(
   _request,
   params,
 ): Promise<Response> {
@@ -43,3 +43,10 @@ export default async function gengi(
     },
   });
 }
+
+gengi.meta = {
+  endpoint: "/x/gengi/{code}",
+  description: "Currency exchange rates from Borgun. Optional {code} parameter to filter by currency code(s), comma-separated.",
+};
+
+export default gengi;

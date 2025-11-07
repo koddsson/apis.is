@@ -4,7 +4,7 @@ import { response } from '../utils.ts';
 /**
  * Pretty bog standard fetching the data from a existing endpoint and returining whatever it gives us.
  */
-export default async function car(
+async function car(
   request,
   params,
 ): Promise<Response> {
@@ -15,3 +15,10 @@ export default async function car(
   const url = new URL(request.url);
   return response(json.data.getPublicVehicleSearch, url.searchParams.get("pretty") === "true")
 }
+
+car.meta = {
+  endpoint: "/x/car/{number}",
+  description: "Vehicle information lookup by registration number from island.is.",
+};
+
+export default car;
