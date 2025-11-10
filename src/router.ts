@@ -1,7 +1,10 @@
-type CallbackHandler = (
-  request: Request,
-  params: Record<string, string>,
-) => Promise<Response>;
+type CallbackHandler = {
+  (request: Request, params: Record<string, string>): Promise<Response>;
+  meta?: {
+    endpoint: string;
+    description: string;
+  };
+};
 
 export class Router {
   #routes: Record<string, Array<{ pattern: URLPattern; handler: CallbackHandler }>> = {
@@ -23,5 +26,16 @@ export class Router {
       }
     }
     return new Response(null, { status: 404 });
+  }
+  getEndpoints() {
+    const endpoints: Array<{ endpoint: string; description: string }> = [];
+    for (const method in this.#routes) {
+      for (const route of this.#routes[method]) {
+        if (route.handler.meta) {
+          endpoints.push(route.handler.meta);
+        }
+      }
+    }
+    return endpoints;
   }
 }
