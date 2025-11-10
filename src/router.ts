@@ -1,5 +1,5 @@
 type CallbackHandler = {
-  (request: Request, params: Record<string, string>): Promise<Response>;
+  (request: Request, params: Record<string, string>): Response | Promise<Response>;
   meta?: {
     endpoint: string;
     description: string;
@@ -24,7 +24,7 @@ export class Router {
         const match = route.pattern.exec(req.url);
         if (match) {
           const params = match.pathname.groups as Record<string, string>;
-          return route["handler"](req, params);
+          return Promise.resolve(route["handler"](req, params));
         }
       }
     }

@@ -3,7 +3,7 @@ import { response } from "../utils.ts";
 
 function meetups(
   request: Request,
-): Promise<Response> {
+): Response {
   const url = new URL(request.url);
   return response(meetupData, url.searchParams.get("pretty") === "true")
 }
