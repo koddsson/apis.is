@@ -21,11 +21,14 @@ export class Router {
   route(req: Request): Promise<Response> {
     for (const route of this.#routes[req.method]) {
       if (route.pattern.test(req.url)) {
-        const params = route.pattern.exec(req.url).pathname.groups;
-        return route["handler"](req, params);
+        const match = route.pattern.exec(req.url);
+        if (match) {
+          const params = match.pathname.groups as Record<string, string>;
+          return route["handler"](req, params);
+        }
       }
     }
-    return new Response(null, { status: 404 });
+    return Promise.resolve(new Response(null, { status: 404 }));
   }
   getEndpoints() {
     const endpoints: Array<{ endpoint: string; description: string }> = [];

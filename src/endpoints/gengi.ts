@@ -4,19 +4,19 @@ import { capitalizeFirstLetter } from "../utils.ts";
 // TODO: Implement caching
 
 interface Currency {
-  description: string;
+  description?: string;
   rate: number;
 }
 
 async function gengi(
-  _request,
-  params,
+  _request: Request,
+  params: Record<string, string>,
 ): Promise<Response> {
   const response = await fetch(
     "https://www.borgun.is/currency/Default.aspx?function=all",
   );
   const text = await response.text();
-  const json = xml2js(text, { compact: true });
+  const json = xml2js(text, { compact: true }) as any;
   const currencies: Record<string, Currency> = {};
   for (const rate of json["Rates"]["Rate"]) {
     const code = rate["CurrencyCode"]["_text"];
