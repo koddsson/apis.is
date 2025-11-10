@@ -1,5 +1,14 @@
 [
   {
+    "title": "Minimal Test",
+    "description": null,
+    "url": "https://example.com/minimal",
+    "data": {
+      "start": "2025-12-25T10:00:00Z",
+      "end": null
+    }
+  },
+  {
     "title": "Travel Tech hittingur - Nóvember",
     "description": "Góður hópur tæknifólks í ferðaþjónustu hittist annan fimmtudag hvers mánaðar til að setjast niður og ræða málefni líðandi stundar, tæknilausnir, sögur af gömlum tæknilausnum og spádóma um tæknilausnir framtíðarinna ásamt því sem er verið að bralla í ferðamálabransanum.\nVelkomið að bjóða félögum með.\nVið hittumst á RVK Brewing Tónabió, Skipholti 33, þann 13. nóvember kl 16:00",
     "url": "https://www.facebook.com/events/1319495819661458",

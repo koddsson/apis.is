@@ -22,7 +22,8 @@ function parseIssueBody(issueBody) {
   };
 
   let currentField = null;
-  let captureNext = false;
+  let descriptionLines = [];
+  let skipEmptyLine = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -30,42 +31,62 @@ function parseIssueBody(issueBody) {
     // Check for field headers
     if (line === '### Meetup Title') {
       currentField = 'title';
-      captureNext = true;
+      skipEmptyLine = true;
       continue;
     } else if (line === '### Description') {
       currentField = 'description';
-      captureNext = true;
+      descriptionLines = [];
+      skipEmptyLine = true;
       continue;
     } else if (line === '### Event URL') {
+      // Save accumulated description
+      if (descriptionLines.length > 0) {
+        const desc = descriptionLines.join('\n').trim();
+        meetup.description = desc === '_No response_' ? null : desc;
+      }
       currentField = 'url';
-      captureNext = true;
+      skipEmptyLine = true;
       continue;
     } else if (line === '### Start Date and Time') {
       currentField = 'start';
-      captureNext = true;
+      skipEmptyLine = true;
       continue;
     } else if (line === '### End Date and Time') {
       currentField = 'end';
-      captureNext = true;
+      skipEmptyLine = true;
+      continue;
+    }
+
+    // Skip the first empty line after a header
+    if (skipEmptyLine && line === '') {
+      skipEmptyLine = false;
       continue;
     }
 
     // Capture the value after the field header
-    if (captureNext && line && !line.startsWith('###')) {
+    if (currentField && line && !line.startsWith('###')) {
       if (currentField === 'title') {
         meetup.title = line;
+        currentField = null;
       } else if (currentField === 'description') {
-        meetup.description = line === '_No response_' ? null : line;
+        descriptionLines.push(lines[i]); // Use original line with whitespace
       } else if (currentField === 'url') {
         meetup.url = line;
+        currentField = null;
       } else if (currentField === 'start') {
         meetup.data.start = line;
+        currentField = null;
       } else if (currentField === 'end') {
         meetup.data.end = line === '_No response_' ? null : line;
+        currentField = null;
       }
-      captureNext = false;
-      currentField = null;
     }
+  }
+
+  // Save description if it wasn't saved yet
+  if (descriptionLines.length > 0 && meetup.description === null) {
+    const desc = descriptionLines.join('\n').trim();
+    meetup.description = desc === '_No response_' ? null : desc;
   }
 
   return meetup;
