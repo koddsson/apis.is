@@ -13,7 +13,7 @@ async function raceCalendar(
   );
   // TODO: Clean up this data some as it's quite messy
   const json = await serverResponse.json();
-  return response(json.dataItems, new URL(request.url).searchParams.get("pretty") === "true")
+  return response(json.dataItems, new URL(request.url).searchParams.get("pretty") === "true");
 }
 
 raceCalendar.meta = {
