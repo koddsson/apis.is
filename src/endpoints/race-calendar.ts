@@ -17,7 +17,7 @@ async function raceCalendar(
 }
 
 raceCalendar.meta = {
-  endpoint: "/x/race-calendar/",
+  endpoint: "/x/race-calendar",
   description: "All Icelandic runs in one place!"
 
 };
