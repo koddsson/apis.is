@@ -2,7 +2,7 @@ import { response } from '../utils.ts';
 // TODO: Implement caching
 
 /**
- * Pretty bog standard fetching the data from a existing endpoint and returining whatever it gives us.
+ * Pretty bog standard fetching the data from a existing endpoint and returning whatever it gives us.
  */
 async function raceCalendar(
   request,
