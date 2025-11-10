@@ -1,22 +1,18 @@
-type CallbackHandler = (
-  request: Request,
-  params: Record<string, string>,
-) => Promise<Response>;
-
-interface EndpointMeta {
-  endpoint: string;
-  description: string;
-}
-
-type HandlerWithMeta = CallbackHandler & { meta?: EndpointMeta };
+type CallbackHandler = {
+  (request: Request, params: Record<string, string>): Promise<Response>;
+  meta?: {
+    endpoint: string;
+    description: string;
+  };
+};
 
 export class Router {
-  #routes: Record<string, Array<{ pattern: URLPattern; handler: HandlerWithMeta }>> = {
+  #routes: Record<string, Array<{ pattern: URLPattern; handler: CallbackHandler }>> = {
     "GET": [],
     "POST": [],
     "PUT": [],
   };
-  add(method: string, pathname: string, handler: HandlerWithMeta) {
+  add(method: string, pathname: string, handler: CallbackHandler) {
     this.#routes[method].push({
       pattern: new URLPattern({ pathname }),
       handler,
@@ -31,8 +27,8 @@ export class Router {
     }
     return new Response(null, { status: 404 });
   }
-  getEndpoints(): EndpointMeta[] {
-    const endpoints: EndpointMeta[] = [];
+  getEndpoints() {
+    const endpoints: Array<{ endpoint: string; description: string }> = [];
     for (const method in this.#routes) {
       for (const route of this.#routes[method]) {
         if (route.handler.meta) {
