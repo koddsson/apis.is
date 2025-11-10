@@ -1,0 +1,54 @@
+name: Add Meetup
+description: Submit a new meetup to be added to the meetups list
+title: "[Meetup]: "
+labels: ["meetup-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting a meetup! Please fill out the information below.
+        
+  - type: input
+    id: title
+    attributes:
+      label: Meetup Title
+      description: The name of the meetup or event
+      placeholder: e.g., "Reykjavík Web Developers Meetup"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A brief description of the meetup (optional)
+      placeholder: Tell us about the meetup, what topics will be covered, who should attend, etc.
+    validations:
+      required: false
+      
+  - type: input
+    id: url
+    attributes:
+      label: Event URL
+      description: Link to the meetup page (Facebook event, Meetup.com, website, etc.)
+      placeholder: https://
+    validations:
+      required: true
+      
+  - type: input
+    id: start
+    attributes:
+      label: Start Date and Time
+      description: When does the meetup start? (ISO 8601 format)
+      placeholder: "2025-11-13T16:00:00Z"
+    validations:
+      required: true
+      
+  - type: input
+    id: end
+    attributes:
+      label: End Date and Time
+      description: When does the meetup end? (ISO 8601 format, leave empty if unknown)
+      placeholder: "2025-11-13T18:00:00Z"
+    validations:
+      required: false
