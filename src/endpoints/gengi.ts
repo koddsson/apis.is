@@ -16,7 +16,7 @@ async function gengi(
     "https://www.borgun.is/currency/Default.aspx?function=all",
   );
   const text = await response.text();
-  const json = xml2js(text, { compact: true }) as any;
+  const json = xml2js(text, { compact: true }) as Record<string, unknown>;
   const currencies: Record<string, Currency> = {};
   for (const rate of json["Rates"]["Rate"]) {
     const code = rate["CurrencyCode"]["_text"];
