@@ -8,6 +8,22 @@ interface Currency {
   rate: number;
 }
 
+interface BorgunRates {
+  Rates: {
+    Rate: Array<{
+      CurrencyCode: {
+        _text: string;
+      };
+      CurrencyDescription?: {
+        _text: string;
+      };
+      CurrencyRate: {
+        _text: string;
+      };
+    }>;
+  };
+}
+
 async function gengi(
   _request: Request,
   params: Record<string, string>,
@@ -16,8 +32,7 @@ async function gengi(
     "https://www.borgun.is/currency/Default.aspx?function=all",
   );
   const text = await response.text();
-  // deno-lint-ignore no-explicit-any
-  const json = xml2js(text, { compact: true }) as any;
+  const json = xml2js(text, { compact: true }) as unknown as BorgunRates;
   const currencies: Record<string, Currency> = {};
   for (const rate of json["Rates"]["Rate"]) {
     const code = rate["CurrencyCode"]["_text"];
