@@ -16,6 +16,7 @@ async function gengi(
     "https://www.borgun.is/currency/Default.aspx?function=all",
   );
   const text = await response.text();
+  // deno-lint-ignore no-explicit-any
   const json = xml2js(text, { compact: true }) as any;
   const currencies: Record<string, Currency> = {};
   for (const rate of json["Rates"]["Rate"]) {
@@ -33,7 +34,7 @@ async function gengi(
 
   if (params.code) {
     const codes = params.code.split(",");
-    const filteredCodes = Object.entries(currencies).filter(([code, currency]) => codes.includes(code));
+    const filteredCodes = Object.entries(currencies).filter(([code]) => codes.includes(code));
     data = Object.fromEntries(filteredCodes);
   }
 

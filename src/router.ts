@@ -23,7 +23,7 @@ export class Router {
       if (route.pattern.test(req.url)) {
         const match = route.pattern.exec(req.url);
         if (match) {
-          const params = match.pathname.groups as Record<string, string>;
+          const params = (match.pathname.groups || {}) as Record<string, string>;
           return Promise.resolve(route["handler"](req, params));
         }
       }
