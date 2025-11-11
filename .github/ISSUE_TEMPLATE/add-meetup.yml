@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for submitting a meetup! Please fill out the information below.
-        
+
   - type: input
     id: title
     attributes:
@@ -16,7 +16,7 @@ body:
       placeholder: e.g., "Reykjavík Web Developers Meetup"
     validations:
       required: true
-      
+
   - type: textarea
     id: description
     attributes:
@@ -25,7 +25,7 @@ body:
       placeholder: Tell us about the meetup, what topics will be covered, who should attend, etc.
     validations:
       required: false
-      
+
   - type: input
     id: url
     attributes:
@@ -34,7 +34,7 @@ body:
       placeholder: https://
     validations:
       required: true
-      
+
   - type: input
     id: start
     attributes:
@@ -43,7 +43,7 @@ body:
       placeholder: "2025-11-13T16:00:00Z"
     validations:
       required: true
-      
+
   - type: input
     id: end
     attributes:

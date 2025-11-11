@@ -4,23 +4,40 @@ import { capitalizeFirstLetter } from "../utils.ts";
 // TODO: Implement caching
 
 interface Currency {
-  description: string;
+  description?: string;
   rate: number;
 }
 
+interface BorgunRates {
+  Rates: {
+    Rate: Array<{
+      CurrencyCode: {
+        _text: string;
+      };
+      CurrencyDescription?: {
+        _text: string;
+      };
+      CurrencyRate: {
+        _text: string;
+      };
+    }>;
+  };
+}
+
 async function gengi(
-  _request,
-  params,
+  _request: Request,
+  params: Record<string, string>,
 ): Promise<Response> {
   const response = await fetch(
     "https://www.borgun.is/currency/Default.aspx?function=all",
   );
   const text = await response.text();
-  const json = xml2js(text, { compact: true });
+  const json = xml2js(text, { compact: true }) as unknown as BorgunRates;
   const currencies: Record<string, Currency> = {};
   for (const rate of json["Rates"]["Rate"]) {
     const code = rate["CurrencyCode"]["_text"];
-    const description = rate["CurrencyDescription"]?.["_text"]?.split(',')?.reverse()?.join(' ').trim();
+    const description = rate["CurrencyDescription"]?.["_text"]?.split(",")
+      ?.reverse()?.join(" ").trim();
     currencies[code] = {
       rate: parseFloat(rate["CurrencyRate"]["_text"]),
     };
@@ -29,11 +46,13 @@ async function gengi(
     }
   }
 
-  let data = currencies
+  let data = currencies;
 
   if (params.code) {
     const codes = params.code.split(",");
-    const filteredCodes = Object.entries(currencies).filter(([code, currency]) => codes.includes(code));
+    const filteredCodes = Object.entries(currencies).filter(([code]) =>
+      codes.includes(code)
+    );
     data = Object.fromEntries(filteredCodes);
   }
 
@@ -46,7 +65,8 @@ async function gengi(
 
 gengi.meta = {
   endpoint: "/x/gengi/{code}",
-  description: "Currency exchange rates from Borgun. Optional {code} parameter to filter by currency code(s), comma-separated.",
+  description:
+    "Currency exchange rates from Borgun. Optional {code} parameter to filter by currency code(s), comma-separated.",
 };
 
 export default gengi;

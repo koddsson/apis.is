@@ -14,4 +14,4 @@ router.add("GET", "/x/meetups", meetups);
 router.add("GET", "/x/car/{:number}?", car);
 router.add("GET", "/x/race-calendar", raceCalendar);
 
-Deno.serve((...args) => router.route(...args));
+Deno.serve((req) => router.route(req));
