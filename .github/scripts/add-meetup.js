@@ -2,12 +2,13 @@
 
 /**
  * Script to parse a GitHub issue and add a meetup to meetups.json
- * 
+ *
  * Usage: node add-meetup.js <issue-body>
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
+const process = require('node:process');
 
 function parseIssueBody(issueBody) {
   const lines = issueBody.split('\n');
@@ -127,7 +128,7 @@ function validateMeetup(meetup) {
 
 function addMeetupToJson(meetup) {
   const jsonPath = path.join(__dirname, '../../src/data/meetups.json');
-  
+
   // Read existing meetups
   let meetups = [];
   try {
