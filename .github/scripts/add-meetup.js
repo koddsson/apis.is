@@ -6,20 +6,20 @@
  * Usage: node add-meetup.js <issue-body>
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const process = require('node:process');
+const fs = require("node:fs");
+const path = require("node:path");
+const process = require("node:process");
 
 function parseIssueBody(issueBody) {
-  const lines = issueBody.split('\n');
+  const lines = issueBody.split("\n");
   const meetup = {
-    title: '',
+    title: "",
     description: null,
-    url: '',
+    url: "",
     data: {
-      start: '',
-      end: null
-    }
+      start: "",
+      end: null,
+    },
   };
 
   let currentField = null;
@@ -30,55 +30,55 @@ function parseIssueBody(issueBody) {
     const line = lines[i].trim();
 
     // Check for field headers
-    if (line === '### Meetup Title') {
-      currentField = 'title';
+    if (line === "### Meetup Title") {
+      currentField = "title";
       skipEmptyLine = true;
       continue;
-    } else if (line === '### Description') {
-      currentField = 'description';
+    } else if (line === "### Description") {
+      currentField = "description";
       descriptionLines = [];
       skipEmptyLine = true;
       continue;
-    } else if (line === '### Event URL') {
+    } else if (line === "### Event URL") {
       // Save accumulated description
       if (descriptionLines.length > 0) {
-        const desc = descriptionLines.join('\n').trim();
-        meetup.description = desc === '_No response_' ? null : desc;
+        const desc = descriptionLines.join("\n").trim();
+        meetup.description = desc === "_No response_" ? null : desc;
       }
-      currentField = 'url';
+      currentField = "url";
       skipEmptyLine = true;
       continue;
-    } else if (line === '### Start Date and Time') {
-      currentField = 'start';
+    } else if (line === "### Start Date and Time") {
+      currentField = "start";
       skipEmptyLine = true;
       continue;
-    } else if (line === '### End Date and Time') {
-      currentField = 'end';
+    } else if (line === "### End Date and Time") {
+      currentField = "end";
       skipEmptyLine = true;
       continue;
     }
 
     // Skip the first empty line after a header
-    if (skipEmptyLine && line === '') {
+    if (skipEmptyLine && line === "") {
       skipEmptyLine = false;
       continue;
     }
 
     // Capture the value after the field header
-    if (currentField && line && !line.startsWith('###')) {
-      if (currentField === 'title') {
+    if (currentField && line && !line.startsWith("###")) {
+      if (currentField === "title") {
         meetup.title = line;
         currentField = null;
-      } else if (currentField === 'description') {
+      } else if (currentField === "description") {
         descriptionLines.push(lines[i]); // Use original line with whitespace
-      } else if (currentField === 'url') {
+      } else if (currentField === "url") {
         meetup.url = line;
         currentField = null;
-      } else if (currentField === 'start') {
+      } else if (currentField === "start") {
         meetup.data.start = line;
         currentField = null;
-      } else if (currentField === 'end') {
-        meetup.data.end = line === '_No response_' ? null : line;
+      } else if (currentField === "end") {
+        meetup.data.end = line === "_No response_" ? null : line;
         currentField = null;
       }
     }
@@ -86,8 +86,8 @@ function parseIssueBody(issueBody) {
 
   // Save description if it wasn't saved yet
   if (descriptionLines.length > 0 && meetup.description === null) {
-    const desc = descriptionLines.join('\n').trim();
-    meetup.description = desc === '_No response_' ? null : desc;
+    const desc = descriptionLines.join("\n").trim();
+    meetup.description = desc === "_No response_" ? null : desc;
   }
 
   return meetup;
@@ -96,30 +96,30 @@ function parseIssueBody(issueBody) {
 function validateMeetup(meetup) {
   const errors = [];
 
-  if (!meetup.title || meetup.title.trim() === '') {
-    errors.push('Title is required');
+  if (!meetup.title || meetup.title.trim() === "") {
+    errors.push("Title is required");
   }
 
-  if (!meetup.url || meetup.url.trim() === '') {
-    errors.push('URL is required');
+  if (!meetup.url || meetup.url.trim() === "") {
+    errors.push("URL is required");
   } else if (!meetup.url.match(/^https?:\/\/.+/)) {
-    errors.push('URL must be a valid HTTP(S) URL');
+    errors.push("URL must be a valid HTTP(S) URL");
   }
 
-  if (!meetup.data.start || meetup.data.start.trim() === '') {
-    errors.push('Start date is required');
+  if (!meetup.data.start || meetup.data.start.trim() === "") {
+    errors.push("Start date is required");
   } else {
     // Validate ISO 8601 format
     const date = new Date(meetup.data.start);
     if (isNaN(date.getTime())) {
-      errors.push('Start date must be in ISO 8601 format');
+      errors.push("Start date must be in ISO 8601 format");
     }
   }
 
-  if (meetup.data.end && meetup.data.end.trim() !== '') {
+  if (meetup.data.end && meetup.data.end.trim() !== "") {
     const date = new Date(meetup.data.end);
     if (isNaN(date.getTime())) {
-      errors.push('End date must be in ISO 8601 format');
+      errors.push("End date must be in ISO 8601 format");
     }
   }
 
@@ -127,15 +127,15 @@ function validateMeetup(meetup) {
 }
 
 function addMeetupToJson(meetup) {
-  const jsonPath = path.join(__dirname, '../../src/data/meetups.json');
+  const jsonPath = path.join(__dirname, "../../src/data/meetups.json");
 
   // Read existing meetups
   let meetups = [];
   try {
-    const data = fs.readFileSync(jsonPath, 'utf8');
+    const data = fs.readFileSync(jsonPath, "utf8");
     meetups = JSON.parse(data);
   } catch (error) {
-    console.error('Error reading meetups.json:', error.message);
+    console.error("Error reading meetups.json:", error.message);
     process.exit(1);
   }
 
@@ -144,10 +144,10 @@ function addMeetupToJson(meetup) {
 
   // Write back to file with proper formatting
   try {
-    fs.writeFileSync(jsonPath, JSON.stringify(meetups, null, 2) + '\n', 'utf8');
-    console.log('✅ Meetup added successfully!');
+    fs.writeFileSync(jsonPath, JSON.stringify(meetups, null, 2) + "\n", "utf8");
+    console.log("✅ Meetup added successfully!");
   } catch (error) {
-    console.error('Error writing meetups.json:', error.message);
+    console.error("Error writing meetups.json:", error.message);
     process.exit(1);
   }
 }
@@ -156,8 +156,8 @@ function addMeetupToJson(meetup) {
 const issueBody = process.env.ISSUE_BODY || process.argv[2];
 
 if (!issueBody) {
-  console.error('Error: No issue body provided');
-  console.error('Usage: node add-meetup.js <issue-body>');
+  console.error("Error: No issue body provided");
+  console.error("Usage: node add-meetup.js <issue-body>");
   process.exit(1);
 }
 
@@ -165,12 +165,12 @@ const meetup = parseIssueBody(issueBody);
 const errors = validateMeetup(meetup);
 
 if (errors.length > 0) {
-  console.error('❌ Validation errors:');
-  errors.forEach(error => console.error(`  - ${error}`));
+  console.error("❌ Validation errors:");
+  errors.forEach((error) => console.error(`  - ${error}`));
   process.exit(1);
 }
 
-console.log('Parsed meetup:');
+console.log("Parsed meetup:");
 console.log(JSON.stringify(meetup, null, 2));
 
 addMeetupToJson(meetup);

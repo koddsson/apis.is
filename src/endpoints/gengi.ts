@@ -21,7 +21,8 @@ async function gengi(
   const currencies: Record<string, Currency> = {};
   for (const rate of json["Rates"]["Rate"]) {
     const code = rate["CurrencyCode"]["_text"];
-    const description = rate["CurrencyDescription"]?.["_text"]?.split(',')?.reverse()?.join(' ').trim();
+    const description = rate["CurrencyDescription"]?.["_text"]?.split(",")
+      ?.reverse()?.join(" ").trim();
     currencies[code] = {
       rate: parseFloat(rate["CurrencyRate"]["_text"]),
     };
@@ -30,11 +31,13 @@ async function gengi(
     }
   }
 
-  let data = currencies
+  let data = currencies;
 
   if (params.code) {
     const codes = params.code.split(",");
-    const filteredCodes = Object.entries(currencies).filter(([code]) => codes.includes(code));
+    const filteredCodes = Object.entries(currencies).filter(([code]) =>
+      codes.includes(code)
+    );
     data = Object.fromEntries(filteredCodes);
   }
 
@@ -47,7 +50,8 @@ async function gengi(
 
 gengi.meta = {
   endpoint: "/x/gengi/{code}",
-  description: "Currency exchange rates from Borgun. Optional {code} parameter to filter by currency code(s), comma-separated.",
+  description:
+    "Currency exchange rates from Borgun. Optional {code} parameter to filter by currency code(s), comma-separated.",
 };
 
 export default gengi;

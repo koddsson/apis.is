@@ -2,7 +2,7 @@ import { response } from "../utils.ts";
 import type { Router } from "../router.ts";
 
 export default function meta(router: Router) {
-  return function(
+  return function (
     request: Request,
     _params: Record<string, string>,
   ): Response {

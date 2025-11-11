@@ -5,7 +5,7 @@ function meetups(
   request: Request,
 ): Response {
   const url = new URL(request.url);
-  return response(meetupData, url.searchParams.get("pretty") === "true")
+  return response(meetupData, url.searchParams.get("pretty") === "true");
 }
 
 meetups.meta = {

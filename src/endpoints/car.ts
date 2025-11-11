@@ -1,4 +1,4 @@
-import { response } from '../utils.ts';
+import { response } from "../utils.ts";
 // TODO: Implement caching
 
 /**
@@ -13,12 +13,16 @@ async function car(
   );
   const json = await serverResponse.json();
   const url = new URL(request.url);
-  return response(json.data.getPublicVehicleSearch, url.searchParams.get("pretty") === "true")
+  return response(
+    json.data.getPublicVehicleSearch,
+    url.searchParams.get("pretty") === "true",
+  );
 }
 
 car.meta = {
   endpoint: "/x/car/{number}",
-  description: "Vehicle information lookup by registration number from island.is.",
+  description:
+    "Vehicle information lookup by registration number from island.is.",
 };
 
 export default car;
