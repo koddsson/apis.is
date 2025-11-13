@@ -24,7 +24,8 @@ function meetups(
 
 meetups.meta = {
   endpoint: "/x/meetups",
-  description: "List of Icelandic tech meetups and community groups.",
+  description:
+    "List of Icelandic tech meetups and community groups. Supports RSS feed via ?format=rss query parameter.",
 };
 
 export default meetups;
