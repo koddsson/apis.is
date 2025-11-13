@@ -31,6 +31,12 @@ jobs:
       - name: Run deno lint
         run: deno lint
 
+      - name: Run tests with coverage
+        run: SKIP_LIVE_TESTS=true deno test --allow-env --coverage=coverage
+
+      - name: Check coverage thresholds
+        run: deno coverage coverage | deno run scripts/check-coverage.ts 85 95
+
       - name: Run deno fmt and commit changes
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         run: |
