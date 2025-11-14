@@ -78,7 +78,8 @@ export class Router {
     }
 
     // No route matched, return 404
-    const notFoundHandler = () => Promise.resolve(new Response(null, { status: 404 }));
+    const notFoundHandler = () =>
+      Promise.resolve(new Response(null, { status: 404 }));
     return await this.#executeMiddleware(req, notFoundHandler);
   }
 
