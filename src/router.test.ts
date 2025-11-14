@@ -150,3 +150,53 @@ Deno.test("Router - handles multiple routes", async () => {
   const res3 = await router.route(req3);
   assertEquals(await res3.text(), "route3");
 });
+
+Deno.test("Router - handles errors in handlers gracefully", async () => {
+  const router = new Router();
+  const handler = () => {
+    throw new Error("Handler error");
+  };
+  router.add("GET", "/error", handler);
+
+  // Ensure we're not in production to avoid creating real issues
+  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  try {
+    if (originalDeploymentId) Deno.env.delete("DENO_DEPLOYMENT_ID");
+
+    const req = new Request("http://localhost/error");
+    const res = await router.route(req);
+
+    assertEquals(res.status, 500);
+    const json = await res.json();
+    assertEquals(json.error, "Internal Server Error");
+  } finally {
+    if (originalDeploymentId) {
+      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    }
+  }
+});
+
+Deno.test("Router - handles async errors in handlers", async () => {
+  const router = new Router();
+  const handler = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    throw new Error("Async handler error");
+  };
+  router.add("GET", "/async-error", handler);
+
+  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  try {
+    if (originalDeploymentId) Deno.env.delete("DENO_DEPLOYMENT_ID");
+
+    const req = new Request("http://localhost/async-error");
+    const res = await router.route(req);
+
+    assertEquals(res.status, 500);
+    const json = await res.json();
+    assertEquals(json.error, "Internal Server Error");
+  } finally {
+    if (originalDeploymentId) {
+      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    }
+  }
+});
