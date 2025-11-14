@@ -22,7 +22,6 @@ The error monitoring system requires the following environment variables to be
 set in production:
 
 - `GITHUB_TOKEN` - A GitHub personal access token with `repo` scope
-  (specifically `issues:write` permission)
 - `GITHUB_REPOSITORY` - The repository in format `owner/repo` (e.g.,
   `koddsson/apis.is`)
 - `DENO_DEPLOYMENT_ID` - Set automatically by Deno Deploy to indicate production
