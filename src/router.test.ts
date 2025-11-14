@@ -204,7 +204,7 @@ Deno.test("Router - handles async errors in handlers", async () => {
   }
 });
 
-Deno.test("Router - logs successful requests", async () => {
+Deno.test("Router - logs successful requests in Common Log Format", async () => {
   const router = new Router();
   const handler = () => new Response("test");
   router.add("GET", "/test", handler);
@@ -220,20 +220,18 @@ Deno.test("Router - logs successful requests", async () => {
     const req = new Request("http://localhost/test");
     await router.route(req);
 
-    // Verify log format: timestamp method path -> status duration
-    assertStringIncludes(loggedMessage, "GET");
-    assertStringIncludes(loggedMessage, "/test");
-    assertStringIncludes(loggedMessage, "-> 200");
-    assertStringIncludes(loggedMessage, "ms");
-    // Verify ISO timestamp format
-    assertStringIncludes(loggedMessage, "T");
-    assertStringIncludes(loggedMessage, "Z");
+    // Verify Common Log Format: host - - [date] "method path protocol" status size
+    assertStringIncludes(loggedMessage, "GET /test HTTP/1.1");
+    assertStringIncludes(loggedMessage, "200");
+    assertStringIncludes(loggedMessage, "- - [");
+    assertStringIncludes(loggedMessage, "]");
+    assertStringIncludes(loggedMessage, '"');
   } finally {
     console.log = originalLog;
   }
 });
 
-Deno.test("Router - logs 404 responses", async () => {
+Deno.test("Router - logs 404 responses in Common Log Format", async () => {
   const router = new Router();
 
   const originalLog = console.log;
@@ -246,16 +244,15 @@ Deno.test("Router - logs 404 responses", async () => {
     const req = new Request("http://localhost/nonexistent");
     await router.route(req);
 
-    assertStringIncludes(loggedMessage, "GET");
-    assertStringIncludes(loggedMessage, "/nonexistent");
-    assertStringIncludes(loggedMessage, "-> 404");
-    assertStringIncludes(loggedMessage, "ms");
+    assertStringIncludes(loggedMessage, "GET /nonexistent HTTP/1.1");
+    assertStringIncludes(loggedMessage, "404");
+    assertStringIncludes(loggedMessage, "- - [");
   } finally {
     console.log = originalLog;
   }
 });
 
-Deno.test("Router - logs error responses with 500 status", async () => {
+Deno.test("Router - logs error responses with 500 status in Common Log Format", async () => {
   const router = new Router();
   const handler = () => {
     throw new Error("Test error");
@@ -275,10 +272,9 @@ Deno.test("Router - logs error responses with 500 status", async () => {
     const req = new Request("http://localhost/error");
     await router.route(req);
 
-    assertStringIncludes(loggedMessage, "GET");
-    assertStringIncludes(loggedMessage, "/error");
-    assertStringIncludes(loggedMessage, "-> 500");
-    assertStringIncludes(loggedMessage, "ms");
+    assertStringIncludes(loggedMessage, "GET /error HTTP/1.1");
+    assertStringIncludes(loggedMessage, "500");
+    assertStringIncludes(loggedMessage, "- - [");
   } finally {
     console.log = originalLog;
     if (originalDeploymentId) {
