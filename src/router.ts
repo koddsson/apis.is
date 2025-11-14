@@ -1,3 +1,5 @@
+import { reportError } from "./error-monitor.ts";
+
 type CallbackHandler = {
   (
     request: Request,
@@ -24,7 +26,7 @@ export class Router {
       handler,
     });
   }
-  route(req: Request): Promise<Response> {
+  async route(req: Request): Promise<Response> {
     for (const route of this.#routes[req.method]) {
       if (route.pattern.test(req.url)) {
         const match = route.pattern.exec(req.url);
@@ -33,7 +35,24 @@ export class Router {
             string,
             string
           >;
-          return Promise.resolve(route["handler"](req, params));
+          try {
+            return await route["handler"](req, params);
+          } catch (error) {
+            // Report the error to monitoring system
+            await reportError(error as Error, req);
+
+            // Return a 500 error response
+            return new Response(
+              JSON.stringify({ error: "Internal Server Error" }),
+              {
+                status: 500,
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                },
+              },
+            );
+          }
         }
       }
     }
