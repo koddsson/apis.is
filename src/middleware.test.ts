@@ -89,11 +89,11 @@ Deno.test("Middleware - can short-circuit the chain", async () => {
   const router = new Router();
   let handlerCalled = false;
 
-  const middleware = async (
+  const middleware = (
     _req: Request,
     _next: () => Promise<Response>,
   ) => {
-    return new Response("short-circuited", { status: 403 });
+    return Promise.resolve(new Response("short-circuited", { status: 403 }));
   };
 
   router.use(middleware);
