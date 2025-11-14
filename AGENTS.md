@@ -1,10 +1,12 @@
 # AGENTS.md
- 
+
 ## Code style
+
 - TypeScript strict mode
 
 ## Review Checklist
-- Make sure to include any changes from `deno fmt .` 
+
+- Make sure to include any changes from `deno fmt .`
 - `deno check src/` must pass.
 - `deno lint` must pass.
 - Add new tests for any new feature or bug fix.
