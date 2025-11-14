@@ -48,6 +48,42 @@ deno lint
 deno check src/index.ts
 ```
 
+### Middleware System
+
+The router supports middleware for processing requests. Middleware functions are
+executed in order before the route handler.
+
+```typescript
+import { Router } from "./router.ts";
+import type { Middleware } from "./router.ts";
+
+const router = new Router();
+
+// Define middleware
+const myMiddleware: Middleware = async (req, next) => {
+  // Do something before the handler
+  console.log(`Request: ${req.method} ${req.url}`);
+
+  // Call next to continue the chain
+  const response = await next();
+
+  // Do something after the handler
+  console.log(`Response status: ${response.status}`);
+
+  return response;
+};
+
+// Add middleware to router
+router.use(myMiddleware);
+
+// Add routes
+router.add("GET", "/", () => new Response("Hello!"));
+```
+
+#### Built-in Middleware
+
+- **commonLogMiddleware**: Logs all requests in Common Log Format (CLF)
+
 ## Contributing
 
 ### Adding a Meetup

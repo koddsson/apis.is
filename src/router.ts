@@ -11,6 +11,11 @@ type CallbackHandler = {
   };
 };
 
+export type Middleware = (
+  req: Request,
+  next: () => Promise<Response>,
+) => Promise<Response>;
+
 export class Router {
   #routes: Record<
     string,
@@ -20,58 +25,21 @@ export class Router {
     "POST": [],
     "PUT": [],
   };
+  #middleware: Middleware[] = [];
+
+  use(middleware: Middleware) {
+    this.#middleware.push(middleware);
+  }
+
   add(method: string, pathname: string, handler: CallbackHandler) {
     this.#routes[method].push({
       pattern: new URLPattern({ pathname }),
       handler,
     });
   }
-  #formatLogEntry(
-    req: Request,
-    status: number,
-    responseSize: number,
-  ): string {
-    // Common Log Format: host - - [date] "method path protocol" status size
-    const url = new URL(req.url);
-    const date = new Date();
-    // Format: [10/Oct/2000:13:55:36 -0700]
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ][date.getMonth()];
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-    const offset = -date.getTimezoneOffset();
-    const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(
-      2,
-      "0",
-    );
-    const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, "0");
-    const offsetSign = offset >= 0 ? "+" : "-";
-    const formattedDate =
-      `[${day}/${month}/${year}:${hours}:${minutes}:${seconds} ${offsetSign}${offsetHours}${offsetMinutes}]`;
-
-    // Get client IP - for Deno Deploy this would be in headers, fallback to "-"
-    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      req.headers.get("x-real-ip") || "-";
-
-    return `${clientIp} - - ${formattedDate} "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${status} ${responseSize}`;
-  }
 
   async route(req: Request): Promise<Response> {
+    // Find matching route
     for (const route of this.#routes[req.method]) {
       if (route.pattern.test(req.url)) {
         const match = route.pattern.exec(req.url);
@@ -80,43 +48,56 @@ export class Router {
             string,
             string
           >;
-          try {
-            const response = await route["handler"](req, params);
-            // Calculate response size from body
-            const responseClone = response.clone();
-            const body = await responseClone.text();
-            const responseSize = new TextEncoder().encode(body).length;
-            console.log(
-              this.#formatLogEntry(req, response.status, responseSize),
-            );
-            return response;
-          } catch (error) {
-            const errorResponse = JSON.stringify({
-              error: "Internal Server Error",
-            });
-            const responseSize = new TextEncoder().encode(errorResponse).length;
-            console.log(this.#formatLogEntry(req, 500, responseSize));
 
-            // Report the error to monitoring system
-            await reportError(error as Error, req);
+          // Create the handler function that will be called at the end of middleware chain
+          const handler = async () => {
+            try {
+              return await route["handler"](req, params);
+            } catch (error) {
+              // Report the error to monitoring system
+              await reportError(error as Error, req);
 
-            // Return a 500 error response
-            return new Response(
-              errorResponse,
-              {
-                status: 500,
-                headers: {
-                  "Content-Type": "application/json",
-                  "Access-Control-Allow-Origin": "*",
+              // Return a 500 error response
+              return new Response(
+                JSON.stringify({ error: "Internal Server Error" }),
+                {
+                  status: 500,
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                  },
                 },
-              },
-            );
-          }
+              );
+            }
+          };
+
+          // Execute middleware chain
+          return await this.#executeMiddleware(req, handler);
         }
       }
     }
-    console.log(this.#formatLogEntry(req, 404, 0));
-    return Promise.resolve(new Response(null, { status: 404 }));
+
+    // No route matched, return 404
+    const notFoundHandler = () =>
+      Promise.resolve(new Response(null, { status: 404 }));
+    return await this.#executeMiddleware(req, notFoundHandler);
+  }
+
+  async #executeMiddleware(
+    req: Request,
+    handler: () => Promise<Response>,
+  ): Promise<Response> {
+    let index = 0;
+
+    const next = async (): Promise<Response> => {
+      if (index < this.#middleware.length) {
+        const middleware = this.#middleware[index++];
+        return await middleware(req, next);
+      }
+      return await handler();
+    };
+
+    return await next();
   }
   getEndpoints() {
     const endpoints: Array<{ endpoint: string; description: string }> = [];

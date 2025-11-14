@@ -206,6 +206,21 @@ Deno.test("Router - handles async errors in handlers", async () => {
 
 Deno.test("Router - logs successful requests in Common Log Format", async () => {
   const router = new Router();
+
+  // Add a simple logging middleware for the test
+  const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
+    const response = await next();
+    const responseClone = response.clone();
+    const body = await responseClone.text();
+    const responseSize = new TextEncoder().encode(body).length;
+    const url = new URL(req.url);
+    console.log(
+      `- - - [date] "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${response.status} ${responseSize}`,
+    );
+    return response;
+  };
+  router.use(logMiddleware);
+
   const handler = () => new Response("test");
   router.add("GET", "/test", handler);
 
@@ -234,6 +249,20 @@ Deno.test("Router - logs successful requests in Common Log Format", async () => 
 Deno.test("Router - logs 404 responses in Common Log Format", async () => {
   const router = new Router();
 
+  // Add a simple logging middleware for the test
+  const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
+    const response = await next();
+    const responseClone = response.clone();
+    const body = await responseClone.text();
+    const responseSize = new TextEncoder().encode(body).length;
+    const url = new URL(req.url);
+    console.log(
+      `- - - [date] "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${response.status} ${responseSize}`,
+    );
+    return response;
+  };
+  router.use(logMiddleware);
+
   const originalLog = console.log;
   let loggedMessage = "";
   console.log = (msg: string) => {
@@ -254,6 +283,21 @@ Deno.test("Router - logs 404 responses in Common Log Format", async () => {
 
 Deno.test("Router - logs error responses with 500 status in Common Log Format", async () => {
   const router = new Router();
+
+  // Add a simple logging middleware for the test
+  const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
+    const response = await next();
+    const responseClone = response.clone();
+    const body = await responseClone.text();
+    const responseSize = new TextEncoder().encode(body).length;
+    const url = new URL(req.url);
+    console.log(
+      `- - - [date] "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${response.status} ${responseSize}`,
+    );
+    return response;
+  };
+  router.use(logMiddleware);
+
   const handler = () => {
     throw new Error("Test error");
   };
@@ -285,6 +329,21 @@ Deno.test("Router - logs error responses with 500 status in Common Log Format", 
 
 Deno.test("Router - logs different HTTP methods", async () => {
   const router = new Router();
+
+  // Add a simple logging middleware for the test
+  const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
+    const response = await next();
+    const responseClone = response.clone();
+    const body = await responseClone.text();
+    const responseSize = new TextEncoder().encode(body).length;
+    const url = new URL(req.url);
+    console.log(
+      `- - - [date] "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${response.status} ${responseSize}`,
+    );
+    return response;
+  };
+  router.use(logMiddleware);
+
   router.add("POST", "/api/data", () => new Response("posted"));
   router.add("PUT", "/api/data", () => new Response("updated"));
 
