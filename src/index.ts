@@ -1,5 +1,6 @@
 import { Router } from "./router.ts";
 import { reportError } from "./error-monitor.ts";
+import { commonLogMiddleware } from "./middleware.ts";
 
 import meta from "./endpoints/meta.ts";
 import gengi from "./endpoints/gengi.ts";
@@ -8,6 +9,10 @@ import car from "./endpoints/car.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
 
 const router = new Router();
+
+// Add middleware
+router.use(commonLogMiddleware);
+
 router.add("GET", "/", meta(router));
 
 router.add("GET", "/x/gengi/{:code}?", gengi);
