@@ -78,7 +78,7 @@ async function createGitHubIssue(
     if (issuesResponse.ok) {
       const issues = await issuesResponse.json();
       const existingIssue = issues.find((issue: { body: string }) =>
-        issue.body?.includes(`Fingerprint: \`${fingerprint}\``)
+        issue.body?.includes(`**Fingerprint:** \`${fingerprint}\``)
       );
 
       if (existingIssue) {
