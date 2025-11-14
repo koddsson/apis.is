@@ -57,6 +57,190 @@ Deno.test("reportError should handle errors without request object", async () =>
   }
 });
 
+Deno.test("reportError should handle errors without stack trace", async () => {
+  // Create an error without stack trace
+  const error = new Error("Error without stack");
+  delete error.stack;
+
+  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
+  const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    Deno.env.set("DENO_DEPLOYMENT_ID", "test-deployment");
+    Deno.env.set("GITHUB_TOKEN", "test-token");
+    Deno.env.set("GITHUB_REPOSITORY", "owner/repo");
+
+    let issueBody = "";
+
+    globalThis.fetch = (
+      input: string | URL | Request,
+      init?: RequestInit,
+    ): Promise<Response> => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url.includes("/issues?")) {
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+
+      if (url.endsWith("/issues") && init?.method === "POST") {
+        const body = JSON.parse(init.body as string);
+        issueBody = body.body;
+        return Promise.resolve(
+          new Response(JSON.stringify({ number: 1 }), {
+            status: 201,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+
+      return Promise.resolve(new Response(null, { status: 404 }));
+    };
+
+    await reportError(error);
+
+    // Verify that "No stack trace available" is in the body
+    assertStringIncludes(issueBody, "No stack trace available");
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalDeploymentId) {
+      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    } else {
+      Deno.env.delete("DENO_DEPLOYMENT_ID");
+    }
+    if (originalGithubToken) {
+      Deno.env.set("GITHUB_TOKEN", originalGithubToken);
+    } else {
+      Deno.env.delete("GITHUB_TOKEN");
+    }
+    if (originalGithubRepo) {
+      Deno.env.set("GITHUB_REPOSITORY", originalGithubRepo);
+    } else {
+      Deno.env.delete("GITHUB_REPOSITORY");
+    }
+  }
+});
+
+Deno.test("reportError should handle missing request method and url", async () => {
+  const error = new Error("Test error");
+  // Test without passing a request to verify N/A fallbacks
+
+  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
+  const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    Deno.env.set("DENO_DEPLOYMENT_ID", "test-deployment");
+    Deno.env.set("GITHUB_TOKEN", "test-token");
+    Deno.env.set("GITHUB_REPOSITORY", "owner/repo");
+
+    let issueBody = "";
+
+    globalThis.fetch = (
+      input: string | URL | Request,
+      init?: RequestInit,
+    ): Promise<Response> => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url.includes("/issues?")) {
+        return Promise.resolve(
+          new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+
+      if (url.endsWith("/issues") && init?.method === "POST") {
+        const body = JSON.parse(init.body as string);
+        issueBody = body.body;
+        return Promise.resolve(
+          new Response(JSON.stringify({ number: 1 }), {
+            status: 201,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+
+      return Promise.resolve(new Response(null, { status: 404 }));
+    };
+
+    // Report error without request to test N/A fallbacks
+    await reportError(error);
+
+    // Verify that "N/A" is used for missing method/url
+    assertStringIncludes(issueBody, "Method: N/A");
+    assertStringIncludes(issueBody, "URL: N/A");
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalDeploymentId) {
+      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    } else {
+      Deno.env.delete("DENO_DEPLOYMENT_ID");
+    }
+    if (originalGithubToken) {
+      Deno.env.set("GITHUB_TOKEN", originalGithubToken);
+    } else {
+      Deno.env.delete("GITHUB_TOKEN");
+    }
+    if (originalGithubRepo) {
+      Deno.env.set("GITHUB_REPOSITORY", originalGithubRepo);
+    } else {
+      Deno.env.delete("GITHUB_REPOSITORY");
+    }
+  }
+});
+
+Deno.test("reportError should handle GitHub API errors gracefully", async () => {
+  const error = new Error("Test error");
+  const request = new Request("https://example.com/test");
+
+  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
+  const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    Deno.env.set("DENO_DEPLOYMENT_ID", "test-deployment");
+    Deno.env.set("GITHUB_TOKEN", "test-token");
+    Deno.env.set("GITHUB_REPOSITORY", "owner/repo");
+
+    // Mock fetch to throw an error
+    globalThis.fetch = (): Promise<Response> => {
+      throw new Error("Network error");
+    };
+
+    // Should not throw, even though fetch fails
+    await reportError(error, request);
+
+    assertEquals(true, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalDeploymentId) {
+      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    } else {
+      Deno.env.delete("DENO_DEPLOYMENT_ID");
+    }
+    if (originalGithubToken) {
+      Deno.env.set("GITHUB_TOKEN", originalGithubToken);
+    } else {
+      Deno.env.delete("GITHUB_TOKEN");
+    }
+    if (originalGithubRepo) {
+      Deno.env.set("GITHUB_REPOSITORY", originalGithubRepo);
+    } else {
+      Deno.env.delete("GITHUB_REPOSITORY");
+    }
+  }
+});
+
 Deno.test("reportError should create GitHub issue with correct API call", async () => {
   const error = new Error("Test API error");
   const request = new Request("https://example.com/api/test");
