@@ -52,8 +52,8 @@ Deno.test({
   async fn() {
     // Note: This test might fail if the test registration number doesn't exist
     // or if the island.is API changes
-    const req = new Request("http://localhost/x/car/AA000");
-    const res = await car(req, { number: "AA000" });
+    const req = new Request("http://localhost/x/car/ISE92");
+    const res = await car(req, { number: "ISE92" });
 
     assertEquals(res.status, 200);
 
