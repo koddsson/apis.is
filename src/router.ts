@@ -27,6 +27,10 @@ export class Router {
     });
   }
   async route(req: Request): Promise<Response> {
+    const startTime = performance.now();
+    const url = new URL(req.url);
+    const pathname = url.pathname;
+
     for (const route of this.#routes[req.method]) {
       if (route.pattern.test(req.url)) {
         const match = route.pattern.exec(req.url);
@@ -36,8 +40,23 @@ export class Router {
             string
           >;
           try {
-            return await route["handler"](req, params);
+            const response = await route["handler"](req, params);
+            const duration = performance.now() - startTime;
+            console.log(
+              `${
+                new Date().toISOString()
+              } ${req.method} ${pathname} -> ${response.status} ${
+                duration.toFixed(2)
+              }ms`,
+            );
+            return response;
           } catch (error) {
+            const duration = performance.now() - startTime;
+            console.log(
+              `${new Date().toISOString()} ${req.method} ${pathname} -> 500 ${
+                duration.toFixed(2)
+              }ms`,
+            );
             // Report the error to monitoring system
             await reportError(error as Error, req);
 
@@ -56,6 +75,12 @@ export class Router {
         }
       }
     }
+    const duration = performance.now() - startTime;
+    console.log(
+      `${new Date().toISOString()} ${req.method} ${pathname} -> 404 ${
+        duration.toFixed(2)
+      }ms`,
+    );
     return Promise.resolve(new Response(null, { status: 404 }));
   }
   getEndpoints() {
