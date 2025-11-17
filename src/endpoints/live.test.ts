@@ -15,19 +15,61 @@ Deno.test({
     const req = new Request("http://localhost/x/gengi");
     const res = await gengi(req, {});
 
-    assertEquals(res.status, 200);
+    assertEquals(
+      res.status,
+      200,
+      `Expected status 200 but got ${res.status}`,
+    );
 
     const data = await res.json();
-    assertEquals(typeof data, "object");
+    assertEquals(
+      typeof data,
+      "object",
+      `Expected data to be an object but got ${typeof data}. Data: ${
+        JSON.stringify(data)
+      }`,
+    );
 
     // Check that common currencies are present
-    assertEquals(typeof data.USD, "object");
-    assertEquals(typeof data.USD.rate, "number");
-    assertEquals(data.USD.rate > 0, true);
+    assertEquals(
+      typeof data.USD,
+      "object",
+      `Expected USD to be an object but got ${typeof data
+        .USD}. Available currencies: ${Object.keys(data).join(", ")}`,
+    );
+    assertEquals(
+      typeof data.USD?.rate,
+      "number",
+      `Expected USD.rate to be a number but got ${typeof data.USD
+        ?.rate}. USD object: ${JSON.stringify(data.USD)}`,
+    );
+    if (typeof data.USD?.rate === "number") {
+      assertEquals(
+        data.USD.rate > 0,
+        true,
+        `Expected USD.rate to be positive but got ${data.USD.rate}`,
+      );
+    }
 
-    assertEquals(typeof data.EUR, "object");
-    assertEquals(typeof data.EUR.rate, "number");
-    assertEquals(data.EUR.rate > 0, true);
+    assertEquals(
+      typeof data.EUR,
+      "object",
+      `Expected EUR to be an object but got ${typeof data
+        .EUR}. Available currencies: ${Object.keys(data).join(", ")}`,
+    );
+    assertEquals(
+      typeof data.EUR?.rate,
+      "number",
+      `Expected EUR.rate to be a number but got ${typeof data.EUR
+        ?.rate}. EUR object: ${JSON.stringify(data.EUR)}`,
+    );
+    if (typeof data.EUR?.rate === "number") {
+      assertEquals(
+        data.EUR.rate > 0,
+        true,
+        `Expected EUR.rate to be positive but got ${data.EUR.rate}`,
+      );
+    }
   },
 });
 
@@ -38,11 +80,25 @@ Deno.test({
     const req = new Request("http://localhost/x/gengi/USD");
     const res = await gengi(req, { code: "USD" });
 
-    assertEquals(res.status, 200);
+    assertEquals(
+      res.status,
+      200,
+      `Expected status 200 but got ${res.status}`,
+    );
 
     const data = await res.json();
-    assertEquals(typeof data.USD, "object");
-    assertEquals(typeof data.EUR, "undefined");
+    assertEquals(
+      typeof data.USD,
+      "object",
+      `Expected USD to be an object but got ${typeof data
+        .USD}. Returned data: ${JSON.stringify(data)}`,
+    );
+    assertEquals(
+      typeof data.EUR,
+      "undefined",
+      `Expected EUR to be undefined but got ${typeof data
+        .EUR}. Returned currencies: ${Object.keys(data).join(", ")}`,
+    );
   },
 });
 
@@ -55,11 +111,21 @@ Deno.test({
     const req = new Request("http://localhost/x/car/ISE92");
     const res = await car(req, { number: "ISE92" });
 
-    assertEquals(res.status, 200);
+    assertEquals(
+      res.status,
+      200,
+      `Expected status 200 but got ${res.status}`,
+    );
 
     const data = await res.json();
     // The API should return an array, even if empty
-    assertEquals(Array.isArray(data), true);
+    assertEquals(
+      Array.isArray(data),
+      true,
+      `Expected data to be an array but got ${typeof data}. Data type: ${
+        Object.prototype.toString.call(data)
+      }. Data: ${JSON.stringify(data, null, 2)}`,
+    );
   },
 });
 
@@ -70,18 +136,40 @@ Deno.test({
     const req = new Request("http://localhost/x/race-calendar");
     const res = await raceCalendar(req);
 
-    assertEquals(res.status, 200);
+    assertEquals(
+      res.status,
+      200,
+      `Expected status 200 but got ${res.status}`,
+    );
 
     const data = await res.json();
     // The API should return an array
-    assertEquals(Array.isArray(data), true);
+    assertEquals(
+      Array.isArray(data),
+      true,
+      `Expected data to be an array but got ${typeof data}. Data type: ${
+        Object.prototype.toString.call(data)
+      }. Data: ${JSON.stringify(data, null, 2)}`,
+    );
 
     // If there are races, validate the structure
     if (data.length > 0) {
       const firstRace = data[0];
-      assertEquals(typeof firstRace, "object");
+      assertEquals(
+        typeof firstRace,
+        "object",
+        `Expected first race to be an object but got ${typeof firstRace}. First race: ${
+          JSON.stringify(firstRace)
+        }`,
+      );
       // The race object should have some properties
-      assertEquals(Object.keys(firstRace).length > 0, true);
+      assertEquals(
+        Object.keys(firstRace).length > 0,
+        true,
+        `Expected first race to have properties but got empty object. First race: ${
+          JSON.stringify(firstRace)
+        }`,
+      );
     }
   },
 });
