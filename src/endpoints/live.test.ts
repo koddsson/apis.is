@@ -43,13 +43,11 @@ Deno.test({
       `Expected USD.rate to be a number but got ${typeof data.USD
         ?.rate}. USD object: ${JSON.stringify(data.USD)}`,
     );
-    if (typeof data.USD?.rate === "number") {
-      assertEquals(
-        data.USD.rate > 0,
-        true,
-        `Expected USD.rate to be positive but got ${data.USD.rate}`,
-      );
-    }
+    assertEquals(
+      data.USD.rate > 0,
+      true,
+      `Expected USD.rate to be positive but got ${data.USD.rate}`,
+    );
 
     assertEquals(
       typeof data.EUR,
@@ -63,13 +61,11 @@ Deno.test({
       `Expected EUR.rate to be a number but got ${typeof data.EUR
         ?.rate}. EUR object: ${JSON.stringify(data.EUR)}`,
     );
-    if (typeof data.EUR?.rate === "number") {
-      assertEquals(
-        data.EUR.rate > 0,
-        true,
-        `Expected EUR.rate to be positive but got ${data.EUR.rate}`,
-      );
-    }
+    assertEquals(
+      data.EUR.rate > 0,
+      true,
+      `Expected EUR.rate to be positive but got ${data.EUR.rate}`,
+    );
   },
 });
 
