@@ -114,13 +114,18 @@ Deno.test({
     );
 
     const data = await res.json();
-    // The API should return an array, even if empty
+    // The API returns an object
     assertEquals(
-      Array.isArray(data),
-      true,
-      `Expected data to be an array but got ${typeof data}. Data type: ${
+      typeof data,
+      "object",
+      `Expected data to be an object but got ${typeof data}. Data type: ${
         Object.prototype.toString.call(data)
       }. Data: ${JSON.stringify(data, null, 2)}`,
+    );
+    assertEquals(
+      data !== null,
+      true,
+      `Expected data to be a non-null object but got null`,
     );
   },
 });
