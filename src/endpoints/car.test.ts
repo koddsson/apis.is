@@ -6,15 +6,13 @@ import car from "./car.ts";
 
 const mockCarResponse = {
   data: {
-    getPublicVehicleSearch: [
-      {
-        permno: "ABC12",
-        make: "Toyota",
-        model: "Corolla",
-        year: 2020,
-        color: "Blue",
-      },
-    ],
+    getPublicVehicleSearch: {
+      permno: "ABC12",
+      make: "Toyota",
+      model: "Corolla",
+      year: 2020,
+      color: "Blue",
+    },
   },
 };
 
@@ -34,9 +32,9 @@ Deno.test("car - fetches and returns vehicle data", async () => {
     assertEquals(res.headers.get("Access-Control-Allow-Origin"), "*");
 
     const data = await res.json();
-    assertEquals(Array.isArray(data), true);
-    assertEquals(data[0].permno, "ABC12");
-    assertEquals(data[0].make, "Toyota");
+    assertEquals(typeof data, "object");
+    assertEquals(data.permno, "ABC12");
+    assertEquals(data.make, "Toyota");
   } finally {
     globalThis.fetch = originalFetch;
   }
