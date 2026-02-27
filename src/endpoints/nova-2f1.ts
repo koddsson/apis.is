@@ -10,11 +10,57 @@ interface Offer {
   link: string;
 }
 
+const DAY_NAMES = ["Mán", "Þri", "Mið", "Fim", "Fös", "Lau", "Sun"];
+
+// The Nova site renders all 7 day labels for every offer but uses different
+// CSS background-color classes on each day's parent div to distinguish
+// available (brand pink) from unavailable (grey) days.  Because the class
+// names are obfuscated and change between builds, we detect the "inactive"
+// class dynamically: scan every day-indicator span across the whole page,
+// collect the CSS classes that vary between parent divs, and treat the
+// minority variant(s) as "inactive".
+function findInactiveDayClasses(
+  doc: ReturnType<InstanceType<typeof DOMParser>["parseFromString"]>,
+): Set<string> {
+  const classCounts = new Map<string, number>();
+  let total = 0;
+
+  for (const span of doc!.querySelectorAll("span")) {
+    if (!DAY_NAMES.includes(span.textContent!.trim())) continue;
+    const parent = span.parentElement;
+    if (!parent) continue;
+    total++;
+    for (
+      const cls of (parent.getAttribute("class") || "").split(/\s+/).filter(
+        Boolean,
+      )
+    ) {
+      classCounts.set(cls, (classCounts.get(cls) || 0) + 1);
+    }
+  }
+
+  if (total === 0) return new Set();
+
+  // Variant classes appear on some but not all day parent elements
+  const variants: [string, number][] = [];
+  for (const [cls, count] of classCounts) {
+    if (count < total) variants.push([cls, count]);
+  }
+
+  // Need at least two variants (active + inactive) to distinguish
+  if (variants.length < 2) return new Set();
+
+  // The most-frequent variant is the "active" style; all others are inactive
+  variants.sort((a, b) => b[1] - a[1]);
+  return new Set(variants.slice(1).map(([cls]) => cls));
+}
+
 async function nova2f1(request: Request): Promise<Response> {
   const res = await fetch("https://www.nova.is/dansgolfid/fyrir-thig/2f1");
   const html = await res.text();
 
   const doc = new DOMParser().parseFromString(html, "text/html")!;
+  const inactiveDayClasses = findInactiveDayClasses(doc);
   const offers: Offer[] = [];
 
   const links = doc.querySelectorAll('a[href^="/dansgolfid/fyrir-thig/2f1/"]');
@@ -36,14 +82,20 @@ async function nova2f1(request: Request): Promise<Response> {
     const descriptionDiv = h4.parentElement?.querySelector("div");
     const description = descriptionDiv?.textContent?.trim() || "";
 
-    // Day availability - spans containing day abbreviations
-    const dayNames = ["Mán", "Þri", "Mið", "Fim", "Fös", "Lau", "Sun"];
+    // Day availability - only include active (non-greyed-out) days
     const days: string[] = [];
     const spans = card.querySelectorAll("span");
     for (const span of spans) {
       const text = span.textContent!.trim();
-      if (dayNames.includes(text)) {
-        days.push(text);
+      if (DAY_NAMES.includes(text)) {
+        const parentClasses = (span.parentElement?.getAttribute("class") || "")
+          .split(/\s+/);
+        const isInactive = parentClasses.some((cls) =>
+          inactiveDayClasses.has(cls)
+        );
+        if (!isInactive) {
+          days.push(text);
+        }
       }
     }
 

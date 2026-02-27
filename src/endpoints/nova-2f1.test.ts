@@ -4,6 +4,9 @@ import {
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import nova2f1 from "./nova-2f1.ts";
 
+// The real Nova site renders all 7 days for every offer, using different CSS
+// classes on the day's parent div to mark active vs inactive days.  "bg-active"
+// and "bg-inactive" stand in for the obfuscated atomic-CSS class names.
 const mockHtml = `<!DOCTYPE html><html><body>
 <div class="as3s0o0">
   <div>
@@ -16,13 +19,13 @@ const mockHtml = `<!DOCTYPE html><html><body>
         <div><div><p><strong>2f1 Buy one get one free.</strong> Great food!</p></div></div>
         <div>
           <div>
-            <div><div><span>Mán</span></div></div>
-            <div><div><span>Þri</span></div></div>
-            <div><div><span>Mið</span></div></div>
-            <div><div><span>Fim</span></div></div>
-            <div><div><span>Fös</span></div></div>
-            <div><div><span>Lau</span></div></div>
-            <div><div><span>Sun</span></div></div>
+            <div><div class="bg-active shared"><span>Mán</span></div></div>
+            <div><div class="bg-active shared"><span>Þri</span></div></div>
+            <div><div class="bg-active shared"><span>Mið</span></div></div>
+            <div><div class="bg-active shared"><span>Fim</span></div></div>
+            <div><div class="bg-active shared"><span>Fös</span></div></div>
+            <div><div class="bg-active shared"><span>Lau</span></div></div>
+            <div><div class="bg-active shared"><span>Sun</span></div></div>
           </div>
         </div>
         <div>
@@ -47,9 +50,13 @@ const mockHtml = `<!DOCTYPE html><html><body>
         <div><div><p><strong>2f1 on all main courses.</strong></p></div></div>
         <div>
           <div>
-            <div><div><span>Mán</span></div></div>
-            <div><div><span>Þri</span></div></div>
-            <div><div><span>Mið</span></div></div>
+            <div><div class="bg-active shared"><span>Mán</span></div></div>
+            <div><div class="bg-active shared"><span>Þri</span></div></div>
+            <div><div class="bg-active shared"><span>Mið</span></div></div>
+            <div><div class="bg-inactive shared"><span>Fim</span></div></div>
+            <div><div class="bg-inactive shared"><span>Fös</span></div></div>
+            <div><div class="bg-inactive shared"><span>Lau</span></div></div>
+            <div><div class="bg-inactive shared"><span>Sun</span></div></div>
           </div>
         </div>
         <div>
