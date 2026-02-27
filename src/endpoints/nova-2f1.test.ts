@@ -143,6 +143,114 @@ Deno.test("nova2f1 - returns pretty JSON when pretty=true", async () => {
   }
 });
 
+Deno.test("nova2f1 - handles card with missing elements", async () => {
+  const minimalHtml = `<!DOCTYPE html><html><body>
+<div>
+  <div>
+    <div>
+      <img alt="Bare Offer"/>
+      <div>
+        <h4>Bare Offer</h4>
+        <div>
+          <div>
+            <a href="/dansgolfid/fyrir-thig/2f1/bare-offer"><span>Skoða nánar</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>`;
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => {
+    return Promise.resolve(new Response(minimalHtml, { status: 200 }));
+  };
+
+  try {
+    const req = new Request("http://localhost/x/nova-2f1");
+    const res = await nova2f1(req);
+    const data = await res.json();
+
+    assertEquals(data.length, 1);
+    assertEquals(data[0].name, "Bare Offer");
+    assertEquals(data[0].image, "");
+    assertEquals(data[0].address, "");
+    assertEquals(data[0].days.length, 0);
+    assertEquals(
+      data[0].link,
+      "https://www.nova.is/dansgolfid/fyrir-thig/2f1/bare-offer",
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("nova2f1 - skips link with no card container", async () => {
+  const orphanLinkHtml = `<!DOCTYPE html><html><body>
+<a href="/dansgolfid/fyrir-thig/2f1/orphan">Orphan</a>
+</body></html>`;
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => {
+    return Promise.resolve(new Response(orphanLinkHtml, { status: 200 }));
+  };
+
+  try {
+    const req = new Request("http://localhost/x/nova-2f1");
+    const res = await nova2f1(req);
+    const data = await res.json();
+
+    assertEquals(data.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("nova2f1 - handles card with non-location SVG only", async () => {
+  const noLocationSvgHtml = `<!DOCTYPE html><html><body>
+<div>
+  <div>
+    <div>
+      <img src="https://example.com/img.png" alt="SVG Test"/>
+      <div>
+        <h4>SVG Test</h4>
+        <div><div><p>Some description</p></div></div>
+        <div>
+          <div><div><span>Mán</span></div></div>
+        </div>
+        <div>
+          <div>
+            <div><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15"/></svg></div>
+          </div>
+          <div>
+            <a href="/dansgolfid/fyrir-thig/2f1/svg-test"><span>Skoða nánar</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>`;
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => {
+    return Promise.resolve(new Response(noLocationSvgHtml, { status: 200 }));
+  };
+
+  try {
+    const req = new Request("http://localhost/x/nova-2f1");
+    const res = await nova2f1(req);
+    const data = await res.json();
+
+    assertEquals(data.length, 1);
+    assertEquals(data[0].address, "");
+    assertEquals(data[0].days, ["Mán"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 Deno.test("nova2f1 - has correct meta information", () => {
   assertEquals(nova2f1.meta?.endpoint, "/x/nova-2f1");
   assertStringIncludes(
