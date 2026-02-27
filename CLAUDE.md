@@ -1,10 +1,14 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
 
 ## Project Overview
 
-apis.is is a collection of Icelandic-specific public APIs built with **Deno** (TypeScript). It aggregates data from external sources (Borgun currency rates, island.is vehicle lookup, hlaupadagskra.is race calendar) and serves community-maintained meetup data. Deployed on **Deno Deploy**.
+apis.is is a collection of Icelandic-specific public APIs built with **Deno**
+(TypeScript). It aggregates data from external sources (Borgun currency rates,
+island.is vehicle lookup, hlaupadagskra.is race calendar) and serves
+community-maintained meetup data. Deployed on **Deno Deploy**.
 
 ## Commands
 
@@ -33,14 +37,20 @@ deno coverage coverage | deno run scripts/check-coverage.ts 85 95
 
 ## Architecture
 
-**Request flow:** `Deno.serve()` → Router (URLPattern-based) → Middleware chain → Endpoint handler → Response
+**Request flow:** `Deno.serve()` → Router (URLPattern-based) → Middleware chain
+→ Endpoint handler → Response
 
 - `src/index.ts` — Entry point, registers routes and starts server
-- `src/router.ts` — Custom router using native `URLPattern` API, supports path params (e.g., `/x/car/{number}?`)
-- `src/middleware.ts` — Middleware system; currently has Common Log Format logger
-- `src/error-monitor.ts` — Auto-creates GitHub issues for uncaught errors in production (deduplicates via fingerprinting)
-- `src/endpoints/` — One file per API endpoint (gengi, meetups, car, race-calendar, meta)
-- `src/data/meetups.json` — Static meetup data (community-maintained via GitHub issues + automated workflow)
+- `src/router.ts` — Custom router using native `URLPattern` API, supports path
+  params (e.g., `/x/car/{number}?`)
+- `src/middleware.ts` — Middleware system; currently has Common Log Format
+  logger
+- `src/error-monitor.ts` — Auto-creates GitHub issues for uncaught errors in
+  production (deduplicates via fingerprinting)
+- `src/endpoints/` — One file per API endpoint (gengi, meetups, car,
+  race-calendar, meta)
+- `src/data/meetups.json` — Static meetup data (community-maintained via GitHub
+  issues + automated workflow)
 - `src/rss.ts` — RSS 2.0 feed generator used by meetups endpoint
 
 ## Code Quality Requirements
