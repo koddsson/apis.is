@@ -7,7 +7,12 @@ import nova2f1 from "./nova-2f1.ts";
 // The real Nova site renders all 7 days for every offer, using different CSS
 // classes on the day's parent div to mark active vs inactive days.  "bg-active"
 // and "bg-inactive" stand in for the obfuscated atomic-CSS class names.
-const mockHtml = `<!DOCTYPE html><html><body>
+const mockCss =
+  `.bg-active { background-color: #FE3C72; } .bg-inactive { background-color: #E0E0E0; } .shared { padding: 4px; }`;
+
+const mockHtml = `<!DOCTYPE html><html><head>
+<link rel="stylesheet" href="/client/test.css"/>
+</head><body>
 <div class="as3s0o0">
   <div>
     <div>
@@ -74,11 +79,21 @@ const mockHtml = `<!DOCTYPE html><html><body>
 </div>
 </body></html>`;
 
+function mockFetch(input: string | URL | Request): Promise<Response> {
+  const url = typeof input === "string"
+    ? input
+    : input instanceof URL
+    ? input.toString()
+    : input.url;
+  if (url.endsWith(".css")) {
+    return Promise.resolve(new Response(mockCss, { status: 200 }));
+  }
+  return Promise.resolve(new Response(mockHtml, { status: 200 }));
+}
+
 Deno.test("nova2f1 - fetches and returns offer data", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = () => {
-    return Promise.resolve(new Response(mockHtml, { status: 200 }));
-  };
+  globalThis.fetch = mockFetch as typeof globalThis.fetch;
 
   try {
     const req = new Request("http://localhost/x/nova-2f1");
@@ -118,9 +133,7 @@ Deno.test("nova2f1 - fetches and returns offer data", async () => {
 
 Deno.test("nova2f1 - returns compact JSON by default", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = () => {
-    return Promise.resolve(new Response(mockHtml, { status: 200 }));
-  };
+  globalThis.fetch = mockFetch as typeof globalThis.fetch;
 
   try {
     const req = new Request("http://localhost/x/nova-2f1");
@@ -135,9 +148,7 @@ Deno.test("nova2f1 - returns compact JSON by default", async () => {
 
 Deno.test("nova2f1 - returns pretty JSON when pretty=true", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = () => {
-    return Promise.resolve(new Response(mockHtml, { status: 200 }));
-  };
+  globalThis.fetch = mockFetch as typeof globalThis.fetch;
 
   try {
     const req = new Request("http://localhost/x/nova-2f1?pretty=true");
@@ -253,6 +264,33 @@ Deno.test("nova2f1 - handles card with non-location SVG only", async () => {
     assertEquals(data.length, 1);
     assertEquals(data[0].address, "");
     assertEquals(data[0].days, ["Mán"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+Deno.test("nova2f1 - returns all days when CSS fetch fails", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = ((input: string | URL | Request) => {
+    const url = typeof input === "string"
+      ? input
+      : input instanceof URL
+      ? input.toString()
+      : input.url;
+    if (url.endsWith(".css")) {
+      return Promise.reject(new Error("network error"));
+    }
+    return Promise.resolve(new Response(mockHtml, { status: 200 }));
+  }) as typeof globalThis.fetch;
+
+  try {
+    const req = new Request("http://localhost/x/nova-2f1");
+    const res = await nova2f1(req);
+    const data = await res.json();
+
+    // Without CSS info we can't distinguish active/inactive, so all 7 pass
+    assertEquals(data[0].days.length, 7);
+    assertEquals(data[1].days.length, 7);
   } finally {
     globalThis.fetch = originalFetch;
   }

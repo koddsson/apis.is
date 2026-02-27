@@ -11,17 +11,30 @@ interface Offer {
 }
 
 const DAY_NAMES = ["Mán", "Þri", "Mið", "Fim", "Fös", "Lau", "Sun"];
+const BASE_URL = "https://www.nova.is";
+
+// Returns true when a hex colour is grey-ish (R ≈ G ≈ B).
+function isGreyColor(hex: string): boolean {
+  const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const r = parseInt(m[1], 16);
+  const g = parseInt(m[2], 16);
+  const b = parseInt(m[3], 16);
+  return Math.max(r, g, b) - Math.min(r, g, b) < 30;
+}
 
 // The Nova site renders all 7 day labels for every offer but uses different
 // CSS background-color classes on each day's parent div to distinguish
 // available (brand pink) from unavailable (grey) days.  Because the class
-// names are obfuscated and change between builds, we detect the "inactive"
-// class dynamically: scan every day-indicator span across the whole page,
-// collect the CSS classes that vary between parent divs, and treat the
-// minority variant(s) as "inactive".
-function findInactiveDayClasses(
+// names are obfuscated and change between builds we:
+//   1. Find which CSS classes vary between day-indicator parent divs.
+//   2. Fetch the site's stylesheets and look up each variant's
+//      background-color.
+//   3. Mark any variant whose colour is grey as "inactive".
+// If stylesheets can't be fetched the set is empty and all days pass through.
+async function findInactiveDayClasses(
   doc: ReturnType<InstanceType<typeof DOMParser>["parseFromString"]>,
-): Set<string> {
+): Promise<Set<string>> {
   const classCounts = new Map<string, number>();
   let total = 0;
 
@@ -42,17 +55,44 @@ function findInactiveDayClasses(
   if (total === 0) return new Set();
 
   // Variant classes appear on some but not all day parent elements
-  const variants: [string, number][] = [];
+  const variantClasses = new Set<string>();
   for (const [cls, count] of classCounts) {
-    if (count < total) variants.push([cls, count]);
+    if (count < total) variantClasses.add(cls);
   }
 
   // Need at least two variants (active + inactive) to distinguish
-  if (variants.length < 2) return new Set();
+  if (variantClasses.size < 2) return new Set();
 
-  // The most-frequent variant is the "active" style; all others are inactive
-  variants.sort((a, b) => b[1] - a[1]);
-  return new Set(variants.slice(1).map(([cls]) => cls));
+  // Fetch CSS stylesheets to determine which variant is "inactive"
+  const inactiveClasses = new Set<string>();
+
+  for (const link of doc!.querySelectorAll('link[rel="stylesheet"]')) {
+    const href = link.getAttribute("href");
+    if (!href) continue;
+    const url = href.startsWith("http") ? href : `${BASE_URL}${href}`;
+
+    try {
+      const cssRes = await fetch(url);
+      const css = await cssRes.text();
+
+      for (const cls of variantClasses) {
+        const escaped = cls.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(
+          `\\.${escaped}\\s*\\{[^}]*background-color:\\s*(#[0-9a-fA-F]{6})`,
+        );
+        const match = regex.exec(css);
+        if (match && isGreyColor(match[1])) {
+          inactiveClasses.add(cls);
+        }
+      }
+
+      if (inactiveClasses.size > 0) break; // Found what we need
+    } catch {
+      continue; // Try next stylesheet
+    }
+  }
+
+  return inactiveClasses;
 }
 
 async function nova2f1(request: Request): Promise<Response> {
@@ -60,7 +100,7 @@ async function nova2f1(request: Request): Promise<Response> {
   const html = await res.text();
 
   const doc = new DOMParser().parseFromString(html, "text/html")!;
-  const inactiveDayClasses = findInactiveDayClasses(doc);
+  const inactiveDayClasses = await findInactiveDayClasses(doc);
   const offers: Offer[] = [];
 
   const links = doc.querySelectorAll('a[href^="/dansgolfid/fyrir-thig/2f1/"]');
