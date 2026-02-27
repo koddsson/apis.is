@@ -59,3 +59,5 @@ deno coverage coverage | deno run scripts/check-coverage.ts 85 95
 - All changes must pass: `deno fmt`, `deno lint`, `deno check src/`
 - New features/fixes require tests
 - Coverage thresholds enforced in CI: 85% branch, 95% line
+- **Always verify coverage** after writing or modifying tests by running the
+  coverage commands above. CI will fail if thresholds are not met.

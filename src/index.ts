@@ -7,6 +7,7 @@ import gengi from "./endpoints/gengi.ts";
 import meetups from "./endpoints/meetups.ts";
 import car from "./endpoints/car.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
+import nova2f1 from "./endpoints/nova-2f1.ts";
 
 const router = new Router();
 
@@ -19,6 +20,7 @@ router.add("GET", "/x/gengi/{:code}?", gengi);
 router.add("GET", "/x/meetups", meetups);
 router.add("GET", "/x/car/{:number}?", car);
 router.add("GET", "/x/race-calendar", raceCalendar);
+router.add("GET", "/x/nova-2f1", nova2f1);
 
 // Global error handler to catch all uncaught errors
 globalThis.addEventListener("error", (event) => {
