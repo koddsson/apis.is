@@ -80,12 +80,8 @@ const mockHtml = `<!DOCTYPE html><html><head>
 </body></html>`;
 
 function mockFetch(input: string | URL | Request): Promise<Response> {
-  const url = typeof input === "string"
-    ? input
-    : input instanceof URL
-    ? input.toString()
-    : input.url;
-  if (url.endsWith(".css")) {
+  const url = new URL(input instanceof Request ? input.url : input);
+  if (url.pathname.endsWith(".css")) {
     return Promise.resolve(new Response(mockCss, { status: 200 }));
   }
   return Promise.resolve(new Response(mockHtml, { status: 200 }));
@@ -272,12 +268,8 @@ Deno.test("nova2f1 - handles card with non-location SVG only", async () => {
 Deno.test("nova2f1 - returns all days when CSS fetch fails", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = ((input: string | URL | Request) => {
-    const url = typeof input === "string"
-      ? input
-      : input instanceof URL
-      ? input.toString()
-      : input.url;
-    if (url.endsWith(".css")) {
+    const url = new URL(input instanceof Request ? input.url : input);
+    if (url.pathname.endsWith(".css")) {
       return Promise.reject(new Error("network error"));
     }
     return Promise.resolve(new Response(mockHtml, { status: 200 }));
