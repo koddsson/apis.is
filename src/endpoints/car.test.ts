@@ -6,11 +6,10 @@ import car from "./car.ts";
 
 const mockCarResponse = {
   data: {
-    getPublicVehicleSearch: {
+    publicVehicleSearch: {
       permno: "ABC12",
       make: "Toyota",
-      model: "Corolla",
-      year: 2020,
+      vehicleCommercialName: "Corolla",
       color: "Blue",
     },
   },
@@ -42,10 +41,10 @@ Deno.test("car - fetches and returns vehicle data", async () => {
 
 Deno.test("car - includes number parameter in API call", async () => {
   const originalFetch = globalThis.fetch;
-  let requestedUrl = "";
+  let requestBody = "";
 
-  globalThis.fetch = (url: string | URL | Request) => {
-    requestedUrl = url.toString();
+  globalThis.fetch = (_url: string | URL | Request, init?: RequestInit) => {
+    requestBody = init?.body as string ?? "";
     return Promise.resolve(
       new Response(JSON.stringify(mockCarResponse), { status: 200 }),
     );
@@ -55,7 +54,7 @@ Deno.test("car - includes number parameter in API call", async () => {
     const req = new Request("http://localhost/x/car/XYZ99");
     await car(req, { number: "XYZ99" });
 
-    assertStringIncludes(requestedUrl, "XYZ99");
+    assertStringIncludes(requestBody, "XYZ99");
   } finally {
     globalThis.fetch = originalFetch;
   }
