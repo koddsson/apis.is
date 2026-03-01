@@ -163,6 +163,7 @@ jobs:
             const repoUrl = `https://github.com/${owner}/${repo}`;
 
             const payload = {
+              username: 'Weekly Digest',
               embeds: [{
                 title,
                 url: repoUrl,
