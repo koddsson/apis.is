@@ -1,0 +1,189 @@
+name: Weekly Digest
+
+on:
+  schedule:
+    - cron: "0 8 * * 0" # Every Sunday at 8 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  weekly-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate and post weekly digest
+        uses: actions/github-script@v7
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        with:
+          script: |
+            const now = new Date();
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const since = weekAgo.toISOString();
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Format dates for title
+            const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const title = `Weekly Digest: ${fmt(weekAgo)} – ${fmt(now)}`;
+
+            // --- Gather data ---
+
+            // Pull Requests
+            const pulls = await github.rest.pulls.list({
+              owner, repo, state: 'all', sort: 'updated', direction: 'desc', per_page: 100
+            });
+            const mergedPRs = pulls.data.filter(pr => pr.merged_at && new Date(pr.merged_at) >= weekAgo);
+            const openedPRs = pulls.data.filter(pr => new Date(pr.created_at) >= weekAgo);
+            const closedPRs = pulls.data.filter(pr => pr.state === 'closed' && !pr.merged_at && pr.closed_at && new Date(pr.closed_at) >= weekAgo);
+
+            // Issues (exclude PRs)
+            const issues = await github.rest.issues.listForRepo({
+              owner, repo, state: 'all', since, per_page: 100
+            });
+            const realIssues = issues.data.filter(i => !i.pull_request);
+            const openedIssues = realIssues.filter(i => new Date(i.created_at) >= weekAgo);
+            const closedIssues = realIssues.filter(i => i.state === 'closed' && i.closed_at && new Date(i.closed_at) >= weekAgo);
+
+            // Commits to main
+            let commitCount = 0;
+            try {
+              const commits = await github.rest.repos.listCommits({
+                owner, repo, sha: 'main', since, per_page: 100
+              });
+              commitCount = commits.data.length;
+            } catch (e) {
+              core.warning(`Failed to fetch commits: ${e.message}`);
+            }
+
+            // CI health
+            let ciTotal = 0, ciSuccess = 0, ciFailure = 0;
+            try {
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner, repo, created: `>=${since.split('T')[0]}`, per_page: 100
+              });
+              ciTotal = runs.data.total_count;
+              ciSuccess = runs.data.workflow_runs.filter(r => r.conclusion === 'success').length;
+              ciFailure = runs.data.workflow_runs.filter(r => r.conclusion === 'failure').length;
+            } catch (e) {
+              core.warning(`Failed to fetch workflow runs: ${e.message}`);
+            }
+
+            // New contributors (first-time PR authors)
+            const newContributors = [];
+            for (const pr of mergedPRs) {
+              const author = pr.user.login;
+              try {
+                const authorPRs = await github.rest.search.issuesAndPullRequests({
+                  q: `repo:${owner}/${repo} is:pr author:${author} merged:<${since.split('T')[0]}`
+                });
+                if (authorPRs.data.total_count === 0) {
+                  newContributors.push(author);
+                }
+              } catch (e) {
+                core.warning(`Failed to check contributor ${author}: ${e.message}`);
+              }
+            }
+
+            // --- Check if there's any activity ---
+            const hasActivity = mergedPRs.length > 0 || openedPRs.length > 0 || closedPRs.length > 0 ||
+              openedIssues.length > 0 || closedIssues.length > 0 || commitCount > 0 || ciTotal > 0;
+
+            if (!hasActivity) {
+              core.info('No activity this week — skipping digest.');
+              return;
+            }
+
+            // --- Build embed fields ---
+            const fields = [];
+
+            const truncate = (s, len = 50) => s.length > len ? s.slice(0, len - 1) + '…' : s;
+
+            if (mergedPRs.length > 0 || openedPRs.length > 0 || closedPRs.length > 0) {
+              let prLines = [];
+              if (mergedPRs.length > 0) {
+                prLines.push(`**Merged (${mergedPRs.length}):**`);
+                for (const pr of mergedPRs.slice(0, 5)) {
+                  prLines.push(`- [${truncate(pr.title)}](${pr.html_url})`);
+                }
+                if (mergedPRs.length > 5) prLines.push(`  _…and ${mergedPRs.length - 5} more_`);
+              }
+              if (openedPRs.length > 0) prLines.push(`**Opened:** ${openedPRs.length}`);
+              if (closedPRs.length > 0) prLines.push(`**Closed without merge:** ${closedPRs.length}`);
+              fields.push({ name: '🔀 Pull Requests', value: prLines.join('\n'), inline: false });
+            }
+
+            if (openedIssues.length > 0 || closedIssues.length > 0) {
+              let issueLines = [];
+              if (openedIssues.length > 0) {
+                issueLines.push(`**Opened (${openedIssues.length}):**`);
+                for (const i of openedIssues.slice(0, 5)) {
+                  issueLines.push(`- [${truncate(i.title)}](${i.html_url})`);
+                }
+                if (openedIssues.length > 5) issueLines.push(`  _…and ${openedIssues.length - 5} more_`);
+              }
+              if (closedIssues.length > 0) issueLines.push(`**Closed:** ${closedIssues.length}`);
+              fields.push({ name: '📋 Issues', value: issueLines.join('\n'), inline: false });
+            }
+
+            if (commitCount > 0) {
+              fields.push({
+                name: '📝 Commits',
+                value: `**${commitCount}** to \`main\``,
+                inline: true
+              });
+            }
+
+            if (ciTotal > 0) {
+              fields.push({
+                name: '⚙️ CI Health',
+                value: `✅ ${ciSuccess}  ❌ ${ciFailure}  / ${ciTotal} runs`,
+                inline: true
+              });
+            }
+
+            if (newContributors.length > 0) {
+              fields.push({
+                name: '🎉 New Contributors',
+                value: newContributors.map(c => `@${c}`).join(', '),
+                inline: false
+              });
+            }
+
+            // --- Send to Discord ---
+            const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+            if (!webhookUrl) {
+              core.setFailed('DISCORD_WEBHOOK_URL secret is not set');
+              return;
+            }
+
+            const repoUrl = `https://github.com/${owner}/${repo}`;
+
+            const payload = {
+              embeds: [{
+                title,
+                url: repoUrl,
+                color: 0x0075ca,
+                fields,
+                footer: {
+                  text: `${owner}/${repo} • Generated by Weekly Digest workflow`
+                },
+                timestamp: now.toISOString()
+              }]
+            };
+
+            const response = await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              const body = await response.text();
+              core.setFailed(`Discord webhook failed (${response.status}): ${body}`);
+            } else {
+              core.info('Weekly digest posted to Discord.');
+            }
