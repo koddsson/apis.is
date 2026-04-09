@@ -88,9 +88,11 @@ jobs:
               }
             }
 
-            // --- Check if there's any activity ---
+            // --- Check if there's any meaningful activity ---
+            // CI runs alone (e.g. scheduled workflows) don't count — only post when
+            // there are PRs, issues, or commits worth reporting.
             const hasActivity = mergedPRs.length > 0 || openedPRs.length > 0 || closedPRs.length > 0 ||
-              openedIssues.length > 0 || closedIssues.length > 0 || commitCount > 0 || ciTotal > 0;
+              openedIssues.length > 0 || closedIssues.length > 0 || commitCount > 0;
 
             if (!hasActivity) {
               core.info('No activity this week — skipping digest.');
