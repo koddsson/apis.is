@@ -1,5 +1,6 @@
 import { assert, test, vi } from "vitest";
-import { checkEndpoints, expectNonEmptyArray, reportHealth } from "./health.ts";
+import * as z from "zod";
+import { checkEndpoints, reportHealth, validate } from "./health.ts";
 import { Router } from "./router.ts";
 import { response } from "./utils.ts";
 
@@ -7,10 +8,37 @@ function withMeta<T extends object>(handler: T, endpoint: string) {
   return Object.assign(handler, { meta: { endpoint, description: "" } });
 }
 
-test("expectNonEmptyArray - accepts only non-empty arrays", () => {
-  assert.isUndefined(expectNonEmptyArray([1]));
-  assert.equal(expectNonEmptyArray([]), "Expected at least one item, got none");
-  assert.equal(expectNonEmptyArray({}), "Expected an array");
+const nonEmpty = z.array(z.number()).min(1);
+
+test("validate - returns undefined for matching data", () => {
+  assert.isUndefined(validate(nonEmpty, [1]));
+});
+
+test("validate - lists each issue with its path", () => {
+  const schema = z.object({ a: z.number(), b: z.object({ c: z.string() }) });
+  assert.equal(
+    validate(schema, { a: "1", b: { c: 2 } }),
+    "a: Invalid input: expected number, received string\nb.c: Invalid input: expected string, received number",
+  );
+  assert.equal(
+    validate(nonEmpty, {}),
+    "(root): Invalid input: expected array, received object",
+  );
+});
+
+test("validate - reports at most five issues", () => {
+  const problem = validate(z.array(z.number()), [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+  ]);
+  assert.equal(problem?.split("\n").length, 6);
+  assert.include(problem ?? "", "0: Invalid input");
+  assert.include(problem ?? "", "…and 2 more");
 });
 
 test("checkEndpoints - runs each declared check with its params", async () => {
@@ -25,7 +53,7 @@ test("checkEndpoints - runs each declared check with its params", async () => {
     "GET",
     "/x/ok/{:code}?",
     Object.assign(ok, {
-      health: { params: { code: "USD" }, check: expectNonEmptyArray },
+      health: { params: { code: "USD" }, schema: nonEmpty },
     }),
   );
 
@@ -36,7 +64,7 @@ test("checkEndpoints - runs each declared check with its params", async () => {
   router.add(
     "GET",
     "/x/optional/{:id}?",
-    Object.assign(optional, { health: { check: expectNonEmptyArray } }),
+    Object.assign(optional, { health: { schema: nonEmpty } }),
   );
 
   const failing = withMeta(
@@ -46,7 +74,7 @@ test("checkEndpoints - runs each declared check with its params", async () => {
   router.add(
     "GET",
     "/x/failing",
-    Object.assign(failing, { health: { check: expectNonEmptyArray } }),
+    Object.assign(failing, { health: { schema: nonEmpty } }),
   );
 
   const throwing = withMeta(() => {
@@ -55,7 +83,7 @@ test("checkEndpoints - runs each declared check with its params", async () => {
   router.add(
     "GET",
     "/x/throwing",
-    Object.assign(throwing, { health: { check: expectNonEmptyArray } }),
+    Object.assign(throwing, { health: { schema: nonEmpty } }),
   );
 
   const rejecting = withMeta(
@@ -65,7 +93,7 @@ test("checkEndpoints - runs each declared check with its params", async () => {
   router.add(
     "GET",
     "/x/rejecting",
-    Object.assign(rejecting, { health: { check: expectNonEmptyArray } }),
+    Object.assign(rejecting, { health: { schema: nonEmpty } }),
   );
 
   router.add(
@@ -80,7 +108,7 @@ test("checkEndpoints - runs each declared check with its params", async () => {
     { endpoint: "/x/ok/{code}", problem: undefined },
     {
       endpoint: "/x/optional/{id}",
-      problem: "Expected at least one item, got none",
+      problem: "(root): Too small: expected array to have >=1 items",
     },
     { endpoint: "/x/failing", problem: "HTTP 503" },
     { endpoint: "/x/throwing", problem: "TypeError: boom" },

@@ -1,3 +1,4 @@
+import type { ZodType } from "zod";
 import type { Router } from "./router.ts";
 
 const LABEL = "endpoint-down";
@@ -7,10 +8,19 @@ export interface HealthResult {
   problem?: string;
 }
 
-export function expectNonEmptyArray(data: unknown): string | undefined {
-  if (!Array.isArray(data)) return "Expected an array";
-  if (data.length === 0) return "Expected at least one item, got none";
-  return undefined;
+const MAX_REPORTED_ISSUES = 5;
+
+export function validate(schema: ZodType, data: unknown): string | undefined {
+  const result = schema.safeParse(data);
+  if (result.success) return undefined;
+  const { issues } = result.error;
+  const lines = issues
+    .slice(0, MAX_REPORTED_ISSUES)
+    .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`);
+  if (issues.length > MAX_REPORTED_ISSUES) {
+    lines.push(`…and ${issues.length - MAX_REPORTED_ISSUES} more`);
+  }
+  return lines.join("\n");
 }
 
 function pathFor(endpoint: string, params: Record<string, string>): string {
@@ -31,7 +41,7 @@ export function checkEndpoints(router: Router): Promise<HealthResult[]> {
           params,
         );
         if (!res.ok) return { endpoint, problem: `HTTP ${res.status}` };
-        return { endpoint, problem: health.check(await res.json()) };
+        return { endpoint, problem: validate(health.schema, await res.json()) };
       } catch (error) {
         return {
           endpoint,

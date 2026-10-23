@@ -1,5 +1,6 @@
 import { assert, beforeEach, test } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import airQuality from "./air-quality.ts";
 
 const LATEST = {
@@ -71,6 +72,9 @@ test("airQuality - returns the latest reading per pollutant and station", async 
   const fetchMock = mockFetch();
   try {
     const res = await airQuality(new Request("http://localhost/x/air-quality"));
+    assert.isUndefined(
+      validate(airQuality.health.schema, await res.clone().json()),
+    );
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("Cache-Control"), "public, max-age=900");
     assert.deepEqual(await res.json(), [

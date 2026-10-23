@@ -1,3 +1,4 @@
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
 import { response } from "../utils.ts";
 
@@ -5,18 +6,19 @@ const SOURCE_URL = "https://en.vedur.is/earthquakes-and-volcanism/earthquakes";
 const TTL_SECONDS = 120;
 const MAX_HOURS = 48;
 
-interface Earthquake {
-  time: string;
-  latitude: number;
-  longitude: number;
-  depth: number;
-  magnitude: number;
-  quality: number;
-  verified: boolean;
-  place: string;
-  distance: number;
-  direction: string;
-}
+const Earthquake = z.object({
+  time: z.iso.datetime(),
+  latitude: z.number(),
+  longitude: z.number(),
+  depth: z.number(),
+  magnitude: z.number(),
+  quality: z.number(),
+  verified: z.boolean(),
+  place: z.string(),
+  distance: z.number(),
+  direction: z.string(),
+});
+type Earthquake = z.infer<typeof Earthquake>;
 
 // The page embeds the last 48 hours as a JS literal: VI.quakeInfo = [{...}, ...];
 // Times are `new Date(year, month - 1, day, hour, minute, second)` in UTC.
@@ -99,9 +101,6 @@ earthquakes.meta = {
     "Earthquakes in Iceland from the last 48 hours (preliminary, from Veðurstofa Íslands). Optional ?hours= and ?min_magnitude= filters.",
 };
 
-earthquakes.health = {
-  check: (data: unknown) =>
-    Array.isArray(data) ? undefined : "Expected an array",
-};
+earthquakes.health = { schema: z.array(Earthquake) };
 
 export default earthquakes;

@@ -1,3 +1,4 @@
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
 import { response } from "../utils.ts";
 
@@ -15,6 +16,30 @@ interface Measurement {
   good: number;
   stop: number;
 }
+
+const Grid = z.object({
+  time: z.iso.datetime().nullable(),
+  totalPowerFlow: z.number().positive(),
+  regulatingPower: z.number().nullable(),
+  regionalFlows: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      lines: z.array(z.string()),
+      flow: z.number().nullable(),
+    }),
+  ),
+  lines: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string().nullable(),
+      substation: z.string().nullable(),
+      flow: z.number(),
+      stopped: z.boolean(),
+      reliable: z.boolean(),
+    }),
+  ),
+});
 
 interface GridMap {
   TransmissionLine: Array<{ MeasureType: string; Name: string }>;
@@ -88,13 +113,6 @@ grid.meta = {
     "Live Icelandic transmission grid from Landsnet: total power flow, regional flows across the main cross-sections, and flow per line in MW. Production by source isn't published.",
 };
 
-grid.health = {
-  check: (data: unknown) => {
-    const total = (data as { totalPowerFlow?: unknown }).totalPowerFlow;
-    return typeof total === "number" && total > 0
-      ? undefined
-      : `Expected a positive total power flow, got ${JSON.stringify(total)}`;
-  },
-};
+grid.health = { schema: Grid };
 
 export default grid;

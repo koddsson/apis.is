@@ -1,3 +1,4 @@
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
 import { response } from "../utils.ts";
 
@@ -75,12 +76,12 @@ population.meta = {
 };
 
 population.health = {
-  check: (data: unknown) => {
-    const value = (data as { population?: unknown }).population;
-    return typeof value === "number" && value > 0
-      ? undefined
-      : `Expected a population figure, got ${JSON.stringify(value)}`;
-  },
+  schema: z.object({
+    population: z.number().positive(),
+    period: z.string(),
+    source: z.string(),
+    note: z.string(),
+  }),
 };
 
 export function latestFullYear(
@@ -143,8 +144,16 @@ births.meta = {
 };
 
 births.health = {
-  check: (data: unknown) =>
-    (data as { latestFullYear?: unknown }).latestFullYear
-      ? undefined
-      : "Expected a latest full year of births",
+  schema: z.object({
+    periods: z.array(
+      z.object({ period: z.string(), births: z.number().nullable() }),
+    ),
+    latestFullYear: z.object({
+      year: z.number().int(),
+      births: z.number().positive(),
+      perDay: z.number().positive(),
+    }),
+    source: z.string(),
+    note: z.string(),
+  }),
 };

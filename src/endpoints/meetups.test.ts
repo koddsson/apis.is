@@ -1,9 +1,11 @@
 import { assert, test } from "vitest";
+import { validate } from "../health.ts";
 import meetups from "./meetups.ts";
 
 test("meetups - returns meetup data", async () => {
   const req = new Request("http://localhost/x/meetups");
   const res = meetups(req);
+  assert.isUndefined(validate(meetups.health.schema, await res.clone().json()));
 
   assert.deepEqual(res.status, 200);
   assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");

@@ -1,5 +1,6 @@
 import { assert, beforeEach, test } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import grid from "./grid.ts";
 
 const MEASUREMENTS = [
@@ -88,6 +89,7 @@ test("grid - combines measurements with map names", async () => {
   const fetchMock = mockFetch();
   try {
     const res = await grid(new Request("http://localhost/x/grid"));
+    assert.isUndefined(validate(grid.health.schema, await res.clone().json()));
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("Cache-Control"), "public, max-age=60");
     assert.deepEqual(await res.json(), {
@@ -175,7 +177,17 @@ test("grid - reports the status, cf-ray, and body of upstream errors", async () 
   );
 });
 
-test("grid - health check needs a positive total", () => {
-  assert.isUndefined(grid.health.check({ totalPowerFlow: 2207 }));
-  assert.include(grid.health.check({ totalPowerFlow: null }) ?? "", "positive");
+test("grid - health schema needs a positive total", () => {
+  const healthy = {
+    time: null,
+    totalPowerFlow: 2207,
+    regulatingPower: null,
+    regionalFlows: [],
+    lines: [],
+  };
+  assert.isUndefined(validate(grid.health.schema, healthy));
+  assert.include(
+    validate(grid.health.schema, { ...healthy, totalPowerFlow: null }) ?? "",
+    "totalPowerFlow",
+  );
 });

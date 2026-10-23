@@ -1,13 +1,15 @@
 import { XMLParser } from "fast-xml-parser";
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
 import { capitalizeFirstLetter, response } from "../utils.ts";
 
 const TTL_SECONDS = 15 * 60;
 
-interface Currency {
-  description?: string;
-  rate: number;
-}
+const Currency = z.object({
+  description: z.string().optional(),
+  rate: z.number(),
+});
+type Currency = z.infer<typeof Currency>;
 
 interface BorgunRates {
   Rates: {
@@ -79,12 +81,7 @@ gengi.meta = {
 
 gengi.health = {
   params: { code: "USD" },
-  check: (data: unknown) => {
-    const rate = (data as Record<string, { rate?: unknown }>).USD?.rate;
-    return typeof rate === "number" && rate > 0
-      ? undefined
-      : `Expected a positive USD rate, got ${JSON.stringify(data)}`;
-  },
+  schema: z.object({ USD: Currency.extend({ rate: z.number().positive() }) }),
 };
 
 export default gengi;

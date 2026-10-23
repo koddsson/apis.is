@@ -1,5 +1,6 @@
 import { assert, beforeEach, test } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import { parseStationTime, roadConditions, roadWeather } from "./roads.ts";
 
 const SEGMENTS = [
@@ -79,6 +80,9 @@ test("roadConditions - maps road segments", async () => {
     const res = await roadConditions(
       new Request("http://localhost/x/roads/conditions"),
     );
+    assert.isUndefined(
+      validate(roadConditions.health.schema, await res.clone().json()),
+    );
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("Cache-Control"), "public, max-age=300");
     assert.deepEqual(await res.json(), [
@@ -116,6 +120,9 @@ test("roadWeather - maps roadside stations", async () => {
   try {
     const res = await roadWeather(
       new Request("http://localhost/x/roads/weather?pretty=true"),
+    );
+    assert.isUndefined(
+      validate(roadWeather.health.schema, await res.clone().json()),
     );
     const text = await res.text();
     assert.include(text, "\n");

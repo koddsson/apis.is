@@ -1,5 +1,6 @@
 import { assert, beforeEach, test } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import { births, latestFullYear, population } from "./population.ts";
 
 function jsonStat(quarters: string[], values: Array<number | null>) {
@@ -54,6 +55,9 @@ test("population - returns the latest quarter's figure", async () => {
   const fetchMock = mockFetch(jsonStat(["2026Q2"], [396500]));
   try {
     const res = await population(new Request("http://localhost/x/population"));
+    assert.isUndefined(
+      validate(population.health.schema, await res.clone().json()),
+    );
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("Cache-Control"), "public, max-age=86400");
     const data = await res.json<Record<string, unknown>>();
@@ -94,6 +98,9 @@ test("births - returns recent quarters and the latest full year", async () => {
   try {
     const res = await births(
       new Request("http://localhost/x/population/births?quarters=2"),
+    );
+    assert.isUndefined(
+      validate(births.health.schema, await res.clone().json()),
     );
     const data = await res.json<Record<string, unknown>>();
     assert.deepEqual(data.periods, [
@@ -158,15 +165,19 @@ test("population - throws when Hagstofa responds with an error", async () => {
   }
 });
 
-test("population - health checks need data", () => {
-  assert.isUndefined(population.health.check({ population: 396500 }));
+test("population - health schemas need data", () => {
+  const latest = { period: "2026Q3", source: "", note: "" };
   assert.include(
-    population.health.check({ population: null }) ?? "",
-    "Expected",
+    validate(population.health.schema, { ...latest, population: null }) ?? "",
+    "population",
   );
-  assert.isUndefined(births.health.check({ latestFullYear: { year: 2025 } }));
   assert.include(
-    births.health.check({ latestFullYear: null }) ?? "",
-    "Expected",
+    validate(births.health.schema, {
+      periods: [],
+      latestFullYear: null,
+      source: "",
+      note: "",
+    }) ?? "",
+    "latestFullYear",
   );
 });

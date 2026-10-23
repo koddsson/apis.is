@@ -1,10 +1,42 @@
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
-import { expectNonEmptyArray } from "../health.ts";
 import { response } from "../utils.ts";
 
 const CONDITIONS_URL = "https://gagnaveita.vegagerdin.is/api/faerd2017_1";
 const WEATHER_URL = "https://gagnaveita.vegagerdin.is/api/vedur2014_1";
 const TTL_SECONDS = 5 * 60;
+
+const Segment = z.object({
+  id: z.number(),
+  name: z.string(),
+  fullName: z.string(),
+  condition: z.string().nullable(),
+  conditionCode: z.string(),
+  weightLimit: z.string().nullable(),
+  updated: z.string(),
+  changed: z.string().nullable(),
+});
+
+const RoadStation = z.object({
+  id: z.number(),
+  name: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+  elevation: z.number().nullable(),
+  time: z.iso.datetime().nullable(),
+  temperature: z.number().nullable(),
+  roadTemperature: z.number().nullable(),
+  windSpeed: z.number().nullable(),
+  windGust: z.number().nullable(),
+  windDirection: z.string().nullable(),
+  windDirectionDegrees: z.number().nullable(),
+  humidity: z.number().nullable(),
+  dewPoint: z.number().nullable(),
+  traffic: z.object({
+    last10Minutes: z.number().nullable(),
+    today: z.number().nullable(),
+  }),
+});
 
 interface UpstreamSegment {
   IdButur: number;
@@ -105,7 +137,7 @@ roadConditions.meta = {
     "Road conditions per road segment from Vegagerðin (passable, slippery, closed, …).",
 };
 
-roadConditions.health = { check: expectNonEmptyArray };
+roadConditions.health = { schema: z.array(Segment).min(1) };
 
 export async function roadWeather(request: Request): Promise<Response> {
   return cached(
@@ -120,4 +152,4 @@ roadWeather.meta = {
     "Roadside weather station readings from Vegagerðin: wind, gusts, air and road temperature, and traffic counts.",
 };
 
-roadWeather.health = { check: expectNonEmptyArray };
+roadWeather.health = { schema: z.array(RoadStation).min(1) };

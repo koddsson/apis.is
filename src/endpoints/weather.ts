@@ -1,4 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
 import { response } from "../utils.ts";
 
@@ -171,12 +172,20 @@ weather.meta = {
 
 weather.health = {
   params: { station: "1" },
-  check: (data: unknown) =>
-    typeof data === "object" &&
-    data !== null &&
-    typeof (data as { time?: unknown }).time === "string"
-      ? undefined
-      : `Expected an observation, got ${JSON.stringify(data)}`,
+  schema: z.object({
+    id: z.number(),
+    name: z.string(),
+    time: z.iso.datetime(),
+    temperature: z.number().nullable(),
+    windSpeed: z.number().nullable(),
+    windDirection: z.string().nullable(),
+    windSpeedMax: z.number().nullable(),
+    windGust: z.number().nullable(),
+    precipitation: z.number().nullable(),
+    visibility: z.string().nullable(),
+    weather: z.string().nullable(),
+    link: z.string(),
+  }),
 };
 
 export default weather;

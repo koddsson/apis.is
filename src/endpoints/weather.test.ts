@@ -1,5 +1,6 @@
 import { assert, beforeEach, test } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import weather from "./weather.ts";
 
 const STATIONS = [
@@ -89,6 +90,9 @@ test("weather - returns the latest observation for a station", async () => {
   const fetchMock = mockFetch({ "type=obs": { body: OBSERVATION } });
   try {
     const res = await get("/x/weather/31392", "31392");
+    assert.isUndefined(
+      validate(weather.health.schema, await res.clone().json()),
+    );
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("Cache-Control"), "public, max-age=600");
     assert.include(fetchMock.urls[0], "ids=31392");
@@ -197,7 +201,6 @@ test("weather - throws when Veðurstofa responds with an error", async () => {
   }
 });
 
-test("weather - health check requires an observation", () => {
-  assert.isUndefined(weather.health.check({ time: "2026-10-23T13:00:00Z" }));
-  assert.include(weather.health.check(null) ?? "", "Expected an observation");
+test("weather - health schema requires an observation", () => {
+  assert.include(validate(weather.health.schema, null) ?? "", "(root)");
 });

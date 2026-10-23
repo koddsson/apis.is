@@ -1,3 +1,4 @@
+import * as z from "zod";
 import { response } from "../utils.ts";
 
 // TODO: Implement caching
@@ -59,10 +60,7 @@ car.meta = {
 
 car.health = {
   params: { number: "ISE92" },
-  check: (data: unknown) =>
-    typeof data === "object" && data !== null && "permno" in data
-      ? undefined
-      : `Expected vehicle data, got ${JSON.stringify(data)}`,
+  schema: z.looseObject({ permno: z.string() }),
 };
 
 export default car;
