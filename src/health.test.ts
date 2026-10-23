@@ -193,3 +193,27 @@ test("reportHealth - logs GitHub failures instead of throwing", async () => {
     console.error = originalError;
   }
 });
+
+test("reportHealth - logs results in production too", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalLog = console.log;
+  let logged: unknown;
+  globalThis.fetch = () => Promise.resolve(new Response("[]"));
+  console.log = (label: string, results: unknown) => {
+    if (label === "Endpoint health:") logged = results;
+  };
+
+  try {
+    vi.stubEnv("ENVIRONMENT", "production");
+    vi.stubEnv("GITHUB_TOKEN", "test-token");
+    vi.stubEnv("GITHUB_REPOSITORY", "owner/repo");
+
+    const results = [{ endpoint: "/x/a" }];
+    await reportHealth(results);
+
+    assert.deepEqual(logged, results);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.log = originalLog;
+  }
+});

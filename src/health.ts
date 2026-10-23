@@ -50,10 +50,10 @@ function marker(endpoint: string): string {
 }
 
 export async function reportHealth(results: HealthResult[]): Promise<void> {
+  console.log("Endpoint health:", results);
   const githubToken = process.env.GITHUB_TOKEN;
   const githubRepo = process.env.GITHUB_REPOSITORY;
   if (!githubToken || !githubRepo || process.env.ENVIRONMENT !== "production") {
-    console.log("Endpoint health:", results);
     return;
   }
 

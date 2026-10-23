@@ -143,19 +143,36 @@ test("grid - handles an empty measurement list", async () => {
   }
 });
 
-test("grid - throws when Landsnet responds with an error", async () => {
-  const fetchMock = mockFetch(MEASUREMENTS, 503);
+async function gridError(response: Response): Promise<string> {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.resolve(response.clone());
   try {
-    let thrown: unknown;
-    try {
-      await grid(new Request("http://localhost/x/grid"));
-    } catch (error) {
-      thrown = error;
-    }
-    assert.equal((thrown as Error).message, "Failed to fetch grid data: 503");
+    await grid(new Request("http://localhost/x/grid"));
+    return "did not throw";
+  } catch (error) {
+    return (error as Error).message;
   } finally {
-    fetchMock.restore();
+    globalThis.fetch = originalFetch;
   }
+}
+
+test("grid - reports the status, cf-ray, and body of upstream errors", async () => {
+  const blocked = await gridError(
+    new Response(
+      "<html><title>Attention Required!</title><h1>Sorry, you have been blocked</h1></html>",
+      { status: 403, headers: { "cf-ray": "a4f1b95bacf45cc7-SIN" } },
+    ),
+  );
+  assert.equal(
+    blocked,
+    "Failed to fetch grid data: 403 (cf-ray a4f1b95bacf45cc7-SIN) Attention Required! Sorry, you have been blocked",
+  );
+
+  clearCache();
+  assert.equal(
+    await gridError(new Response("", { status: 503 })),
+    "Failed to fetch grid data: 503",
+  );
 });
 
 test("grid - health check needs a positive total", () => {
