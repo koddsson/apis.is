@@ -37,4 +37,6 @@ globalThis.addEventListener("unhandledrejection", (event) => {
   event.preventDefault();
 });
 
-Deno.serve((req) => router.route(req));
+export default {
+  fetch: (req: Request) => router.route(req),
+};

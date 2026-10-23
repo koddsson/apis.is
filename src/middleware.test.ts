@@ -155,6 +155,32 @@ Deno.test("commonLogMiddleware - logs requests in Common Log Format", async () =
   }
 });
 
+Deno.test("commonLogMiddleware - logs Cloudflare client IP", async () => {
+  const router = new Router();
+  router.use(commonLogMiddleware);
+  router.add("GET", "/test", () => new Response("ok"));
+
+  const originalLog = console.log;
+  let loggedMessage = "";
+  console.log = (msg: string) => {
+    loggedMessage = msg;
+  };
+
+  try {
+    const req = new Request("http://localhost/test", {
+      headers: {
+        "cf-connecting-ip": "203.0.113.7",
+        "x-forwarded-for": "198.51.100.1",
+      },
+    });
+    await router.route(req);
+
+    assertStringIncludes(loggedMessage, "203.0.113.7 - - [");
+  } finally {
+    console.log = originalLog;
+  }
+});
+
 Deno.test("commonLogMiddleware - logs with query parameters", async () => {
   const router = new Router();
   router.use(commonLogMiddleware);
@@ -182,9 +208,9 @@ Deno.test("commonLogMiddleware - logs error responses", async () => {
   router.use(commonLogMiddleware);
 
   // Disable error reporting for this test
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalEnvironment = Deno.env.get("ENVIRONMENT");
   try {
-    if (originalDeploymentId) Deno.env.delete("DENO_DEPLOYMENT_ID");
+    if (originalEnvironment) Deno.env.delete("ENVIRONMENT");
 
     router.add("GET", "/error", () => {
       throw new Error("Test error");
@@ -206,8 +232,8 @@ Deno.test("commonLogMiddleware - logs error responses", async () => {
       console.log = originalLog;
     }
   } finally {
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    if (originalEnvironment) {
+      Deno.env.set("ENVIRONMENT", originalEnvironment);
     }
   }
 });

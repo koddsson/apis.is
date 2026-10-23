@@ -10,13 +10,13 @@ Deno.test("reportError should log error without crashing when not in production"
   const request = new Request("https://example.com/test");
 
   // Ensure we're not in production environment
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalEnvironment = Deno.env.get("ENVIRONMENT");
   const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
   const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
 
   try {
     // Clear production environment variables
-    if (originalDeploymentId) Deno.env.delete("DENO_DEPLOYMENT_ID");
+    if (originalEnvironment) Deno.env.delete("ENVIRONMENT");
     if (originalGithubToken) Deno.env.delete("GITHUB_TOKEN");
     if (originalGithubRepo) Deno.env.delete("GITHUB_REPOSITORY");
 
@@ -27,8 +27,8 @@ Deno.test("reportError should log error without crashing when not in production"
     assertEquals(true, true);
   } finally {
     // Restore environment variables
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    if (originalEnvironment) {
+      Deno.env.set("ENVIRONMENT", originalEnvironment);
     }
     if (originalGithubToken) Deno.env.set("GITHUB_TOKEN", originalGithubToken);
     if (originalGithubRepo) {
@@ -41,18 +41,18 @@ Deno.test("reportError should handle errors without request object", async () =>
   const error = new Error("Test error without request");
 
   // Ensure we're not in production environment
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalEnvironment = Deno.env.get("ENVIRONMENT");
 
   try {
-    if (originalDeploymentId) Deno.env.delete("DENO_DEPLOYMENT_ID");
+    if (originalEnvironment) Deno.env.delete("ENVIRONMENT");
 
     // This should not throw an error
     await reportError(error);
 
     assertEquals(true, true);
   } finally {
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    if (originalEnvironment) {
+      Deno.env.set("ENVIRONMENT", originalEnvironment);
     }
   }
 });
@@ -62,13 +62,13 @@ Deno.test("reportError should handle errors without stack trace", async () => {
   const error = new Error("Error without stack");
   delete error.stack;
 
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalEnvironment = Deno.env.get("ENVIRONMENT");
   const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
   const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
   const originalFetch = globalThis.fetch;
 
   try {
-    Deno.env.set("DENO_DEPLOYMENT_ID", "test-deployment");
+    Deno.env.set("ENVIRONMENT", "production");
     Deno.env.set("GITHUB_TOKEN", "test-token");
     Deno.env.set("GITHUB_REPOSITORY", "owner/repo");
 
@@ -109,10 +109,10 @@ Deno.test("reportError should handle errors without stack trace", async () => {
     assertStringIncludes(issueBody, "No stack trace available");
   } finally {
     globalThis.fetch = originalFetch;
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    if (originalEnvironment) {
+      Deno.env.set("ENVIRONMENT", originalEnvironment);
     } else {
-      Deno.env.delete("DENO_DEPLOYMENT_ID");
+      Deno.env.delete("ENVIRONMENT");
     }
     if (originalGithubToken) {
       Deno.env.set("GITHUB_TOKEN", originalGithubToken);
@@ -131,13 +131,13 @@ Deno.test("reportError should handle missing request method and url", async () =
   const error = new Error("Test error");
   // Test without passing a request to verify N/A fallbacks
 
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalEnvironment = Deno.env.get("ENVIRONMENT");
   const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
   const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
   const originalFetch = globalThis.fetch;
 
   try {
-    Deno.env.set("DENO_DEPLOYMENT_ID", "test-deployment");
+    Deno.env.set("ENVIRONMENT", "production");
     Deno.env.set("GITHUB_TOKEN", "test-token");
     Deno.env.set("GITHUB_REPOSITORY", "owner/repo");
 
@@ -180,10 +180,10 @@ Deno.test("reportError should handle missing request method and url", async () =
     assertStringIncludes(issueBody, "URL: N/A");
   } finally {
     globalThis.fetch = originalFetch;
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    if (originalEnvironment) {
+      Deno.env.set("ENVIRONMENT", originalEnvironment);
     } else {
-      Deno.env.delete("DENO_DEPLOYMENT_ID");
+      Deno.env.delete("ENVIRONMENT");
     }
     if (originalGithubToken) {
       Deno.env.set("GITHUB_TOKEN", originalGithubToken);
@@ -202,13 +202,13 @@ Deno.test("reportError should handle GitHub API errors gracefully", async () => 
   const error = new Error("Test error");
   const request = new Request("https://example.com/test");
 
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalEnvironment = Deno.env.get("ENVIRONMENT");
   const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
   const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
   const originalFetch = globalThis.fetch;
 
   try {
-    Deno.env.set("DENO_DEPLOYMENT_ID", "test-deployment");
+    Deno.env.set("ENVIRONMENT", "production");
     Deno.env.set("GITHUB_TOKEN", "test-token");
     Deno.env.set("GITHUB_REPOSITORY", "owner/repo");
 
@@ -223,10 +223,10 @@ Deno.test("reportError should handle GitHub API errors gracefully", async () => 
     assertEquals(true, true);
   } finally {
     globalThis.fetch = originalFetch;
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    if (originalEnvironment) {
+      Deno.env.set("ENVIRONMENT", originalEnvironment);
     } else {
-      Deno.env.delete("DENO_DEPLOYMENT_ID");
+      Deno.env.delete("ENVIRONMENT");
     }
     if (originalGithubToken) {
       Deno.env.set("GITHUB_TOKEN", originalGithubToken);
@@ -246,14 +246,14 @@ Deno.test("reportError should create GitHub issue with correct API call", async 
   const request = new Request("https://example.com/api/test");
 
   // Store original environment and fetch
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalEnvironment = Deno.env.get("ENVIRONMENT");
   const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
   const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
   const originalFetch = globalThis.fetch;
 
   try {
     // Set up production environment
-    Deno.env.set("DENO_DEPLOYMENT_ID", "test-deployment");
+    Deno.env.set("ENVIRONMENT", "production");
     Deno.env.set("GITHUB_TOKEN", "test-token");
     Deno.env.set("GITHUB_REPOSITORY", "owner/repo");
 
@@ -323,10 +323,10 @@ Deno.test("reportError should create GitHub issue with correct API call", async 
   } finally {
     // Restore environment and fetch
     globalThis.fetch = originalFetch;
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    if (originalEnvironment) {
+      Deno.env.set("ENVIRONMENT", originalEnvironment);
     } else {
-      Deno.env.delete("DENO_DEPLOYMENT_ID");
+      Deno.env.delete("ENVIRONMENT");
     }
     if (originalGithubToken) {
       Deno.env.set("GITHUB_TOKEN", originalGithubToken);
@@ -346,14 +346,14 @@ Deno.test("reportError should comment on existing issue with same fingerprint", 
   const request = new Request("https://example.com/api/duplicate");
 
   // Store original environment and fetch
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+  const originalEnvironment = Deno.env.get("ENVIRONMENT");
   const originalGithubToken = Deno.env.get("GITHUB_TOKEN");
   const originalGithubRepo = Deno.env.get("GITHUB_REPOSITORY");
   const originalFetch = globalThis.fetch;
 
   try {
     // Set up production environment
-    Deno.env.set("DENO_DEPLOYMENT_ID", "test-deployment");
+    Deno.env.set("ENVIRONMENT", "production");
     Deno.env.set("GITHUB_TOKEN", "test-token");
     Deno.env.set("GITHUB_REPOSITORY", "owner/repo");
 
@@ -448,10 +448,10 @@ Deno.test("reportError should comment on existing issue with same fingerprint", 
   } finally {
     // Restore environment and fetch
     globalThis.fetch = originalFetch;
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
+    if (originalEnvironment) {
+      Deno.env.set("ENVIRONMENT", originalEnvironment);
     } else {
-      Deno.env.delete("DENO_DEPLOYMENT_ID");
+      Deno.env.delete("ENVIRONMENT");
     }
     if (originalGithubToken) {
       Deno.env.set("GITHUB_TOKEN", originalGithubToken);

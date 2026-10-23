@@ -38,8 +38,8 @@ function formatLogEntry(
   const formattedDate =
     `[${day}/${month}/${year}:${hours}:${minutes}:${seconds} ${offsetSign}${offsetHours}${offsetMinutes}]`;
 
-  // Get client IP - for Deno Deploy this would be in headers, fallback to "-"
-  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+  const clientIp = req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
     req.headers.get("x-real-ip") || "-";
 
   return `${clientIp} - - ${formattedDate} "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${status} ${responseSize}`;

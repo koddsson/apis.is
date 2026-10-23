@@ -24,18 +24,19 @@ set in production:
 - `GITHUB_TOKEN` - A GitHub personal access token with `repo` scope
 - `GITHUB_REPOSITORY` - The repository in format `owner/repo` (e.g.,
   `koddsson/apis.is`)
-- `DENO_DEPLOYMENT_ID` - Set automatically by Deno Deploy to indicate production
-  environment
+- `ENVIRONMENT` - Must be `production` for issues to be created
 
-### Setting Up in Deno Deploy
+### Setting Up on Cloudflare Workers
 
-1. Go to your project settings in Deno Deploy
-2. Add the following environment variables:
-   - `GITHUB_TOKEN` - Generate a
-     [personal access token](https://github.com/settings/tokens) with `repo`
-     scope
-   - `GITHUB_REPOSITORY` - Set to `koddsson/apis.is`
-3. `DENO_DEPLOYMENT_ID` is automatically set by Deno Deploy
+`ENVIRONMENT` and `GITHUB_REPOSITORY` are set as `vars` in `wrangler.jsonc`. The
+token is a secret:
+
+```bash
+npx wrangler secret put GITHUB_TOKEN
+```
+
+Generate a [personal access token](https://github.com/settings/tokens) with
+`repo` scope.
 
 ## Issue Management
 

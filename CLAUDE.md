@@ -8,7 +8,7 @@ code in this repository.
 apis.is is a collection of Icelandic-specific public APIs built with **Deno**
 (TypeScript). It aggregates data from external sources (Borgun currency rates,
 island.is vehicle lookup, hlaupadagskra.is race calendar) and serves
-community-maintained meetup data. Deployed on **Deno Deploy**.
+community-maintained meetup data. Deployed on **Cloudflare Workers**.
 
 ## Commands
 
@@ -30,6 +30,12 @@ deno test --allow-env src/endpoints/gengi.test.ts
 # Run live/integration tests (hits real external APIs)
 deno test --allow-net --allow-env src/endpoints/live.test.ts
 
+# Run locally with Deno
+deno serve --allow-net --allow-env src/index.ts
+
+# Run locally in the Workers runtime (bundles via `deno bundle` first)
+npx wrangler dev
+
 # Coverage (branch: 85%, line: 95% thresholds)
 deno test --coverage=coverage --allow-env
 deno coverage coverage | deno run scripts/check-coverage.ts 85 95
@@ -37,10 +43,13 @@ deno coverage coverage | deno run scripts/check-coverage.ts 85 95
 
 ## Architecture
 
-**Request flow:** `Deno.serve()` → Router (URLPattern-based) → Middleware chain
-→ Endpoint handler → Response
+**Request flow:** default-exported `fetch` handler → Router (URLPattern-based) →
+Middleware chain → Endpoint handler → Response
 
-- `src/index.ts` — Entry point, registers routes and starts server
+- `src/index.ts` — Entry point, registers routes and exports the `fetch`
+  handler. Runs under both `deno serve` and Cloudflare Workers, so endpoint code
+  must stick to web-standard APIs (no `Deno.*`, no runtime WASM compilation).
+  `wrangler.jsonc` bundles it with `deno bundle` before deploying.
 - `src/router.ts` — Custom router using native `URLPattern` API, supports path
   params (e.g., `/x/car/{number}?`)
 - `src/middleware.ts` — Middleware system; currently has Common Log Format

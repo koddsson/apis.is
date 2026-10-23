@@ -1,4 +1,4 @@
-import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
+import { DOMParser } from "npm:linkedom@0.18.12";
 import { response } from "../utils.ts";
 
 interface Offer {
@@ -130,7 +130,7 @@ async function nova2f1(request: Request): Promise<Response> {
       if (DAY_NAMES.includes(text)) {
         const parentClasses = (span.parentElement?.getAttribute("class") || "")
           .split(/\s+/);
-        const isInactive = parentClasses.some((cls) =>
+        const isInactive = parentClasses.some((cls: string) =>
           inactiveDayClasses.has(cls)
         );
         if (!isInactive) {
