@@ -1,4 +1,5 @@
 import { reportError } from "./error-monitor.ts";
+import { response } from "./utils.ts";
 
 export type HealthCheck = {
   params?: Record<string, string>;
@@ -64,16 +65,7 @@ export class Router {
             await reportError(error as Error, req);
 
             // Return a 500 error response
-            return new Response(
-              JSON.stringify({ error: "Internal Server Error" }),
-              {
-                status: 500,
-                headers: {
-                  "Content-Type": "application/json",
-                  "Access-Control-Allow-Origin": "*",
-                },
-              },
-            );
+            return response({ error: "Internal Server Error" }, false, 500);
           }
         };
 

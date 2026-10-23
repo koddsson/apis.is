@@ -20,5 +20,11 @@
     "rules": {
       "style": { "noNonNullAssertion": "off" }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/endpoints/**/*.ts", "!**/*.test.ts"],
+      "plugins": ["./lint/no-raw-response.grit"]
+    }
+  ]
 }

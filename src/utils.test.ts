@@ -26,6 +26,10 @@ test("response - returns Response with JSON data", () => {
 
   assert.deepEqual(res instanceof Response, true);
   assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
+  assert.deepEqual(
+    res.headers.get("Content-Type"),
+    "application/json; charset=utf-8",
+  );
 });
 
 test("response - returns compact JSON by default", async () => {

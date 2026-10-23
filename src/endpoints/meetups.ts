@@ -9,6 +9,7 @@ function meetups(request: Request): Response {
 
   // Return RSS feed if format=rss
   if (format === "rss") {
+    // biome-ignore lint/plugin: RSS is XML, not JSON
     return new Response(generateRSS(meetupData), {
       headers: {
         "Content-Type": "application/rss+xml; charset=utf-8",

@@ -1,0 +1,3 @@
+`new Response($args)` where {
+  register_diagnostic(span=$args, message="Use the response() helper from src/utils.ts so CORS and Content-Type headers are set.")
+}

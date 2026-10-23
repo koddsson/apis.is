@@ -1,6 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import { cacheControl, withCache } from "../cache.ts";
-import { capitalizeFirstLetter } from "../utils.ts";
+import { capitalizeFirstLetter, response } from "../utils.ts";
 
 const TTL_SECONDS = 15 * 60;
 
@@ -48,7 +48,7 @@ async function fetchCurrencies(): Promise<Record<string, Currency>> {
 }
 
 async function gengi(
-  _request: Request,
+  request: Request,
   params: Record<string, string>,
 ): Promise<Response> {
   const currencies = await withCache("gengi", TTL_SECONDS, fetchCurrencies);
@@ -63,12 +63,12 @@ async function gengi(
     data = Object.fromEntries(filteredCodes);
   }
 
-  return new Response(JSON.stringify(data, null, 2), {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Cache-Control": cacheControl(TTL_SECONDS),
-    },
-  });
+  const res = response(
+    data,
+    new URL(request.url).searchParams.get("pretty") === "true",
+  );
+  res.headers.set("Cache-Control", cacheControl(TTL_SECONDS));
+  return res;
 }
 
 gengi.meta = {

@@ -92,7 +92,7 @@ test("gengi - filters by multiple currency codes", async () => {
   }
 });
 
-test("gengi - returns pretty JSON", async () => {
+test("gengi - returns compact JSON by default", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => {
     return Promise.resolve(new Response(mockXmlResponse, { status: 200 }));
@@ -100,6 +100,23 @@ test("gengi - returns pretty JSON", async () => {
 
   try {
     const req = new Request("http://localhost/x/gengi");
+    const res = await gengi(req, {});
+
+    const text = await res.text();
+    assert.notInclude(text, "\n");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("gengi - returns pretty JSON with ?pretty=true", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => {
+    return Promise.resolve(new Response(mockXmlResponse, { status: 200 }));
+  };
+
+  try {
+    const req = new Request("http://localhost/x/gengi?pretty=true");
     const res = await gengi(req, {});
 
     const text = await res.text();
