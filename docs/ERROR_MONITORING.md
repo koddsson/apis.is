@@ -48,6 +48,7 @@ Issues created by the error monitoring system:
   - Error message and stack trace
   - Request method and URL
   - Timestamp
+  - Cloudflare Ray ID, for finding the source-mapped stack trace in Workers Logs
   - Error fingerprint for tracking duplicates
 
 ### Duplicate Handling

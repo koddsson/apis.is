@@ -175,6 +175,7 @@ Deno.test("reportError should handle missing request method and url", async () =
     // Verify that "N/A" is used for missing method/url
     assertStringIncludes(issueBody, "Method: N/A");
     assertStringIncludes(issueBody, "URL: N/A");
+    assertStringIncludes(issueBody, "Ray ID: N/A");
   } finally {
     globalThis.fetch = originalFetch;
     if (originalEnvironment) {
@@ -240,7 +241,9 @@ Deno.test("reportError should handle GitHub API errors gracefully", async () => 
 
 Deno.test("reportError should create GitHub issue with correct API call", async () => {
   const error = new Error("Test API error");
-  const request = new Request("https://example.com/api/test");
+  const request = new Request("https://example.com/api/test", {
+    headers: { "cf-ray": "8d1f2a3b4c5d6e7f-KEF" },
+  });
 
   // Store original environment and fetch
   const originalEnvironment = Deno.env.get("ENVIRONMENT");
@@ -316,6 +319,7 @@ Deno.test("reportError should create GitHub issue with correct API call", async 
     assertStringIncludes(createBody.body, "Test API error");
     assertStringIncludes(createBody.body, "https://example.com/api/test");
     assertStringIncludes(createBody.body, "Fingerprint:");
+    assertStringIncludes(createBody.body, "Ray ID: 8d1f2a3b4c5d6e7f-KEF");
     assertEquals(createBody.labels, ["uncaught-error", "automated", "bug"]);
   } finally {
     // Restore environment and fetch
@@ -340,7 +344,9 @@ Deno.test("reportError should create GitHub issue with correct API call", async 
 
 Deno.test("reportError should comment on existing issue with same fingerprint", async () => {
   const error = new Error("Duplicate error");
-  const request = new Request("https://example.com/api/duplicate");
+  const request = new Request("https://example.com/api/duplicate", {
+    headers: { "cf-ray": "9e8d7c6b5a4f3e2d-KEF" },
+  });
 
   // Store original environment and fetch
   const originalEnvironment = Deno.env.get("ENVIRONMENT");
@@ -442,6 +448,7 @@ Deno.test("reportError should comment on existing issue with same fingerprint", 
     // Verify comment body
     const commentBody = JSON.parse(fetchCalls[1].options?.body as string);
     assertStringIncludes(commentBody.body, "Error occurred again");
+    assertStringIncludes(commentBody.body, "**Ray ID:** 9e8d7c6b5a4f3e2d-KEF");
   } finally {
     // Restore environment and fetch
     globalThis.fetch = originalFetch;
