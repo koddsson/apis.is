@@ -11,6 +11,7 @@ import earthquakes from "./earthquakes.ts";
 import flights from "./flights.ts";
 import gengi from "./gengi.ts";
 import grid from "./grid.ts";
+import { births, population } from "./population.ts";
 import raceCalendar from "./race-calendar.ts";
 import { roadConditions, roadWeather } from "./roads.ts";
 import weather from "./weather.ts";
@@ -290,4 +291,22 @@ test("LIVE - grid endpoint reads Landsnet's real-time feeds", async () => {
   assert.isFalse(Number.isNaN(Date.parse(data.time)));
   assert.isAbove(data.regionalFlows.length, 0);
   assert.isTrue(data.lines.some((line) => line.name !== null));
+});
+
+test("LIVE - population endpoints read Hagstofa tables", async () => {
+  const res = await population(new Request("http://localhost/x/population"));
+  assert.equal(res.status, 200);
+  const data = await res.json<{ population: number; period: string }>();
+  assert.isAbove(data.population, 300_000);
+  assert.match(data.period, /^\d{4}Q[1-4]$/);
+
+  const birthsRes = await births(
+    new Request("http://localhost/x/population/births"),
+  );
+  const birthData = await birthsRes.json<{
+    periods: Array<{ births: number }>;
+    latestFullYear: { perDay: number };
+  }>();
+  assert.equal(birthData.periods.length, 8);
+  assert.isAbove(birthData.latestFullYear.perDay, 1);
 });

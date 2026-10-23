@@ -8,6 +8,7 @@ import grid from "./endpoints/grid.ts";
 import meetups from "./endpoints/meetups.ts";
 import meta from "./endpoints/meta.ts";
 import nova2f1 from "./endpoints/nova-2f1.ts";
+import { births, population } from "./endpoints/population.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
 import { roadConditions, roadWeather } from "./endpoints/roads.ts";
 import weather from "./endpoints/weather.ts";
@@ -37,6 +38,8 @@ router.add("GET", "/x/roads/conditions", roadConditions);
 router.add("GET", "/x/roads/weather", roadWeather);
 router.add("GET", "/x/air-quality", airQuality);
 router.add("GET", "/x/grid", grid);
+router.add("GET", "/x/population", population);
+router.add("GET", "/x/population/births", births);
 
 // Global unhandled rejection handler
 globalThis.addEventListener("unhandledrejection", (event) => {
