@@ -1,7 +1,8 @@
 import { XMLParser } from "fast-xml-parser";
+import { cacheControl, withCache } from "../cache.ts";
 import { capitalizeFirstLetter } from "../utils.ts";
 
-// TODO: Implement caching
+const TTL_SECONDS = 15 * 60;
 
 interface Currency {
   description?: string;
@@ -23,10 +24,7 @@ const parser = new XMLParser({
   isArray: (name) => name === "Rate",
 });
 
-async function gengi(
-  _request: Request,
-  params: Record<string, string>,
-): Promise<Response> {
+async function fetchCurrencies(): Promise<Record<string, Currency>> {
   const response = await fetch(
     "https://www.borgun.is/currency/Default.aspx?function=all",
   );
@@ -46,6 +44,14 @@ async function gengi(
       currencies[code].description = capitalizeFirstLetter(description);
     }
   }
+  return currencies;
+}
+
+async function gengi(
+  _request: Request,
+  params: Record<string, string>,
+): Promise<Response> {
+  const currencies = await withCache("gengi", TTL_SECONDS, fetchCurrencies);
 
   let data = currencies;
 
@@ -60,6 +66,7 @@ async function gengi(
   return new Response(JSON.stringify(data, null, 2), {
     headers: {
       "Access-Control-Allow-Origin": "*",
+      "Cache-Control": cacheControl(TTL_SECONDS),
     },
   });
 }

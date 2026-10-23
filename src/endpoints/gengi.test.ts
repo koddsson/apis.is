@@ -1,4 +1,5 @@
-import { assert, test } from "vitest";
+import { assert, beforeEach, test } from "vitest";
+import { clearCache } from "../cache.ts";
 import gengi from "./gengi.ts";
 
 type Rates = Record<string, { rate: number; description?: string }>;
@@ -22,6 +23,10 @@ const mockXmlResponse = `<?xml version="1.0" encoding="UTF-8"?>
     <CurrencyRate>175.30</CurrencyRate>
   </Rate>
 </Rates>`;
+
+beforeEach(() => {
+  clearCache();
+});
 
 test("gengi - fetches and returns all currencies", async () => {
   // Mock fetch
@@ -115,4 +120,28 @@ test("gengi - health check requires a positive USD rate", () => {
   assert.isUndefined(check?.({ USD: { rate: 124.28 } }));
   assert.include(check?.({ USD: { rate: 0 } }) ?? "", "positive USD rate");
   assert.include(check?.({}) ?? "", "positive USD rate");
+});
+
+test("gengi - caches rates and sets Cache-Control", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = () => {
+    calls++;
+    return Promise.resolve(new Response(mockXmlResponse));
+  };
+
+  try {
+    const first = await gengi(new Request("http://localhost/x/gengi/USD"), {
+      code: "USD",
+    });
+    const second = await gengi(new Request("http://localhost/x/gengi/EUR"), {
+      code: "EUR",
+    });
+
+    assert.equal(calls, 1);
+    assert.equal(first.headers.get("Cache-Control"), "public, max-age=900");
+    assert.deepEqual(Object.keys(await second.json<Rates>()), ["EUR"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
