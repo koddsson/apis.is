@@ -1,6 +1,5 @@
 name: Live Tests (Watchdog)
 
-# Production is watched by the Worker's hourly health check (src/health.ts).
 on:
   workflow_dispatch:
 
