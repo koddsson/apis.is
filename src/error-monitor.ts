@@ -12,6 +12,7 @@ interface ErrorReport {
   timestamp: string;
   url?: string;
   method?: string;
+  rayId?: string;
 }
 
 /**
@@ -92,6 +93,7 @@ async function createGitHubIssue(
           body: JSON.stringify({
             body: `Error occurred again at ${report.timestamp}\n\n` +
               `**Request:** ${report.method} ${report.url}\n\n` +
+              `**Ray ID:** ${report.rayId || "N/A"}\n\n` +
               `See deployment logs for more details.`,
           }),
         });
@@ -117,6 +119,9 @@ ${report.stack || "No stack trace available"}
 - Method: ${report.method || "N/A"}
 - URL: ${report.url || "N/A"}
 - Timestamp: ${report.timestamp}
+- Ray ID: ${
+      report.rayId || "N/A"
+    } (search Workers Logs for the source-mapped stack trace)
 
 **Fingerprint:** \`${fingerprint}\`
 
@@ -155,6 +160,7 @@ export async function reportError(
     timestamp: new Date().toISOString(),
     url: request?.url,
     method: request?.method,
+    rayId: request?.headers.get("cf-ray") ?? undefined,
   };
 
   // Log the error
