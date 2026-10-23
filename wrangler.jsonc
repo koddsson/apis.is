@@ -6,6 +6,7 @@
   // Exposes vars and secrets on process.env, which error-monitor.ts reads.
   "compatibility_flags": ["nodejs_compat"],
   "upload_source_maps": true,
+  "triggers": { "crons": ["0 * * * *"] },
   "observability": { "enabled": true },
   "vars": {
     "ENVIRONMENT": "production",

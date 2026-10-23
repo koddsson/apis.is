@@ -57,4 +57,12 @@ car.meta = {
     "Vehicle information lookup by registration number from island.is.",
 };
 
+car.health = {
+  params: { number: "ISE92" },
+  check: (data: unknown) =>
+    typeof data === "object" && data !== null && "permno" in data
+      ? undefined
+      : `Expected vehicle data, got ${JSON.stringify(data)}`,
+};
+
 export default car;

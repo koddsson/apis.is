@@ -99,3 +99,11 @@ test("car - has correct meta information", () => {
   assert.deepEqual(car.meta?.endpoint, "/x/car/{number}");
   assert.include(car.meta?.description || "", "Vehicle information");
 });
+
+test("car - health check requires vehicle data", () => {
+  const check = car.health?.check;
+  assert.isDefined(check);
+  assert.isUndefined(check?.({ permno: "ISE92" }));
+  assert.include(check?.(null) ?? "", "Expected vehicle data");
+  assert.include(check?.({}) ?? "", "Expected vehicle data");
+});

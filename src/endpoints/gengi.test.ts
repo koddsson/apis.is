@@ -108,3 +108,11 @@ test("gengi - has correct meta information", () => {
   assert.deepEqual(gengi.meta?.endpoint, "/x/gengi/{code}");
   assert.include(gengi.meta?.description || "", "Currency exchange rates");
 });
+
+test("gengi - health check requires a positive USD rate", () => {
+  const check = gengi.health?.check;
+  assert.isDefined(check);
+  assert.isUndefined(check?.({ USD: { rate: 124.28 } }));
+  assert.include(check?.({ USD: { rate: 0 } }) ?? "", "positive USD rate");
+  assert.include(check?.({}) ?? "", "positive USD rate");
+});

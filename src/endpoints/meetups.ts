@@ -1,4 +1,5 @@
 import meetupData from "../data/meetups.json" with { type: "json" };
+import { expectNonEmptyArray } from "../health.ts";
 import { generateRSS } from "../rss.ts";
 import { response } from "../utils.ts";
 
@@ -25,5 +26,7 @@ meetups.meta = {
   description:
     "List of Icelandic tech meetups and community groups. Supports RSS feed via ?format=rss query parameter.",
 };
+
+meetups.health = { check: expectNonEmptyArray };
 
 export default meetups;
