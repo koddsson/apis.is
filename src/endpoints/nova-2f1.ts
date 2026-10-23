@@ -1,4 +1,4 @@
-import { DOMParser } from "npm:linkedom@0.18.12";
+import { DOMParser } from "linkedom";
 import { response } from "../utils.ts";
 
 interface Offer {

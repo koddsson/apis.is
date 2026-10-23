@@ -1,7 +1,4 @@
-import {
-  assertEquals,
-  assertStringIncludes,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { reportError } from "./error-monitor.ts";
 
 Deno.test("reportError should log error without crashing when not in production", async () => {

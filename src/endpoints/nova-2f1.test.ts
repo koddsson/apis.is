@@ -1,7 +1,4 @@
-import {
-  assertEquals,
-  assertStringIncludes,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import nova2f1 from "./nova-2f1.ts";
 
 // The real Nova site renders all 7 days for every offer, using different CSS

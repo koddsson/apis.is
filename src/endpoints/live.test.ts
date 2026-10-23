@@ -3,7 +3,7 @@
 // Run these with: deno test --allow-net src/endpoints/live.test.ts
 // These can be run periodically (e.g., daily) as a watchdog for breaking changes in external APIs
 
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 import gengi from "./gengi.ts";
 import car from "./car.ts";
 import raceCalendar from "./race-calendar.ts";
