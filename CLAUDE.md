@@ -62,6 +62,9 @@ Middleware chain → Endpoint handler → Response
 - `src/data/meetups.json` — Static meetup data (community-maintained via GitHub
   issues + automated workflow)
 - `src/rss.ts` — RSS 2.0 feed generator used by meetups endpoint
+- `src/cache.ts` — `withCache(key, ttlSeconds, fetcher)` in-memory cache for
+  upstream data (per isolate); pair with `cacheControl(ttl)` for the
+  `Cache-Control` header
 - `src/health.ts` — Hourly Cron Trigger (`scheduled` handler) that runs each
   endpoint's `health` check and opens/closes `endpoint-down` issues. New
   endpoints should set `handler.health` (see `gengi.ts`).
