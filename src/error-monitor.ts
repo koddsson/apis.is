@@ -119,9 +119,7 @@ ${report.stack || "No stack trace available"}
 - Method: ${report.method || "N/A"}
 - URL: ${report.url || "N/A"}
 - Timestamp: ${report.timestamp}
-- Ray ID: ${
-      report.rayId || "N/A"
-    } (search Workers Logs for the source-mapped stack trace)
+- Ray ID: ${report.rayId || "N/A"}
 
 **Fingerprint:** \`${fingerprint}\`
 
