@@ -23,7 +23,10 @@ export function validate(schema: ZodType, data: unknown): string | undefined {
   return lines.join("\n");
 }
 
-function pathFor(endpoint: string, params: Record<string, string>): string {
+export function pathFor(
+  endpoint: string,
+  params: Record<string, string>,
+): string {
   let path = endpoint;
   for (const [name, value] of Object.entries(params)) {
     path = path.replace(`{${name}}`, value);

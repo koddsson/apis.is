@@ -61,6 +61,8 @@ Middleware chain → Endpoint handler → Response
   race-calendar, meta)
 - `src/data/meetups.json` — Static meetup data (community-maintained via GitHub
   issues + automated workflow)
+- `src/explorer.ts` — HTML API explorer that `/` serves to browsers
+  (`Accept: text/html`); API clients still get the JSON endpoint list
 - `src/rss.ts` — RSS 2.0 feed generator used by meetups endpoint
 - `src/cache.ts` — `withCache(key, ttlSeconds, fetcher)` in-memory cache for
   upstream data (per isolate); pair with `cacheControl(ttl)` for the
