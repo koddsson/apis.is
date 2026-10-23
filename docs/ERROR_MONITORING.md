@@ -38,6 +38,22 @@ npx wrangler secret put GITHUB_TOKEN
 Generate a [personal access token](https://github.com/settings/tokens) with
 `repo` scope.
 
+## Endpoint Health Checks
+
+Errors only get reported when someone hits an endpoint, and a scraper that
+stops matching returns `200 []` without erroring. To catch both, the Worker
+has an hourly Cron Trigger (`triggers.crons` in `wrangler.jsonc`) that runs
+`src/health.ts`:
+
+- Every endpoint handler with a `health` property is called directly (not
+  through the router, so failures don't also file `uncaught-error` issues)
+  with the declared `params`, and its JSON is passed to `health.check`.
+- A failing endpoint gets one `endpoint-down` issue. It isn't commented on
+  while it stays down, and it is closed automatically once the check passes.
+
+Like error issues, these are only filed when `ENVIRONMENT` is `production` and
+`GITHUB_TOKEN` is set.
+
 ## Source-Mapped Stack Traces
 
 The Worker runs a bundle, so `error.stack` points into `index.js`. To get

@@ -6,6 +6,7 @@ import meta from "./endpoints/meta.ts";
 import nova2f1 from "./endpoints/nova-2f1.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
 import { reportError } from "./error-monitor.ts";
+import { checkEndpoints, reportHealth } from "./health.ts";
 import { commonLogMiddleware } from "./middleware.ts";
 import { Router } from "./router.ts";
 
@@ -34,4 +35,11 @@ globalThis.addEventListener("unhandledrejection", (event) => {
 
 export default {
   fetch: (req: Request) => router.route(req),
+  scheduled: (
+    _controller: ScheduledController,
+    _env: unknown,
+    ctx: ExecutionContext,
+  ) => {
+    ctx.waitUntil(checkEndpoints(router).then(reportHealth));
+  },
 };

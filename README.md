@@ -28,7 +28,7 @@ npm run test:live
 - **Live Tests**: Integration tests that call real external APIs
   - `src/endpoints/live.test.ts` - Validates external API availability and
     format
-  - Run automatically daily via GitHub Actions as a watchdog
+  - Run on demand from the "Live Tests" GitHub Actions workflow
   - Not part of `npm test`; they have their own config, `vitest.live.config.ts`
 
 ### Linting and Formatting

@@ -1,6 +1,12 @@
 import { reportError } from "./error-monitor.ts";
 
-type CallbackHandler = {
+export type HealthCheck = {
+  params?: Record<string, string>;
+  // Returns why the response body is unhealthy, or undefined when it's fine.
+  check: (data: unknown) => string | undefined;
+};
+
+export type CallbackHandler = {
   (
     request: Request,
     params: Record<string, string>,
@@ -9,6 +15,7 @@ type CallbackHandler = {
     endpoint: string;
     description: string;
   };
+  health?: HealthCheck;
 };
 
 export type Middleware = (
@@ -109,5 +116,25 @@ export class Router {
       }
     }
     return endpoints;
+  }
+
+  getHealthChecks() {
+    const checks: Array<{
+      endpoint: string;
+      handler: CallbackHandler;
+      health: HealthCheck;
+    }> = [];
+    for (const method in this.#routes) {
+      for (const { handler } of this.#routes[method]) {
+        if (handler.meta && handler.health) {
+          checks.push({
+            endpoint: handler.meta.endpoint,
+            handler,
+            health: handler.health,
+          });
+        }
+      }
+    }
+    return checks;
   }
 }

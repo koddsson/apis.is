@@ -70,4 +70,14 @@ gengi.meta = {
     "Currency exchange rates from Borgun. Optional {code} parameter to filter by currency code(s), comma-separated.",
 };
 
+gengi.health = {
+  params: { code: "USD" },
+  check: (data: unknown) => {
+    const rate = (data as Record<string, { rate?: unknown }>).USD?.rate;
+    return typeof rate === "number" && rate > 0
+      ? undefined
+      : `Expected a positive USD rate, got ${JSON.stringify(data)}`;
+  },
+};
+
 export default gengi;

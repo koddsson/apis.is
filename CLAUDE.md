@@ -61,6 +61,9 @@ Middleware chain → Endpoint handler → Response
 - `src/data/meetups.json` — Static meetup data (community-maintained via GitHub
   issues + automated workflow)
 - `src/rss.ts` — RSS 2.0 feed generator used by meetups endpoint
+- `src/health.ts` — Hourly Cron Trigger (`scheduled` handler) that runs each
+  endpoint's `health` check and opens/closes `endpoint-down` issues. New
+  endpoints should set `handler.health` (see `gengi.ts`).
 - `scripts/remap-stack.ts` — Source-maps stack traces in error issues; run by
   `.github/workflows/remap-error-trace.yml`
 

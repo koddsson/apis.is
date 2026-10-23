@@ -1,3 +1,4 @@
+import { expectNonEmptyArray } from "../health.ts";
 import { response } from "../utils.ts";
 
 // TODO: Implement caching
@@ -33,5 +34,7 @@ raceCalendar.meta = {
   endpoint: "/x/race-calendar",
   description: "All Icelandic runs in one place!",
 };
+
+raceCalendar.health = { check: expectNonEmptyArray };
 
 export default raceCalendar;

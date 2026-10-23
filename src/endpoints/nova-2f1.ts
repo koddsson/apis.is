@@ -1,4 +1,5 @@
 import { DOMParser } from "linkedom";
+import { expectNonEmptyArray } from "../health.ts";
 import { response } from "../utils.ts";
 
 interface Offer {
@@ -170,5 +171,7 @@ nova2f1.meta = {
   endpoint: "/x/nova-2f1",
   description: "2-for-1 offers from Nova's FyrirÞig program.",
 };
+
+nova2f1.health = { check: expectNonEmptyArray };
 
 export default nova2f1;
