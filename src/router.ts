@@ -47,40 +47,38 @@ export class Router {
 
   async route(req: Request): Promise<Response> {
     // Find matching route
+    const { pathname } = new URL(req.url);
+    // "/x/gengi/" and "/x/gengi" are the same route.
+    const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
     for (const route of this.#routes[req.method]) {
-      if (route.pattern.test(req.url)) {
-        const match = route.pattern.exec(req.url);
-        if (match) {
-          const params = (match.pathname.groups || {}) as Record<
-            string,
-            string
-          >;
+      const match = route.pattern.exec({ pathname: path });
+      if (match) {
+        const params = (match.pathname.groups || {}) as Record<string, string>;
 
-          // Create the handler function that will be called at the end of middleware chain
-          const handler = async () => {
-            try {
-              return await route.handler(req, params);
-            } catch (error) {
-              // Report the error to monitoring system
-              await reportError(error as Error, req);
+        // Create the handler function that will be called at the end of middleware chain
+        const handler = async () => {
+          try {
+            return await route.handler(req, params);
+          } catch (error) {
+            // Report the error to monitoring system
+            await reportError(error as Error, req);
 
-              // Return a 500 error response
-              return new Response(
-                JSON.stringify({ error: "Internal Server Error" }),
-                {
-                  status: 500,
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                  },
+            // Return a 500 error response
+            return new Response(
+              JSON.stringify({ error: "Internal Server Error" }),
+              {
+                status: 500,
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
                 },
-              );
-            }
-          };
+              },
+            );
+          }
+        };
 
-          // Execute middleware chain
-          return await this.#executeMiddleware(req, handler);
-        }
+        // Execute middleware chain
+        return await this.#executeMiddleware(req, handler);
       }
     }
 

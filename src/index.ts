@@ -24,14 +24,14 @@ router.use(commonLogMiddleware);
 
 router.add("GET", "/", meta(router));
 
-router.add("GET", "/x/gengi/{:code}?", gengi);
+router.add("GET", "/x/gengi{/:code}?", gengi);
 router.add("GET", "/x/meetups", meetups);
-router.add("GET", "/x/car/{:number}?", car);
+router.add("GET", "/x/car{/:number}?", car);
 router.add("GET", "/x/race-calendar", raceCalendar);
 router.add("GET", "/x/nova-2f1", nova2f1);
 router.add("GET", "/x/earthquakes", earthquakes);
-router.add("GET", "/x/weather/{:station}?", weather);
-router.add("GET", "/x/bus/stops/{:id}?", busStops);
+router.add("GET", "/x/weather{/:station}?", weather);
+router.add("GET", "/x/bus/stops{/:id}?", busStops);
 router.add("GET", "/x/bus/routes", busRoutes);
 router.add("GET", "/x/flights/{:type}", flights);
 router.add("GET", "/x/roads/conditions", roadConditions);

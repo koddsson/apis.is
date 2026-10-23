@@ -47,18 +47,31 @@ test("Router - handles optional parameters", async () => {
     return new Response("ok");
   };
 
-  router.add("GET", "/item/{:code}?", handler);
+  router.add("GET", "/item{/:code}?", handler);
 
   // With parameter
   const req1 = new Request("http://localhost/item/ABC");
   await router.route(req1);
   assert.deepEqual(capturedParams.code, "ABC");
 
-  // Without parameter
-  capturedParams = {};
-  const req2 = new Request("http://localhost/item/");
-  await router.route(req2);
-  assert.deepEqual(capturedParams.code, undefined);
+  // Without parameter, with or without a trailing slash
+  for (const path of ["/item", "/item/"]) {
+    capturedParams = { code: "stale" };
+    const res = await router.route(new Request(`http://localhost${path}`));
+    assert.equal(res.status, 200, path);
+    assert.deepEqual(capturedParams.code, undefined, path);
+  }
+});
+
+test("Router - ignores trailing slashes", async () => {
+  const router = new Router();
+  router.add("GET", "/user/{:id}", (_req, params) => new Response(params.id));
+  router.add("GET", "/", () => new Response("root"));
+
+  const user = await router.route(new Request("http://localhost/user/42//"));
+  assert.equal(await user.text(), "42");
+  const root = await router.route(new Request("http://localhost/"));
+  assert.equal(await root.text(), "root");
 });
 
 test("Router - supports POST requests", async () => {
