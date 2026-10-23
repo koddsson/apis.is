@@ -49,6 +49,19 @@ function marker(endpoint: string): string {
   return `**Endpoint:** \`${endpoint}\``;
 }
 
+function issueBody(endpoint: string, problem: string, seenAt: string): string {
+  return `The scheduled health check for \`${endpoint}\` failed.
+
+**Problem** (last seen ${seenAt}):
+\`\`\`
+${problem}
+\`\`\`
+
+${marker(endpoint)}
+
+This issue closes automatically once the health check passes again.`;
+}
+
 export async function reportHealth(results: HealthResult[]): Promise<void> {
   console.log("Endpoint health:", results);
   const githubToken = process.env.GITHUB_TOKEN;
@@ -87,17 +100,17 @@ export async function reportHealth(results: HealthResult[]): Promise<void> {
           headers,
           body: JSON.stringify({
             title: `🔻 Endpoint down: ${endpoint}`,
-            body: `The scheduled health check for \`${endpoint}\` failed.
-
-**Problem:**
-\`\`\`
-${problem}
-\`\`\`
-
-${marker(endpoint)}
-
-This issue closes automatically once the health check passes again.`,
+            body: issueBody(endpoint, problem, new Date().toISOString()),
             labels: [LABEL, "automated", "bug"],
+          }),
+        });
+      } else if (problem && existing && !existing.body.includes(problem)) {
+        // Keep the latest failure in the issue without commenting every hour.
+        await fetch(`${apiUrl}/issues/${existing.number}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({
+            body: issueBody(endpoint, problem, new Date().toISOString()),
           }),
         });
       } else if (!problem && existing) {
