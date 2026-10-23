@@ -5,6 +5,7 @@ on:
     types: [labeled]
 
 permissions:
+  actions: write
   contents: write
   issues: write
   pull-requests: write
@@ -53,6 +54,13 @@ jobs:
 
             Closes #${{ github.event.issue.number }}
           labels: meetup
+
+      # PRs opened with GITHUB_TOKEN don't trigger workflows, so start CI explicitly.
+      - name: Run CI on the pull request
+        if: steps.check_changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --ref meetup-issue-${{ github.event.issue.number }}
 
       - name: Comment on issue (success)
         if: steps.check_changes.outputs.has_changes == 'true'

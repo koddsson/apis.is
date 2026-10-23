@@ -5,9 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   check:
@@ -16,14 +17,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-        with:
-          ref: ${{ github.head_ref || github.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+
+      - name: Run deno fmt
+        run: deno fmt --check
 
       - name: Run deno check
         run: deno check src/index.ts
@@ -36,18 +37,6 @@ jobs:
 
       - name: Check coverage thresholds
         run: deno coverage coverage | deno run scripts/check-coverage.ts 85 95
-
-      - name: Run deno fmt and commit changes
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          deno fmt .
-          if [[ -n $(git status --porcelain) ]]; then
-            git config --local user.email "github-actions[bot]@users.noreply.github.com"
-            git config --local user.name "github-actions[bot]"
-            git add .
-            git commit -m "chore: auto-format code with deno fmt"
-            git push
-          fi
 
   deploy:
     needs: check
