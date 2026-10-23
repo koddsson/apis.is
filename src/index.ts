@@ -1,12 +1,16 @@
+import airQuality from "./endpoints/air-quality.ts";
 import { busRoutes, busStops } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
 import earthquakes from "./endpoints/earthquakes.ts";
 import flights from "./endpoints/flights.ts";
 import gengi from "./endpoints/gengi.ts";
+import grid from "./endpoints/grid.ts";
 import meetups from "./endpoints/meetups.ts";
 import meta from "./endpoints/meta.ts";
 import nova2f1 from "./endpoints/nova-2f1.ts";
+import { births, population } from "./endpoints/population.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
+import { roadConditions, roadWeather } from "./endpoints/roads.ts";
 import weather from "./endpoints/weather.ts";
 import { reportError } from "./error-monitor.ts";
 import { checkEndpoints, reportHealth } from "./health.ts";
@@ -20,16 +24,22 @@ router.use(commonLogMiddleware);
 
 router.add("GET", "/", meta(router));
 
-router.add("GET", "/x/gengi/{:code}?", gengi);
+router.add("GET", "/x/gengi{/:code}?", gengi);
 router.add("GET", "/x/meetups", meetups);
-router.add("GET", "/x/car/{:number}?", car);
+router.add("GET", "/x/car{/:number}?", car);
 router.add("GET", "/x/race-calendar", raceCalendar);
 router.add("GET", "/x/nova-2f1", nova2f1);
 router.add("GET", "/x/earthquakes", earthquakes);
-router.add("GET", "/x/weather/{:station}?", weather);
-router.add("GET", "/x/bus/stops/{:id}?", busStops);
+router.add("GET", "/x/weather{/:station}?", weather);
+router.add("GET", "/x/bus/stops{/:id}?", busStops);
 router.add("GET", "/x/bus/routes", busRoutes);
 router.add("GET", "/x/flights/{:type}", flights);
+router.add("GET", "/x/roads/conditions", roadConditions);
+router.add("GET", "/x/roads/weather", roadWeather);
+router.add("GET", "/x/air-quality", airQuality);
+router.add("GET", "/x/grid", grid);
+router.add("GET", "/x/population", population);
+router.add("GET", "/x/population/births", births);
 
 // Global unhandled rejection handler
 globalThis.addEventListener("unhandledrejection", (event) => {

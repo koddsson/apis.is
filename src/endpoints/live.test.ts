@@ -4,12 +4,16 @@
 // These can be run periodically (e.g., daily) as a watchdog for breaking changes in external APIs
 
 import { assert, test } from "vitest";
+import airQuality from "./air-quality.ts";
 import { busRoutes, busStops } from "./bus.ts";
 import car from "./car.ts";
 import earthquakes from "./earthquakes.ts";
 import flights from "./flights.ts";
 import gengi from "./gengi.ts";
+import grid from "./grid.ts";
+import { births, population } from "./population.ts";
 import raceCalendar from "./race-calendar.ts";
+import { roadConditions, roadWeather } from "./roads.ts";
 import weather from "./weather.ts";
 
 type Rates = Record<string, { rate: number; description?: string }>;
@@ -233,4 +237,76 @@ test("LIVE - flights endpoint reads Keflavík and a domestic airport", async () 
       assert.isFalse(Number.isNaN(Date.parse(flight.scheduled)));
     }
   }
+});
+
+test("LIVE - roads endpoints read Vegagerðin feeds", async () => {
+  const conditions = await roadConditions(
+    new Request("http://localhost/x/roads/conditions"),
+  );
+  assert.equal(conditions.status, 200);
+  const segments = await conditions.json<Array<{ condition: string }>>();
+  assert.isAbove(segments.length, 100);
+  assert.isString(segments[0].condition);
+
+  const weather = await roadWeather(
+    new Request("http://localhost/x/roads/weather"),
+  );
+  const stations = await weather.json<Array<{ name: string; time: string }>>();
+  assert.isAbove(stations.length, 50);
+  assert.isTrue(stations.some((station) => station.time !== null));
+});
+
+test("LIVE - air quality endpoint reads UST stations", async () => {
+  const res = await airQuality(new Request("http://localhost/x/air-quality"));
+  assert.equal(res.status, 200);
+  const stations =
+    await res.json<
+      Array<{
+        id: string;
+        latitude: number | null;
+        readings: Record<string, { value: number; time: string }>;
+      }>
+    >();
+  assert.isAbove(stations.length, 10);
+  const withReadings = stations.filter(
+    (station) => Object.keys(station.readings).length > 0,
+  );
+  assert.isAbove(withReadings.length, 0);
+  for (const reading of Object.values(withReadings[0].readings)) {
+    assert.isFalse(Number.isNaN(reading.value));
+    assert.isFalse(Number.isNaN(Date.parse(reading.time)));
+  }
+});
+
+test("LIVE - grid endpoint reads Landsnet's real-time feeds", async () => {
+  const res = await grid(new Request("http://localhost/x/grid"));
+  assert.equal(res.status, 200);
+  const data = await res.json<{
+    time: string;
+    totalPowerFlow: number;
+    regionalFlows: Array<{ name: string; flow: number | null }>;
+    lines: Array<{ id: string; name: string | null }>;
+  }>();
+  assert.isAbove(data.totalPowerFlow, 0);
+  assert.isFalse(Number.isNaN(Date.parse(data.time)));
+  assert.isAbove(data.regionalFlows.length, 0);
+  assert.isTrue(data.lines.some((line) => line.name !== null));
+});
+
+test("LIVE - population endpoints read Hagstofa tables", async () => {
+  const res = await population(new Request("http://localhost/x/population"));
+  assert.equal(res.status, 200);
+  const data = await res.json<{ population: number; period: string }>();
+  assert.isAbove(data.population, 300_000);
+  assert.match(data.period, /^\d{4}Q[1-4]$/);
+
+  const birthsRes = await births(
+    new Request("http://localhost/x/population/births"),
+  );
+  const birthData = await birthsRes.json<{
+    periods: Array<{ births: number }>;
+    latestFullYear: { perDay: number };
+  }>();
+  assert.equal(birthData.periods.length, 8);
+  assert.isAbove(birthData.latestFullYear.perDay, 1);
 });
