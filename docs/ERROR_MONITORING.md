@@ -49,7 +49,9 @@ has an hourly Cron Trigger (`triggers.crons` in `wrangler.jsonc`) that runs
   through the router, so failures don't also file `uncaught-error` issues)
   with the declared `params`, and its JSON is passed to `health.check`.
 - A failing endpoint gets one `endpoint-down` issue. It isn't commented on
-  while it stays down, and it is closed automatically once the check passes.
+  while it stays down, but if the failure message changes the issue's problem
+  section is rewritten with the latest one. It is closed automatically once
+  the check passes.
 
 Like error issues, these are only filed when `ENVIRONMENT` is `production` and
 `GITHUB_TOKEN` is set.

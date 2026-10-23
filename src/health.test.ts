@@ -125,7 +125,14 @@ test("reportHealth - opens, leaves, and closes endpoint issues", async () => {
         new Response(
           JSON.stringify([
             { number: 5, body: "**Endpoint:** `/x/recovered`" },
-            { number: 6, body: "**Endpoint:** `/x/still-down`" },
+            {
+              number: 6,
+              body: "```\nHTTP 500\n```\n**Endpoint:** `/x/still-down`",
+            },
+            {
+              number: 7,
+              body: "```\nHTTP 502\n```\n**Endpoint:** `/x/changed`",
+            },
           ]),
         ),
       );
@@ -142,6 +149,7 @@ test("reportHealth - opens, leaves, and closes endpoint issues", async () => {
       { endpoint: "/x/new-down", problem: "HTTP 500" },
       { endpoint: "/x/recovered" },
       { endpoint: "/x/still-down", problem: "HTTP 500" },
+      { endpoint: "/x/changed", problem: "HTTP 403 (cf-ray abc-SIN)" },
       { endpoint: "/x/healthy" },
     ]);
 
@@ -152,6 +160,7 @@ test("reportHealth - opens, leaves, and closes endpoint issues", async () => {
         "POST https://api.github.com/repos/owner/repo/issues",
         "POST https://api.github.com/repos/owner/repo/issues/5/comments",
         "PATCH https://api.github.com/repos/owner/repo/issues/5",
+        "PATCH https://api.github.com/repos/owner/repo/issues/7",
       ],
     );
 
@@ -165,6 +174,12 @@ test("reportHealth - opens, leaves, and closes endpoint issues", async () => {
       state: "closed",
       state_reason: "completed",
     });
+
+    const updated = JSON.parse(calls[4].body ?? "{}");
+    assert.deepEqual(Object.keys(updated), ["body"]);
+    assert.include(updated.body, "HTTP 403 (cf-ray abc-SIN)");
+    assert.include(updated.body, "**Endpoint:** `/x/changed`");
+    assert.match(updated.body, /last seen \d{4}-\d{2}-\d{2}T/);
   } finally {
     globalThis.fetch = originalFetch;
   }
