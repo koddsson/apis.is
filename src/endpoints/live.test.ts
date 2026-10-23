@@ -5,6 +5,7 @@
 
 import { assert, test } from "vitest";
 import car from "./car.ts";
+import earthquakes from "./earthquakes.ts";
 import gengi from "./gengi.ts";
 import raceCalendar from "./race-calendar.ts";
 
@@ -154,5 +155,19 @@ test("LIVE - raceCalendar endpoint fetches real race data", async () => {
         firstRace,
       )}`,
     );
+  }
+});
+
+test("LIVE - earthquakes endpoint parses vedur.is", async () => {
+  const res = await earthquakes(new Request("http://localhost/x/earthquakes"));
+  assert.equal(res.status, 200);
+
+  const data = await res.json<Array<Record<string, unknown>>>();
+  assert.isArray(data);
+  for (const quake of data) {
+    assert.isString(quake.time);
+    assert.isNumber(quake.latitude);
+    assert.isNumber(quake.magnitude);
+    assert.isFalse(Number.isNaN(quake.magnitude));
   }
 });

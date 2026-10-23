@@ -5,8 +5,10 @@ export function capitalizeFirstLetter(val: string) {
 export function response(
   data: unknown[] | Record<string, unknown>,
   pretty = false,
+  status = 200,
 ) {
   return new Response(JSON.stringify(data, null, pretty ? 2 : 0), {
+    status,
     headers: {
       "Access-Control-Allow-Origin": "*",
     },
