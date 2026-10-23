@@ -4,9 +4,13 @@
 // These can be run periodically (e.g., daily) as a watchdog for breaking changes in external APIs
 
 import { assert, test } from "vitest";
+import { busRoutes, busStops } from "./bus.ts";
 import car from "./car.ts";
+import earthquakes from "./earthquakes.ts";
+import flights from "./flights.ts";
 import gengi from "./gengi.ts";
 import raceCalendar from "./race-calendar.ts";
+import weather from "./weather.ts";
 
 type Rates = Record<string, { rate: number; description?: string }>;
 
@@ -154,5 +158,79 @@ test("LIVE - raceCalendar endpoint fetches real race data", async () => {
         firstRace,
       )}`,
     );
+  }
+});
+
+test("LIVE - earthquakes endpoint parses vedur.is", async () => {
+  const res = await earthquakes(new Request("http://localhost/x/earthquakes"));
+  assert.equal(res.status, 200);
+
+  const data = await res.json<Array<Record<string, unknown>>>();
+  assert.isArray(data);
+  for (const quake of data) {
+    assert.isString(quake.time);
+    assert.isNumber(quake.latitude);
+    assert.isNumber(quake.magnitude);
+    assert.isFalse(Number.isNaN(quake.magnitude));
+  }
+});
+
+test("LIVE - weather endpoint lists stations and reads Reykjavík", async () => {
+  const list = await weather(new Request("http://localhost/x/weather"), {});
+  assert.equal(list.status, 200);
+  const stations = await list.json<Array<{ id: number; name: string }>>();
+  assert.isTrue(stations.some((station) => station.id === 1));
+
+  const res = await weather(
+    new Request("http://localhost/x/weather/1?forecast=true"),
+    { station: "1" },
+  );
+  assert.equal(res.status, 200);
+  const data = await res.json<{
+    name: string;
+    time: string;
+    forecast: Array<{ time: string }>;
+  }>();
+  assert.equal(data.name, "Reykjavík");
+  assert.match(data.time, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  assert.isAbove(data.forecast.length, 0);
+});
+
+test("LIVE - bus endpoints read stops and routes from Strætó GTFS", async () => {
+  const stops = await busStops(new Request("http://localhost/x/bus/stops"), {});
+  assert.equal(stops.status, 200);
+  const stopList = await stops.json<Array<{ id: string; latitude: number }>>();
+  assert.isAbove(stopList.length, 100);
+  assert.isFalse(Number.isNaN(stopList[0].latitude));
+
+  const one = await busStops(
+    new Request(`http://localhost/x/bus/stops/${stopList[0].id}`),
+    { id: stopList[0].id },
+  );
+  assert.equal(one.status, 200);
+
+  const routes = await busRoutes(new Request("http://localhost/x/bus/routes"));
+  const routeList = await routes.json<Array<{ number: string }>>();
+  assert.isTrue(routeList.some((route) => route.number === "1"));
+});
+
+test("LIVE - flights endpoint reads Keflavík and a domestic airport", async () => {
+  for (const [query, type] of [
+    ["", "arrivals"],
+    ["", "departures"],
+    ["?airport=RKV", "arrivals"],
+  ]) {
+    const res = await flights(
+      new Request(`http://localhost/x/flights/${type}${query}`),
+      { type },
+    );
+    assert.equal(res.status, 200, `${type}${query}`);
+    const data =
+      await res.json<Array<{ flightNumber: string; scheduled: string }>>();
+    assert.isArray(data);
+    for (const flight of data) {
+      assert.isString(flight.flightNumber);
+      assert.isFalse(Number.isNaN(Date.parse(flight.scheduled)));
+    }
   }
 });
