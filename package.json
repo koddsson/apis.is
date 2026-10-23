@@ -15,16 +15,16 @@
   },
   "dependencies": {
     "fast-xml-parser": "5.11.2",
-    "linkedom": "0.18.12"
+    "linkedom": "0.18.13"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
-    "@cloudflare/vitest-plugin": "1.4.0",
+    "@cloudflare/vitest-plugin": "1.4.4",
     "@types/node": "26.6.5",
-    "@vitest/coverage-istanbul": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.5",
     "source-map-js": "1.2.2",
     "typescript": "7.0.2",
-    "vitest": "5.0.3",
-    "wrangler": "4.149.0"
+    "vitest": "5.0.5",
+    "wrangler": "4.151.1"
   }
 }
