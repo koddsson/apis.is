@@ -6,8 +6,9 @@
   // Exposes vars and secrets on process.env, which error-monitor.ts reads.
   "compatibility_flags": ["nodejs_compat"],
   "build": {
-    "command": "deno bundle --platform browser -o dist/worker.js src/index.ts"
+    "command": "deno bundle --platform browser --sourcemap=linked -o dist/worker.js src/index.ts"
   },
+  "upload_source_maps": true,
   "observability": { "enabled": true },
   "vars": {
     "ENVIRONMENT": "production",
