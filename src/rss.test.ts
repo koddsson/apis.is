@@ -1,7 +1,4 @@
-import {
-  assertEquals,
-  assertStringIncludes,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { generateRSS } from "./rss.ts";
 
 Deno.test("generateRSS - generates valid RSS 2.0 feed", () => {

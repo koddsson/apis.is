@@ -1,4 +1,4 @@
-import { xml2js } from "https://deno.land/x/xml2js@1.0.0/mod.ts";
+import { xml2js } from "xml2js";
 import { capitalizeFirstLetter } from "../utils.ts";
 
 // TODO: Implement caching
