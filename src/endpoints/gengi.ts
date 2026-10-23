@@ -1,4 +1,4 @@
-import { xml2js } from "xml2js";
+import { XMLParser } from "fast-xml-parser";
 import { capitalizeFirstLetter } from "../utils.ts";
 
 // TODO: Implement caching
@@ -11,18 +11,17 @@ interface Currency {
 interface BorgunRates {
   Rates: {
     Rate: Array<{
-      CurrencyCode: {
-        _text: string;
-      };
-      CurrencyDescription?: {
-        _text: string;
-      };
-      CurrencyRate: {
-        _text: string;
-      };
+      CurrencyCode: string;
+      CurrencyDescription?: string;
+      CurrencyRate: string;
     }>;
   };
 }
+
+const parser = new XMLParser({
+  parseTagValue: false,
+  isArray: (name) => name === "Rate",
+});
 
 async function gengi(
   _request: Request,
@@ -32,14 +31,16 @@ async function gengi(
     "https://www.borgun.is/currency/Default.aspx?function=all",
   );
   const text = await response.text();
-  const json = xml2js(text, { compact: true }) as unknown as BorgunRates;
+  const json = parser.parse(text) as BorgunRates;
   const currencies: Record<string, Currency> = {};
-  for (const rate of json["Rates"]["Rate"]) {
-    const code = rate["CurrencyCode"]["_text"];
-    const description = rate["CurrencyDescription"]?.["_text"]?.split(",")
-      ?.reverse()?.join(" ").trim();
+  for (const rate of json.Rates.Rate) {
+    const code = rate.CurrencyCode;
+    const description = rate.CurrencyDescription?.split(",")
+      ?.reverse()
+      ?.join(" ")
+      .trim();
     currencies[code] = {
-      rate: parseFloat(rate["CurrencyRate"]["_text"]),
+      rate: parseFloat(rate.CurrencyRate),
     };
     if (description) {
       currencies[code].description = capitalizeFirstLetter(description);
@@ -51,7 +52,7 @@ async function gengi(
   if (params.code) {
     const codes = params.code.split(",");
     const filteredCodes = Object.entries(currencies).filter(([code]) =>
-      codes.includes(code)
+      codes.includes(code),
     );
     data = Object.fromEntries(filteredCodes);
   }

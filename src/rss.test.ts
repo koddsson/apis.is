@@ -1,7 +1,7 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, test } from "vitest";
 import { generateRSS } from "./rss.ts";
 
-Deno.test("generateRSS - generates valid RSS 2.0 feed", () => {
+test("generateRSS - generates valid RSS 2.0 feed", () => {
   const items = [
     {
       title: "Test Meetup",
@@ -16,14 +16,14 @@ Deno.test("generateRSS - generates valid RSS 2.0 feed", () => {
 
   const rss = generateRSS(items);
 
-  assertStringIncludes(rss, '<?xml version="1.0" encoding="UTF-8"?>');
-  assertStringIncludes(rss, '<rss version="2.0"');
-  assertStringIncludes(rss, "<channel>");
-  assertStringIncludes(rss, "</channel>");
-  assertStringIncludes(rss, "</rss>");
+  assert.include(rss, '<?xml version="1.0" encoding="UTF-8"?>');
+  assert.include(rss, '<rss version="2.0"');
+  assert.include(rss, "<channel>");
+  assert.include(rss, "</channel>");
+  assert.include(rss, "</rss>");
 });
 
-Deno.test("generateRSS - includes channel metadata", () => {
+test("generateRSS - includes channel metadata", () => {
   const items = [
     {
       title: "Test Meetup",
@@ -38,17 +38,17 @@ Deno.test("generateRSS - includes channel metadata", () => {
 
   const rss = generateRSS(items);
 
-  assertStringIncludes(rss, "<title>Icelandic Tech Meetups</title>");
-  assertStringIncludes(
+  assert.include(rss, "<title>Icelandic Tech Meetups</title>");
+  assert.include(
     rss,
     "<description>List of Icelandic tech meetups and community groups from apis.is</description>",
   );
-  assertStringIncludes(rss, "<link>https://apis.is/x/meetups</link>");
-  assertStringIncludes(rss, "<language>is</language>");
-  assertStringIncludes(rss, "<lastBuildDate>");
+  assert.include(rss, "<link>https://apis.is/x/meetups</link>");
+  assert.include(rss, "<language>is</language>");
+  assert.include(rss, "<lastBuildDate>");
 });
 
-Deno.test("generateRSS - includes item data", () => {
+test("generateRSS - includes item data", () => {
   const items = [
     {
       title: "JavaScript Meetup",
@@ -63,19 +63,19 @@ Deno.test("generateRSS - includes item data", () => {
 
   const rss = generateRSS(items);
 
-  assertStringIncludes(rss, "<item>");
-  assertStringIncludes(rss, "<title>JavaScript Meetup</title>");
-  assertStringIncludes(rss, "<description>Monthly JS meetup</description>");
-  assertStringIncludes(rss, "<link>https://example.com/js-meetup</link>");
-  assertStringIncludes(
+  assert.include(rss, "<item>");
+  assert.include(rss, "<title>JavaScript Meetup</title>");
+  assert.include(rss, "<description>Monthly JS meetup</description>");
+  assert.include(rss, "<link>https://example.com/js-meetup</link>");
+  assert.include(
     rss,
     '<guid isPermaLink="true">https://example.com/js-meetup</guid>',
   );
-  assertStringIncludes(rss, "<pubDate>");
-  assertStringIncludes(rss, "</item>");
+  assert.include(rss, "<pubDate>");
+  assert.include(rss, "</item>");
 });
 
-Deno.test("generateRSS - handles null description", () => {
+test("generateRSS - handles null description", () => {
   const items = [
     {
       title: "Test Meetup",
@@ -90,13 +90,10 @@ Deno.test("generateRSS - handles null description", () => {
 
   const rss = generateRSS(items);
 
-  assertStringIncludes(
-    rss,
-    "<description>No description available.</description>",
-  );
+  assert.include(rss, "<description>No description available.</description>");
 });
 
-Deno.test("generateRSS - escapes XML special characters", () => {
+test("generateRSS - escapes XML special characters", () => {
   const items = [
     {
       title: 'Test & "Special" <Characters>',
@@ -111,17 +108,17 @@ Deno.test("generateRSS - escapes XML special characters", () => {
 
   const rss = generateRSS(items);
 
-  assertStringIncludes(rss, "&amp;");
-  assertStringIncludes(rss, "&lt;");
-  assertStringIncludes(rss, "&gt;");
-  assertStringIncludes(rss, "&quot;");
-  assertStringIncludes(rss, "&apos;");
+  assert.include(rss, "&amp;");
+  assert.include(rss, "&lt;");
+  assert.include(rss, "&gt;");
+  assert.include(rss, "&quot;");
+  assert.include(rss, "&apos;");
 
   // Should not contain unescaped special characters
-  assertEquals(rss.includes('Test & "Special" <Characters>'), false);
+  assert.deepEqual(rss.includes('Test & "Special" <Characters>'), false);
 });
 
-Deno.test("generateRSS - handles multiple items", () => {
+test("generateRSS - handles multiple items", () => {
   const items = [
     {
       title: "Meetup 1",
@@ -154,15 +151,15 @@ Deno.test("generateRSS - handles multiple items", () => {
 
   const rss = generateRSS(items);
 
-  assertStringIncludes(rss, "<title>Meetup 1</title>");
-  assertStringIncludes(rss, "<title>Meetup 2</title>");
-  assertStringIncludes(rss, "<title>Meetup 3</title>");
-  assertStringIncludes(rss, "First meetup");
-  assertStringIncludes(rss, "Second meetup");
-  assertStringIncludes(rss, "Third meetup");
+  assert.include(rss, "<title>Meetup 1</title>");
+  assert.include(rss, "<title>Meetup 2</title>");
+  assert.include(rss, "<title>Meetup 3</title>");
+  assert.include(rss, "First meetup");
+  assert.include(rss, "Second meetup");
+  assert.include(rss, "Third meetup");
 });
 
-Deno.test("generateRSS - handles empty items array", () => {
+test("generateRSS - handles empty items array", () => {
   const items: Array<{
     title: string;
     description: string | null;
@@ -172,8 +169,8 @@ Deno.test("generateRSS - handles empty items array", () => {
 
   const rss = generateRSS(items);
 
-  assertStringIncludes(rss, "<channel>");
-  assertStringIncludes(rss, "</channel>");
+  assert.include(rss, "<channel>");
+  assert.include(rss, "</channel>");
   // Should not contain any item tags
-  assertEquals(rss.includes("<item>"), false);
+  assert.deepEqual(rss.includes("<item>"), false);
 });

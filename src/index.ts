@@ -1,13 +1,13 @@
-import { Router } from "./router.ts";
-import { reportError } from "./error-monitor.ts";
-import { commonLogMiddleware } from "./middleware.ts";
-
-import meta from "./endpoints/meta.ts";
+import car from "./endpoints/car.ts";
 import gengi from "./endpoints/gengi.ts";
 import meetups from "./endpoints/meetups.ts";
-import car from "./endpoints/car.ts";
-import raceCalendar from "./endpoints/race-calendar.ts";
+
+import meta from "./endpoints/meta.ts";
 import nova2f1 from "./endpoints/nova-2f1.ts";
+import raceCalendar from "./endpoints/race-calendar.ts";
+import { reportError } from "./error-monitor.ts";
+import { commonLogMiddleware } from "./middleware.ts";
+import { Router } from "./router.ts";
 
 const router = new Router();
 
@@ -22,17 +22,12 @@ router.add("GET", "/x/car/{:number}?", car);
 router.add("GET", "/x/race-calendar", raceCalendar);
 router.add("GET", "/x/nova-2f1", nova2f1);
 
-// Global error handler to catch all uncaught errors
-globalThis.addEventListener("error", (event) => {
-  reportError(event.error);
-  event.preventDefault(); // Prevent default error handling
-});
-
 // Global unhandled rejection handler
 globalThis.addEventListener("unhandledrejection", (event) => {
-  const error = event.reason instanceof Error
-    ? event.reason
-    : new Error(String(event.reason));
+  const error =
+    event.reason instanceof Error
+      ? event.reason
+      : new Error(String(event.reason));
   reportError(error);
   event.preventDefault();
 });

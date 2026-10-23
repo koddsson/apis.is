@@ -1,13 +1,10 @@
 {
   "$schema": "https://unpkg.com/wrangler@4.149.0/config-schema.json",
   "name": "apis-is",
-  "main": "dist/worker.js",
+  "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   // Exposes vars and secrets on process.env, which error-monitor.ts reads.
   "compatibility_flags": ["nodejs_compat"],
-  "build": {
-    "command": "deno bundle --platform browser --sourcemap=linked -o dist/worker.js src/index.ts"
-  },
   "upload_source_maps": true,
   "observability": { "enabled": true },
   "vars": {

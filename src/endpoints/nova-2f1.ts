@@ -43,11 +43,9 @@ async function findInactiveDayClasses(
     const parent = span.parentElement;
     if (!parent) continue;
     total++;
-    for (
-      const cls of (parent.getAttribute("class") || "").split(/\s+/).filter(
-        Boolean,
-      )
-    ) {
+    for (const cls of (parent.getAttribute("class") || "")
+      .split(/\s+/)
+      .filter(Boolean)) {
       classCounts.set(cls, (classCounts.get(cls) || 0) + 1);
     }
   }
@@ -87,9 +85,7 @@ async function findInactiveDayClasses(
       }
 
       if (inactiveClasses.size > 0) break; // Found what we need
-    } catch {
-      continue; // Try next stylesheet
-    }
+    } catch {}
   }
 
   return inactiveClasses;
@@ -128,10 +124,11 @@ async function nova2f1(request: Request): Promise<Response> {
     for (const span of spans) {
       const text = span.textContent!.trim();
       if (DAY_NAMES.includes(text)) {
-        const parentClasses = (span.parentElement?.getAttribute("class") || "")
-          .split(/\s+/);
+        const parentClasses = (
+          span.parentElement?.getAttribute("class") || ""
+        ).split(/\s+/);
         const isInactive = parentClasses.some((cls: string) =>
-          inactiveDayClasses.has(cls)
+          inactiveDayClasses.has(cls),
         );
         if (!isInactive) {
           days.push(text);

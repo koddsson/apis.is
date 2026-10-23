@@ -1,11 +1,19 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, test } from "vitest";
 import nova2f1 from "./nova-2f1.ts";
+
+type Offer = {
+  name: string;
+  description: string;
+  image: string;
+  address: string;
+  days: string[];
+  link: string;
+};
 
 // The real Nova site renders all 7 days for every offer, using different CSS
 // classes on the day's parent div to mark active vs inactive days.  "bg-active"
 // and "bg-inactive" stand in for the obfuscated atomic-CSS class names.
-const mockCss =
-  `.bg-active { background-color: #FE3C72; } .bg-inactive { background-color: #E0E0E0; } .shared { padding: 4px; }`;
+const mockCss = `.bg-active { background-color: #FE3C72; } .bg-inactive { background-color: #E0E0E0; } .shared { padding: 4px; }`;
 
 const mockHtml = `<!DOCTYPE html><html><head>
 <link rel="stylesheet" href="/client/test.css"/>
@@ -84,7 +92,7 @@ function mockFetch(input: string | URL | Request): Promise<Response> {
   return Promise.resolve(new Response(mockHtml, { status: 200 }));
 }
 
-Deno.test("nova2f1 - fetches and returns offer data", async () => {
+test("nova2f1 - fetches and returns offer data", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = mockFetch as typeof globalThis.fetch;
 
@@ -92,30 +100,30 @@ Deno.test("nova2f1 - fetches and returns offer data", async () => {
     const req = new Request("http://localhost/x/nova-2f1");
     const res = await nova2f1(req);
 
-    assertEquals(res.status, 200);
-    assertEquals(res.headers.get("Access-Control-Allow-Origin"), "*");
+    assert.deepEqual(res.status, 200);
+    assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
 
-    const data = await res.json();
-    assertEquals(Array.isArray(data), true);
-    assertEquals(data.length, 2);
+    const data = await res.json<Offer[]>();
+    assert.deepEqual(Array.isArray(data), true);
+    assert.deepEqual(data.length, 2);
 
-    assertEquals(data[0].name, "Test Offer");
-    assertEquals(
+    assert.deepEqual(data[0].name, "Test Offer");
+    assert.deepEqual(
       data[0].image,
       "https://images.ctfassets.net/example/image1.png",
     );
-    assertEquals(data[0].address, "Laugavegur 10");
-    assertEquals(
+    assert.deepEqual(data[0].address, "Laugavegur 10");
+    assert.deepEqual(
       data[0].link,
       "https://www.nova.is/dansgolfid/fyrir-thig/2f1/test-offer",
     );
-    assertEquals(data[0].days.length, 7);
-    assertEquals(data[0].days[0], "Mán");
+    assert.deepEqual(data[0].days.length, 7);
+    assert.deepEqual(data[0].days[0], "Mán");
 
-    assertEquals(data[1].name, "Another Place");
-    assertEquals(data[1].address, "Skólavörðustígur 5");
-    assertEquals(data[1].days.length, 3);
-    assertEquals(
+    assert.deepEqual(data[1].name, "Another Place");
+    assert.deepEqual(data[1].address, "Skólavörðustígur 5");
+    assert.deepEqual(data[1].days.length, 3);
+    assert.deepEqual(
       data[1].link,
       "https://www.nova.is/dansgolfid/fyrir-thig/2f1/another-place",
     );
@@ -124,7 +132,7 @@ Deno.test("nova2f1 - fetches and returns offer data", async () => {
   }
 });
 
-Deno.test("nova2f1 - returns compact JSON by default", async () => {
+test("nova2f1 - returns compact JSON by default", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = mockFetch as typeof globalThis.fetch;
 
@@ -133,13 +141,13 @@ Deno.test("nova2f1 - returns compact JSON by default", async () => {
     const res = await nova2f1(req);
 
     const text = await res.text();
-    assertEquals(text.includes("\n"), false);
+    assert.deepEqual(text.includes("\n"), false);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("nova2f1 - returns pretty JSON when pretty=true", async () => {
+test("nova2f1 - returns pretty JSON when pretty=true", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = mockFetch as typeof globalThis.fetch;
 
@@ -148,13 +156,13 @@ Deno.test("nova2f1 - returns pretty JSON when pretty=true", async () => {
     const res = await nova2f1(req);
 
     const text = await res.text();
-    assertEquals(text.includes("\n"), true);
+    assert.deepEqual(text.includes("\n"), true);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("nova2f1 - handles card with missing elements", async () => {
+test("nova2f1 - handles card with missing elements", async () => {
   const minimalHtml = `<!DOCTYPE html><html><body>
 <div>
   <div>
@@ -181,14 +189,14 @@ Deno.test("nova2f1 - handles card with missing elements", async () => {
   try {
     const req = new Request("http://localhost/x/nova-2f1");
     const res = await nova2f1(req);
-    const data = await res.json();
+    const data = await res.json<Offer[]>();
 
-    assertEquals(data.length, 1);
-    assertEquals(data[0].name, "Bare Offer");
-    assertEquals(data[0].image, "");
-    assertEquals(data[0].address, "");
-    assertEquals(data[0].days.length, 0);
-    assertEquals(
+    assert.deepEqual(data.length, 1);
+    assert.deepEqual(data[0].name, "Bare Offer");
+    assert.deepEqual(data[0].image, "");
+    assert.deepEqual(data[0].address, "");
+    assert.deepEqual(data[0].days.length, 0);
+    assert.deepEqual(
       data[0].link,
       "https://www.nova.is/dansgolfid/fyrir-thig/2f1/bare-offer",
     );
@@ -197,7 +205,7 @@ Deno.test("nova2f1 - handles card with missing elements", async () => {
   }
 });
 
-Deno.test("nova2f1 - skips link with no card container", async () => {
+test("nova2f1 - skips link with no card container", async () => {
   const orphanLinkHtml = `<!DOCTYPE html><html><body>
 <a href="/dansgolfid/fyrir-thig/2f1/orphan">Orphan</a>
 </body></html>`;
@@ -210,15 +218,15 @@ Deno.test("nova2f1 - skips link with no card container", async () => {
   try {
     const req = new Request("http://localhost/x/nova-2f1");
     const res = await nova2f1(req);
-    const data = await res.json();
+    const data = await res.json<Offer[]>();
 
-    assertEquals(data.length, 0);
+    assert.deepEqual(data.length, 0);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("nova2f1 - handles card with non-location SVG only", async () => {
+test("nova2f1 - handles card with non-location SVG only", async () => {
   const noLocationSvgHtml = `<!DOCTYPE html><html><body>
 <div>
   <div>
@@ -252,17 +260,17 @@ Deno.test("nova2f1 - handles card with non-location SVG only", async () => {
   try {
     const req = new Request("http://localhost/x/nova-2f1");
     const res = await nova2f1(req);
-    const data = await res.json();
+    const data = await res.json<Offer[]>();
 
-    assertEquals(data.length, 1);
-    assertEquals(data[0].address, "");
-    assertEquals(data[0].days, ["Mán"]);
+    assert.deepEqual(data.length, 1);
+    assert.deepEqual(data[0].address, "");
+    assert.deepEqual(data[0].days, ["Mán"]);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("nova2f1 - returns all days when CSS fetch fails", async () => {
+test("nova2f1 - returns all days when CSS fetch fails", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = ((input: string | URL | Request) => {
     const url = new URL(input instanceof Request ? input.url : input);
@@ -275,20 +283,17 @@ Deno.test("nova2f1 - returns all days when CSS fetch fails", async () => {
   try {
     const req = new Request("http://localhost/x/nova-2f1");
     const res = await nova2f1(req);
-    const data = await res.json();
+    const data = await res.json<Offer[]>();
 
     // Without CSS info we can't distinguish active/inactive, so all 7 pass
-    assertEquals(data[0].days.length, 7);
-    assertEquals(data[1].days.length, 7);
+    assert.deepEqual(data[0].days.length, 7);
+    assert.deepEqual(data[1].days.length, 7);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("nova2f1 - has correct meta information", () => {
-  assertEquals(nova2f1.meta?.endpoint, "/x/nova-2f1");
-  assertStringIncludes(
-    nova2f1.meta?.description || "",
-    "2-for-1",
-  );
+test("nova2f1 - has correct meta information", () => {
+  assert.deepEqual(nova2f1.meta?.endpoint, "/x/nova-2f1");
+  assert.include(nova2f1.meta?.description || "", "2-for-1");
 });

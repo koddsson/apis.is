@@ -27,7 +27,7 @@ function generateErrorFingerprint(error: Error, _url?: string): string {
   let hash = 0;
   for (let i = 0; i < fingerprint.length; i++) {
     const char = fingerprint.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
 
@@ -67,17 +67,18 @@ async function createGitHubIssue(
       `${apiUrl}/issues?state=open&labels=uncaught-error&per_page=100`,
       {
         headers: {
-          "Authorization": `Bearer ${githubToken}`,
-          "Accept": "application/vnd.github.v3+json",
+          Authorization: `Bearer ${githubToken}`,
+          Accept: "application/vnd.github.v3+json",
           "User-Agent": "apis.is-error-monitor",
         },
       },
     );
 
     if (issuesResponse.ok) {
-      const issues = await issuesResponse.json();
+      const issues =
+        await issuesResponse.json<Array<{ number: number; body: string }>>();
       const existingIssue = issues.find((issue: { body: string }) =>
-        issue.body?.includes(`**Fingerprint:** \`${fingerprint}\``)
+        issue.body?.includes(`**Fingerprint:** \`${fingerprint}\``),
       );
 
       if (existingIssue) {
@@ -85,13 +86,14 @@ async function createGitHubIssue(
         await fetch(`${apiUrl}/issues/${existingIssue.number}/comments`, {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${githubToken}`,
-            "Accept": "application/vnd.github.v3+json",
+            Authorization: `Bearer ${githubToken}`,
+            Accept: "application/vnd.github.v3+json",
             "User-Agent": "apis.is-error-monitor",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            body: `Error occurred again at ${report.timestamp}\n\n` +
+            body:
+              `Error occurred again at ${report.timestamp}\n\n` +
               `**Request:** ${report.method} ${report.url}\n\n` +
               `**Ray ID:** ${report.rayId || "N/A"}\n\n` +
               `See deployment logs for more details.`,
@@ -128,8 +130,8 @@ This issue was automatically created by the error monitoring system.`;
     await fetch(`${apiUrl}/issues`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${githubToken}`,
-        "Accept": "application/vnd.github.v3+json",
+        Authorization: `Bearer ${githubToken}`,
+        Accept: "application/vnd.github.v3+json",
         "User-Agent": "apis.is-error-monitor",
         "Content-Type": "application/json",
       },

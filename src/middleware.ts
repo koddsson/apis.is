@@ -35,12 +35,13 @@ function formatLogEntry(
   );
   const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, "0");
   const offsetSign = offset >= 0 ? "+" : "-";
-  const formattedDate =
-    `[${day}/${month}/${year}:${hours}:${minutes}:${seconds} ${offsetSign}${offsetHours}${offsetMinutes}]`;
+  const formattedDate = `[${day}/${month}/${year}:${hours}:${minutes}:${seconds} ${offsetSign}${offsetHours}${offsetMinutes}]`;
 
-  const clientIp = req.headers.get("cf-connecting-ip") ||
+  const clientIp =
+    req.headers.get("cf-connecting-ip") ||
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    req.headers.get("x-real-ip") || "-";
+    req.headers.get("x-real-ip") ||
+    "-";
 
   return `${clientIp} - - ${formattedDate} "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${status} ${responseSize}`;
 }

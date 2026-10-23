@@ -14,18 +14,20 @@ export function generateRSS(
 ): string {
   const now = new Date().toUTCString();
 
-  const rssItems = items.map((item) => {
-    const startDate = new Date(item.data.start);
-    const description = item.description || "No description available.";
+  const rssItems = items
+    .map((item) => {
+      const startDate = new Date(item.data.start);
+      const description = item.description || "No description available.";
 
-    return `    <item>
+      return `    <item>
       <title>${escapeXml(item.title)}</title>
       <description>${escapeXml(description)}</description>
       <link>${escapeXml(item.url)}</link>
       <guid isPermaLink="true">${escapeXml(item.url)}</guid>
       <pubDate>${startDate.toUTCString()}</pubDate>
     </item>`;
-  }).join("\n");
+    })
+    .join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

@@ -6,17 +6,16 @@ A collection of Icelandic-specific APIs
 
 ### Running Tests
 
-This project uses Deno's built-in test framework. To run the tests:
+Tests use Vitest and run inside workerd, the Cloudflare Workers runtime:
 
 ```bash
+npm install
+
 # Run all unit tests
-deno test --allow-env
+npm test
 
 # Run tests with live API calls (integration tests)
-deno test --allow-net --allow-env src/endpoints/live.test.ts
-
-# Skip live tests (useful for CI)
-SKIP_LIVE_TESTS=true deno test --allow-env
+npm run test:live
 ```
 
 ### Test Structure
@@ -30,22 +29,19 @@ SKIP_LIVE_TESTS=true deno test --allow-env
   - `src/endpoints/live.test.ts` - Validates external API availability and
     format
   - Run automatically daily via GitHub Actions as a watchdog
-  - Can be skipped with `SKIP_LIVE_TESTS=true` environment variable
+  - Not part of `npm test`; they have their own config, `vitest.live.config.ts`
 
 ### Linting and Formatting
 
 ```bash
-# Check code formatting
-deno fmt --check
+# Check linting and formatting (Biome)
+npm run lint
 
-# Format code
-deno fmt
-
-# Lint code
-deno lint
+# Fix formatting and safe lint issues
+npm run format
 
 # Type check
-deno check src/index.ts
+npm run typecheck
 ```
 
 ### Middleware System

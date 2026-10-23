@@ -111,14 +111,14 @@ function validateMeetup(meetup) {
   } else {
     // Validate ISO 8601 format
     const date = new Date(meetup.data.start);
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       errors.push("Start date must be in ISO 8601 format");
     }
   }
 
   if (meetup.data.end && meetup.data.end.trim() !== "") {
     const date = new Date(meetup.data.end);
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       errors.push("End date must be in ISO 8601 format");
     }
   }
@@ -144,7 +144,7 @@ function addMeetupToJson(meetup) {
 
   // Write back to file with proper formatting
   try {
-    fs.writeFileSync(jsonPath, JSON.stringify(meetups, null, 2) + "\n", "utf8");
+    fs.writeFileSync(jsonPath, `${JSON.stringify(meetups, null, 2)}\n`, "utf8");
     console.log("✅ Meetup added successfully!");
   } catch (error) {
     console.error("Error writing meetups.json:", error.message);
@@ -166,7 +166,9 @@ const errors = validateMeetup(meetup);
 
 if (errors.length > 0) {
   console.error("❌ Validation errors:");
-  errors.forEach((error) => console.error(`  - ${error}`));
+  for (const error of errors) {
+    console.error(`  - ${error}`);
+  }
   process.exit(1);
 }
 

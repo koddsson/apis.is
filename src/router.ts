@@ -21,9 +21,9 @@ export class Router {
     string,
     Array<{ pattern: URLPattern; handler: CallbackHandler }>
   > = {
-    "GET": [],
-    "POST": [],
-    "PUT": [],
+    GET: [],
+    POST: [],
+    PUT: [],
   };
   #middleware: Middleware[] = [];
 
@@ -52,7 +52,7 @@ export class Router {
           // Create the handler function that will be called at the end of middleware chain
           const handler = async () => {
             try {
-              return await route["handler"](req, params);
+              return await route.handler(req, params);
             } catch (error) {
               // Report the error to monitoring system
               await reportError(error as Error, req);
