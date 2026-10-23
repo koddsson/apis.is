@@ -4,6 +4,7 @@ import car from "./endpoints/car.ts";
 import earthquakes from "./endpoints/earthquakes.ts";
 import flights from "./endpoints/flights.ts";
 import gengi from "./endpoints/gengi.ts";
+import grid from "./endpoints/grid.ts";
 import meetups from "./endpoints/meetups.ts";
 import meta from "./endpoints/meta.ts";
 import nova2f1 from "./endpoints/nova-2f1.ts";
@@ -35,6 +36,7 @@ router.add("GET", "/x/flights/{:type}", flights);
 router.add("GET", "/x/roads/conditions", roadConditions);
 router.add("GET", "/x/roads/weather", roadWeather);
 router.add("GET", "/x/air-quality", airQuality);
+router.add("GET", "/x/grid", grid);
 
 // Global unhandled rejection handler
 globalThis.addEventListener("unhandledrejection", (event) => {

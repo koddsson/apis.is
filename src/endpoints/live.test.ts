@@ -10,6 +10,7 @@ import car from "./car.ts";
 import earthquakes from "./earthquakes.ts";
 import flights from "./flights.ts";
 import gengi from "./gengi.ts";
+import grid from "./grid.ts";
 import raceCalendar from "./race-calendar.ts";
 import { roadConditions, roadWeather } from "./roads.ts";
 import weather from "./weather.ts";
@@ -274,4 +275,19 @@ test("LIVE - air quality endpoint reads UST stations", async () => {
     assert.isFalse(Number.isNaN(reading.value));
     assert.isFalse(Number.isNaN(Date.parse(reading.time)));
   }
+});
+
+test("LIVE - grid endpoint reads Landsnet's real-time feeds", async () => {
+  const res = await grid(new Request("http://localhost/x/grid"));
+  assert.equal(res.status, 200);
+  const data = await res.json<{
+    time: string;
+    totalPowerFlow: number;
+    regionalFlows: Array<{ name: string; flow: number | null }>;
+    lines: Array<{ id: string; name: string | null }>;
+  }>();
+  assert.isAbove(data.totalPowerFlow, 0);
+  assert.isFalse(Number.isNaN(Date.parse(data.time)));
+  assert.isAbove(data.regionalFlows.length, 0);
+  assert.isTrue(data.lines.some((line) => line.name !== null));
 });
