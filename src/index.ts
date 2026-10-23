@@ -1,3 +1,4 @@
+import airQuality from "./endpoints/air-quality.ts";
 import { busRoutes, busStops } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
 import earthquakes from "./endpoints/earthquakes.ts";
@@ -33,6 +34,7 @@ router.add("GET", "/x/bus/routes", busRoutes);
 router.add("GET", "/x/flights/{:type}", flights);
 router.add("GET", "/x/roads/conditions", roadConditions);
 router.add("GET", "/x/roads/weather", roadWeather);
+router.add("GET", "/x/air-quality", airQuality);
 
 // Global unhandled rejection handler
 globalThis.addEventListener("unhandledrejection", (event) => {

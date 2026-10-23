@@ -4,6 +4,7 @@
 // These can be run periodically (e.g., daily) as a watchdog for breaking changes in external APIs
 
 import { assert, test } from "vitest";
+import airQuality from "./air-quality.ts";
 import { busRoutes, busStops } from "./bus.ts";
 import car from "./car.ts";
 import earthquakes from "./earthquakes.ts";
@@ -251,4 +252,26 @@ test("LIVE - roads endpoints read Vegagerðin feeds", async () => {
   const stations = await weather.json<Array<{ name: string; time: string }>>();
   assert.isAbove(stations.length, 50);
   assert.isTrue(stations.some((station) => station.time !== null));
+});
+
+test("LIVE - air quality endpoint reads UST stations", async () => {
+  const res = await airQuality(new Request("http://localhost/x/air-quality"));
+  assert.equal(res.status, 200);
+  const stations =
+    await res.json<
+      Array<{
+        id: string;
+        latitude: number | null;
+        readings: Record<string, { value: number; time: string }>;
+      }>
+    >();
+  assert.isAbove(stations.length, 10);
+  const withReadings = stations.filter(
+    (station) => Object.keys(station.readings).length > 0,
+  );
+  assert.isAbove(withReadings.length, 0);
+  for (const reading of Object.values(withReadings[0].readings)) {
+    assert.isFalse(Number.isNaN(reading.value));
+    assert.isFalse(Number.isNaN(Date.parse(reading.time)));
+  }
 });
