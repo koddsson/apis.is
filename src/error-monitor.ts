@@ -122,6 +122,7 @@ ${report.stack || "No stack trace available"}
 - URL: ${report.url || "N/A"}
 - Timestamp: ${report.timestamp}
 - Ray ID: ${report.rayId || "N/A"}
+- Commit: ${process.env.GIT_SHA || "N/A"}
 
 **Fingerprint:** \`${fingerprint}\`
 

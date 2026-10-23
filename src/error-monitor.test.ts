@@ -123,6 +123,7 @@ test("reportError should handle missing request method and url", async () => {
     assert.include(issueBody, "Method: N/A");
     assert.include(issueBody, "URL: N/A");
     assert.include(issueBody, "Ray ID: N/A");
+    assert.include(issueBody, "Commit: N/A");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -167,6 +168,7 @@ test("reportError should create GitHub issue with correct API call", async () =>
     vi.stubEnv("ENVIRONMENT", "production");
     vi.stubEnv("GITHUB_TOKEN", "test-token");
     vi.stubEnv("GITHUB_REPOSITORY", "owner/repo");
+    vi.stubEnv("GIT_SHA", "0123456789abcdef0123456789abcdef01234567");
 
     // Track fetch calls
     const fetchCalls: Array<{ url: string; options?: RequestInit }> = [];
@@ -231,6 +233,10 @@ test("reportError should create GitHub issue with correct API call", async () =>
     assert.include(createBody.body, "https://example.com/api/test");
     assert.include(createBody.body, "Fingerprint:");
     assert.include(createBody.body, "Ray ID: 8d1f2a3b4c5d6e7f-KEF");
+    assert.include(
+      createBody.body,
+      "Commit: 0123456789abcdef0123456789abcdef01234567",
+    );
     assert.deepEqual(createBody.labels, ["uncaught-error", "automated", "bug"]);
   } finally {
     // Restore fetch

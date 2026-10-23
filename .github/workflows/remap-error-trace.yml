@@ -1,0 +1,72 @@
+name: Remap Error Stack Trace
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  remap:
+    # The error monitor files issues with the repository owner's token.
+    if: >-
+      contains(github.event.issue.labels.*.name, 'uncaught-error') &&
+      github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Find deployed commit
+        id: commit
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          sha=$(printf '%s\n' "$ISSUE_BODY" | sed -nE 's/^- Commit: ([0-9a-f]{40})$/\1/p' | head -n 1)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        if: steps.commit.outputs.sha != ''
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        if: steps.commit.outputs.sha != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.commit.outputs.sha != ''
+        run: npm ci
+
+      - name: Download source map
+        id: map
+        if: steps.commit.outputs.sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          url=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=worker-sourcemap-$SHA" \
+            --jq '[.artifacts[] | select(.expired | not)][0].archive_download_url // empty')
+          if [ -z "$url" ]; then
+            echo "No source map artifact for $SHA"
+            exit 0
+          fi
+          gh api "$url" > sourcemap.zip
+          unzip -o sourcemap.zip -d sourcemap
+          echo "found=true" >> "$GITHUB_OUTPUT"
+
+      - name: Remap stack trace
+        if: steps.map.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          node scripts/remap-issue-body.ts sourcemap/index.js.map "$SHA" remapped.md
+          if [ -f remapped.md ]; then
+            gh issue edit "$ISSUE_NUMBER" --body-file remapped.md
+          fi
