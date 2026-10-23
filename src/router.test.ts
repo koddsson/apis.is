@@ -1,7 +1,7 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, test } from "vitest";
 import { Router } from "./router.ts";
 
-Deno.test("Router - adds and routes GET requests", async () => {
+test("Router - adds and routes GET requests", async () => {
   const router = new Router();
   const handler = () => new Response("test");
   router.add("GET", "/test", handler);
@@ -9,19 +9,19 @@ Deno.test("Router - adds and routes GET requests", async () => {
   const req = new Request("http://localhost/test");
   const res = await router.route(req);
 
-  assertEquals(res.status, 200);
-  assertEquals(await res.text(), "test");
+  assert.deepEqual(res.status, 200);
+  assert.deepEqual(await res.text(), "test");
 });
 
-Deno.test("Router - returns 404 for unmatched routes", async () => {
+test("Router - returns 404 for unmatched routes", async () => {
   const router = new Router();
   const req = new Request("http://localhost/nonexistent");
   const res = await router.route(req);
 
-  assertEquals(res.status, 404);
+  assert.deepEqual(res.status, 404);
 });
 
-Deno.test("Router - handles path parameters", async () => {
+test("Router - handles path parameters", async () => {
   const router = new Router();
   let capturedParams: Record<string, string> = {};
 
@@ -35,10 +35,10 @@ Deno.test("Router - handles path parameters", async () => {
   const req = new Request("http://localhost/user/123");
   await router.route(req);
 
-  assertEquals(capturedParams.id, "123");
+  assert.deepEqual(capturedParams.id, "123");
 });
 
-Deno.test("Router - handles optional parameters", async () => {
+test("Router - handles optional parameters", async () => {
   const router = new Router();
   let capturedParams: Record<string, string> = {};
 
@@ -52,16 +52,16 @@ Deno.test("Router - handles optional parameters", async () => {
   // With parameter
   const req1 = new Request("http://localhost/item/ABC");
   await router.route(req1);
-  assertEquals(capturedParams.code, "ABC");
+  assert.deepEqual(capturedParams.code, "ABC");
 
   // Without parameter
   capturedParams = {};
   const req2 = new Request("http://localhost/item/");
   await router.route(req2);
-  assertEquals(capturedParams.code, undefined);
+  assert.deepEqual(capturedParams.code, undefined);
 });
 
-Deno.test("Router - supports POST requests", async () => {
+test("Router - supports POST requests", async () => {
   const router = new Router();
   const handler = () => new Response("posted");
   router.add("POST", "/api/data", handler);
@@ -69,11 +69,11 @@ Deno.test("Router - supports POST requests", async () => {
   const req = new Request("http://localhost/api/data", { method: "POST" });
   const res = await router.route(req);
 
-  assertEquals(res.status, 200);
-  assertEquals(await res.text(), "posted");
+  assert.deepEqual(res.status, 200);
+  assert.deepEqual(await res.text(), "posted");
 });
 
-Deno.test("Router - supports PUT requests", async () => {
+test("Router - supports PUT requests", async () => {
   const router = new Router();
   const handler = () => new Response("updated");
   router.add("PUT", "/api/data", handler);
@@ -81,11 +81,11 @@ Deno.test("Router - supports PUT requests", async () => {
   const req = new Request("http://localhost/api/data", { method: "PUT" });
   const res = await router.route(req);
 
-  assertEquals(res.status, 200);
-  assertEquals(await res.text(), "updated");
+  assert.deepEqual(res.status, 200);
+  assert.deepEqual(await res.text(), "updated");
 });
 
-Deno.test("Router - getEndpoints returns endpoints with meta", () => {
+test("Router - getEndpoints returns endpoints with meta", () => {
   const router = new Router();
 
   const handler1 = () => new Response("ok");
@@ -103,21 +103,21 @@ Deno.test("Router - getEndpoints returns endpoints with meta", () => {
 
   const endpoints = router.getEndpoints();
 
-  assertEquals(endpoints.length, 2);
-  assertEquals(endpoints[0].endpoint, "/api/test");
-  assertEquals(endpoints[0].description, "Test endpoint");
-  assertEquals(endpoints[1].endpoint, "/api/other");
-  assertEquals(endpoints[1].description, "Other endpoint");
+  assert.deepEqual(endpoints.length, 2);
+  assert.deepEqual(endpoints[0].endpoint, "/api/test");
+  assert.deepEqual(endpoints[0].description, "Test endpoint");
+  assert.deepEqual(endpoints[1].endpoint, "/api/other");
+  assert.deepEqual(endpoints[1].description, "Other endpoint");
 });
 
-Deno.test("Router - getEndpoints returns empty array when no endpoints", () => {
+test("Router - getEndpoints returns empty array when no endpoints", () => {
   const router = new Router();
   const endpoints = router.getEndpoints();
 
-  assertEquals(endpoints.length, 0);
+  assert.deepEqual(endpoints.length, 0);
 });
 
-Deno.test("Router - handles async handlers", async () => {
+test("Router - handles async handlers", async () => {
   const router = new Router();
   const handler = async () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -128,11 +128,11 @@ Deno.test("Router - handles async handlers", async () => {
   const req = new Request("http://localhost/async");
   const res = await router.route(req);
 
-  assertEquals(res.status, 200);
-  assertEquals(await res.text(), "async result");
+  assert.deepEqual(res.status, 200);
+  assert.deepEqual(await res.text(), "async result");
 });
 
-Deno.test("Router - handles multiple routes", async () => {
+test("Router - handles multiple routes", async () => {
   const router = new Router();
   router.add("GET", "/route1", () => new Response("route1"));
   router.add("GET", "/route2", () => new Response("route2"));
@@ -140,43 +140,33 @@ Deno.test("Router - handles multiple routes", async () => {
 
   const req1 = new Request("http://localhost/route1");
   const res1 = await router.route(req1);
-  assertEquals(await res1.text(), "route1");
+  assert.deepEqual(await res1.text(), "route1");
 
   const req2 = new Request("http://localhost/route2");
   const res2 = await router.route(req2);
-  assertEquals(await res2.text(), "route2");
+  assert.deepEqual(await res2.text(), "route2");
 
   const req3 = new Request("http://localhost/route3");
   const res3 = await router.route(req3);
-  assertEquals(await res3.text(), "route3");
+  assert.deepEqual(await res3.text(), "route3");
 });
 
-Deno.test("Router - handles errors in handlers gracefully", async () => {
+test("Router - handles errors in handlers gracefully", async () => {
   const router = new Router();
   const handler = () => {
     throw new Error("Handler error");
   };
   router.add("GET", "/error", handler);
 
-  // Ensure we're not in production to avoid creating real issues
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
-  try {
-    if (originalDeploymentId) Deno.env.delete("DENO_DEPLOYMENT_ID");
+  const req = new Request("http://localhost/error");
+  const res = await router.route(req);
 
-    const req = new Request("http://localhost/error");
-    const res = await router.route(req);
-
-    assertEquals(res.status, 500);
-    const json = await res.json();
-    assertEquals(json.error, "Internal Server Error");
-  } finally {
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
-    }
-  }
+  assert.deepEqual(res.status, 500);
+  const json = await res.json<{ error: string }>();
+  assert.deepEqual(json.error, "Internal Server Error");
 });
 
-Deno.test("Router - handles async errors in handlers", async () => {
+test("Router - handles async errors in handlers", async () => {
   const router = new Router();
   const handler = async () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -184,24 +174,15 @@ Deno.test("Router - handles async errors in handlers", async () => {
   };
   router.add("GET", "/async-error", handler);
 
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
-  try {
-    if (originalDeploymentId) Deno.env.delete("DENO_DEPLOYMENT_ID");
+  const req = new Request("http://localhost/async-error");
+  const res = await router.route(req);
 
-    const req = new Request("http://localhost/async-error");
-    const res = await router.route(req);
-
-    assertEquals(res.status, 500);
-    const json = await res.json();
-    assertEquals(json.error, "Internal Server Error");
-  } finally {
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
-    }
-  }
+  assert.deepEqual(res.status, 500);
+  const json = await res.json<{ error: string }>();
+  assert.deepEqual(json.error, "Internal Server Error");
 });
 
-Deno.test("Router - logs successful requests in Common Log Format", async () => {
+test("Router - logs successful requests in Common Log Format", async () => {
   const router = new Router();
 
   // Add a simple logging middleware for the test
@@ -233,17 +214,17 @@ Deno.test("Router - logs successful requests in Common Log Format", async () => 
     await router.route(req);
 
     // Verify Common Log Format: host - - [date] "method path protocol" status size
-    assertStringIncludes(loggedMessage, "GET /test HTTP/1.1");
-    assertStringIncludes(loggedMessage, "200");
-    assertStringIncludes(loggedMessage, "- - [");
-    assertStringIncludes(loggedMessage, "]");
-    assertStringIncludes(loggedMessage, '"');
+    assert.include(loggedMessage, "GET /test HTTP/1.1");
+    assert.include(loggedMessage, "200");
+    assert.include(loggedMessage, "- - [");
+    assert.include(loggedMessage, "]");
+    assert.include(loggedMessage, '"');
   } finally {
     console.log = originalLog;
   }
 });
 
-Deno.test("Router - logs 404 responses in Common Log Format", async () => {
+test("Router - logs 404 responses in Common Log Format", async () => {
   const router = new Router();
 
   // Add a simple logging middleware for the test
@@ -270,15 +251,15 @@ Deno.test("Router - logs 404 responses in Common Log Format", async () => {
     const req = new Request("http://localhost/nonexistent");
     await router.route(req);
 
-    assertStringIncludes(loggedMessage, "GET /nonexistent HTTP/1.1");
-    assertStringIncludes(loggedMessage, "404");
-    assertStringIncludes(loggedMessage, "- - [");
+    assert.include(loggedMessage, "GET /nonexistent HTTP/1.1");
+    assert.include(loggedMessage, "404");
+    assert.include(loggedMessage, "- - [");
   } finally {
     console.log = originalLog;
   }
 });
 
-Deno.test("Router - logs error responses with 500 status in Common Log Format", async () => {
+test("Router - logs error responses with 500 status in Common Log Format", async () => {
   const router = new Router();
 
   // Add a simple logging middleware for the test
@@ -306,25 +287,19 @@ Deno.test("Router - logs error responses with 500 status in Common Log Format", 
     loggedMessage = msg;
   };
 
-  const originalDeploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
   try {
-    if (originalDeploymentId) Deno.env.delete("DENO_DEPLOYMENT_ID");
-
     const req = new Request("http://localhost/error");
     await router.route(req);
 
-    assertStringIncludes(loggedMessage, "GET /error HTTP/1.1");
-    assertStringIncludes(loggedMessage, "500");
-    assertStringIncludes(loggedMessage, "- - [");
+    assert.include(loggedMessage, "GET /error HTTP/1.1");
+    assert.include(loggedMessage, "500");
+    assert.include(loggedMessage, "- - [");
   } finally {
     console.log = originalLog;
-    if (originalDeploymentId) {
-      Deno.env.set("DENO_DEPLOYMENT_ID", originalDeploymentId);
-    }
   }
 });
 
-Deno.test("Router - logs different HTTP methods", async () => {
+test("Router - logs different HTTP methods", async () => {
   const router = new Router();
 
   // Add a simple logging middleware for the test
@@ -359,11 +334,11 @@ Deno.test("Router - logs different HTTP methods", async () => {
     const putReq = new Request("http://localhost/api/data", { method: "PUT" });
     await router.route(putReq);
 
-    assertEquals(loggedMessages.length, 2);
-    assertStringIncludes(loggedMessages[0], "POST");
-    assertStringIncludes(loggedMessages[0], "/api/data");
-    assertStringIncludes(loggedMessages[1], "PUT");
-    assertStringIncludes(loggedMessages[1], "/api/data");
+    assert.deepEqual(loggedMessages.length, 2);
+    assert.include(loggedMessages[0], "POST");
+    assert.include(loggedMessages[0], "/api/data");
+    assert.include(loggedMessages[1], "PUT");
+    assert.include(loggedMessages[1], "/api/data");
   } finally {
     console.log = originalLog;
   }

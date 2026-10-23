@@ -1,8 +1,12 @@
-import { assertEquals } from "@std/assert";
+import { assert, test } from "vitest";
 import { Router } from "../router.ts";
 import meta from "./meta.ts";
 
-Deno.test("meta - returns list of endpoints", async () => {
+type Endpoints = {
+  endpoints: Array<{ endpoint: string; description: string }>;
+};
+
+test("meta - returns list of endpoints", async () => {
   const router = new Router();
 
   const handler1 = () => new Response("ok");
@@ -18,18 +22,18 @@ Deno.test("meta - returns list of endpoints", async () => {
   const req = new Request("http://localhost/");
   const res = metaHandler(req, {});
 
-  assertEquals(res.status, 200);
-  assertEquals(res.headers.get("Access-Control-Allow-Origin"), "*");
+  assert.deepEqual(res.status, 200);
+  assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
 
-  const data = await res.json();
-  assertEquals(data.endpoints.length, 2);
-  assertEquals(data.endpoints[0].endpoint, "/x/test1");
-  assertEquals(data.endpoints[0].description, "Test 1");
-  assertEquals(data.endpoints[1].endpoint, "/x/test2");
-  assertEquals(data.endpoints[1].description, "Test 2");
+  const data = await res.json<Endpoints>();
+  assert.deepEqual(data.endpoints.length, 2);
+  assert.deepEqual(data.endpoints[0].endpoint, "/x/test1");
+  assert.deepEqual(data.endpoints[0].description, "Test 1");
+  assert.deepEqual(data.endpoints[1].endpoint, "/x/test2");
+  assert.deepEqual(data.endpoints[1].description, "Test 2");
 });
 
-Deno.test("meta - returns compact JSON by default", async () => {
+test("meta - returns compact JSON by default", async () => {
   const router = new Router();
   const metaHandler = meta(router);
 
@@ -37,10 +41,10 @@ Deno.test("meta - returns compact JSON by default", async () => {
   const res = metaHandler(req, {});
 
   const text = await res.text();
-  assertEquals(text.includes("\n"), false);
+  assert.deepEqual(text.includes("\n"), false);
 });
 
-Deno.test("meta - returns pretty JSON when pretty=true", async () => {
+test("meta - returns pretty JSON when pretty=true", async () => {
   const router = new Router();
   const metaHandler = meta(router);
 
@@ -48,16 +52,16 @@ Deno.test("meta - returns pretty JSON when pretty=true", async () => {
   const res = metaHandler(req, {});
 
   const text = await res.text();
-  assertEquals(text.includes("\n"), true);
+  assert.deepEqual(text.includes("\n"), true);
 });
 
-Deno.test("meta - returns empty endpoints array when no endpoints", async () => {
+test("meta - returns empty endpoints array when no endpoints", async () => {
   const router = new Router();
   const metaHandler = meta(router);
 
   const req = new Request("http://localhost/");
   const res = metaHandler(req, {});
 
-  const data = await res.json();
-  assertEquals(data.endpoints.length, 0);
+  const data = await res.json<Endpoints>();
+  assert.deepEqual(data.endpoints.length, 0);
 });

@@ -1,8 +1,8 @@
 import { response } from "../utils.ts";
+
 // TODO: Implement caching
 
-const VEHICLE_SEARCH_QUERY =
-  `query publicVehicleSearch($input: GetPublicVehicleSearchInput!) {
+const VEHICLE_SEARCH_QUERY = `query publicVehicleSearch($input: GetPublicVehicleSearchInput!) {
   publicVehicleSearch(input: $input) {
     permno
     regno
@@ -41,7 +41,9 @@ async function car(
       query: VEHICLE_SEARCH_QUERY,
     }),
   });
-  const json = await serverResponse.json();
+  const json = await serverResponse.json<{
+    data: { publicVehicleSearch: Record<string, unknown> };
+  }>();
   const url = new URL(request.url);
   return response(
     json.data.publicVehicleSearch,

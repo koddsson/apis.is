@@ -6,9 +6,7 @@
 
 ## Review Checklist
 
-- Make sure to include any changes from `deno fmt .`
-- `deno check src/` must pass.
-- `deno lint` must pass.
+- `npm run lint` must pass (run `npm run format` to fix formatting).
+- `npm run typecheck` must pass.
 - Add new tests for any new feature or bug fix.
-- `SKIP_LIVE_TESTS=true deno test --allow-env --coverage=coverage` must pass
-- `deno coverage coverage | deno run scripts/check-coverage.ts 85 95` must pass
+- `npm run test:coverage` must pass, including the coverage thresholds.

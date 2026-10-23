@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, test } from "vitest";
 import car from "./car.ts";
 
 const mockCarResponse = {
@@ -12,7 +12,7 @@ const mockCarResponse = {
   },
 };
 
-Deno.test("car - fetches and returns vehicle data", async () => {
+test("car - fetches and returns vehicle data", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => {
     return Promise.resolve(
@@ -24,24 +24,24 @@ Deno.test("car - fetches and returns vehicle data", async () => {
     const req = new Request("http://localhost/x/car/ABC12");
     const res = await car(req, { number: "ABC12" });
 
-    assertEquals(res.status, 200);
-    assertEquals(res.headers.get("Access-Control-Allow-Origin"), "*");
+    assert.deepEqual(res.status, 200);
+    assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
 
-    const data = await res.json();
-    assertEquals(typeof data, "object");
-    assertEquals(data.permno, "ABC12");
-    assertEquals(data.make, "Toyota");
+    const data = await res.json<Record<string, string>>();
+    assert.deepEqual(typeof data, "object");
+    assert.deepEqual(data.permno, "ABC12");
+    assert.deepEqual(data.make, "Toyota");
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("car - includes number parameter in API call", async () => {
+test("car - includes number parameter in API call", async () => {
   const originalFetch = globalThis.fetch;
   let requestBody = "";
 
   globalThis.fetch = (_url: string | URL | Request, init?: RequestInit) => {
-    requestBody = init?.body as string ?? "";
+    requestBody = (init?.body as string) ?? "";
     return Promise.resolve(
       new Response(JSON.stringify(mockCarResponse), { status: 200 }),
     );
@@ -51,13 +51,13 @@ Deno.test("car - includes number parameter in API call", async () => {
     const req = new Request("http://localhost/x/car/XYZ99");
     await car(req, { number: "XYZ99" });
 
-    assertStringIncludes(requestBody, "XYZ99");
+    assert.include(requestBody, "XYZ99");
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("car - returns compact JSON by default", async () => {
+test("car - returns compact JSON by default", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => {
     return Promise.resolve(
@@ -70,13 +70,13 @@ Deno.test("car - returns compact JSON by default", async () => {
     const res = await car(req, { number: "ABC12" });
 
     const text = await res.text();
-    assertEquals(text.includes("\n"), false);
+    assert.deepEqual(text.includes("\n"), false);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("car - returns pretty JSON when pretty=true", async () => {
+test("car - returns pretty JSON when pretty=true", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => {
     return Promise.resolve(
@@ -89,13 +89,13 @@ Deno.test("car - returns pretty JSON when pretty=true", async () => {
     const res = await car(req, { number: "ABC12" });
 
     const text = await res.text();
-    assertEquals(text.includes("\n"), true);
+    assert.deepEqual(text.includes("\n"), true);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("car - has correct meta information", () => {
-  assertEquals(car.meta?.endpoint, "/x/car/{number}");
-  assertStringIncludes(car.meta?.description || "", "Vehicle information");
+test("car - has correct meta information", () => {
+  assert.deepEqual(car.meta?.endpoint, "/x/car/{number}");
+  assert.include(car.meta?.description || "", "Vehicle information");
 });

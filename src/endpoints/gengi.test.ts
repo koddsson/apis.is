@@ -1,5 +1,7 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, test } from "vitest";
 import gengi from "./gengi.ts";
+
+type Rates = Record<string, { rate: number; description?: string }>;
 
 // Mock XML response from Borgun API
 const mockXmlResponse = `<?xml version="1.0" encoding="UTF-8"?>
@@ -21,7 +23,7 @@ const mockXmlResponse = `<?xml version="1.0" encoding="UTF-8"?>
   </Rate>
 </Rates>`;
 
-Deno.test("gengi - fetches and returns all currencies", async () => {
+test("gengi - fetches and returns all currencies", async () => {
   // Mock fetch
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => {
@@ -32,21 +34,21 @@ Deno.test("gengi - fetches and returns all currencies", async () => {
     const req = new Request("http://localhost/x/gengi");
     const res = await gengi(req, {});
 
-    assertEquals(res.status, 200);
-    assertEquals(res.headers.get("Access-Control-Allow-Origin"), "*");
+    assert.deepEqual(res.status, 200);
+    assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
 
-    const data = await res.json();
-    assertEquals(typeof data, "object");
-    assertEquals(data.USD.rate, 138.50);
-    assertEquals(data.USD.description, "US Dollar");
-    assertEquals(data.EUR.rate, 151.20);
-    assertEquals(data.GBP.rate, 175.30);
+    const data = await res.json<Rates>();
+    assert.deepEqual(typeof data, "object");
+    assert.deepEqual(data.USD.rate, 138.5);
+    assert.deepEqual(data.USD.description, "US Dollar");
+    assert.deepEqual(data.EUR.rate, 151.2);
+    assert.deepEqual(data.GBP.rate, 175.3);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("gengi - filters by single currency code", async () => {
+test("gengi - filters by single currency code", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => {
     return Promise.resolve(new Response(mockXmlResponse, { status: 200 }));
@@ -56,16 +58,16 @@ Deno.test("gengi - filters by single currency code", async () => {
     const req = new Request("http://localhost/x/gengi/USD");
     const res = await gengi(req, { code: "USD" });
 
-    const data = await res.json();
-    assertEquals(Object.keys(data).length, 1);
-    assertEquals(data.USD.rate, 138.50);
-    assertEquals(data.EUR, undefined);
+    const data = await res.json<Rates>();
+    assert.deepEqual(Object.keys(data).length, 1);
+    assert.deepEqual(data.USD.rate, 138.5);
+    assert.deepEqual(data.EUR, undefined);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("gengi - filters by multiple currency codes", async () => {
+test("gengi - filters by multiple currency codes", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => {
     return Promise.resolve(new Response(mockXmlResponse, { status: 200 }));
@@ -75,17 +77,17 @@ Deno.test("gengi - filters by multiple currency codes", async () => {
     const req = new Request("http://localhost/x/gengi/USD,EUR");
     const res = await gengi(req, { code: "USD,EUR" });
 
-    const data = await res.json();
-    assertEquals(Object.keys(data).length, 2);
-    assertEquals(data.USD.rate, 138.50);
-    assertEquals(data.EUR.rate, 151.20);
-    assertEquals(data.GBP, undefined);
+    const data = await res.json<Rates>();
+    assert.deepEqual(Object.keys(data).length, 2);
+    assert.deepEqual(data.USD.rate, 138.5);
+    assert.deepEqual(data.EUR.rate, 151.2);
+    assert.deepEqual(data.GBP, undefined);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("gengi - returns pretty JSON", async () => {
+test("gengi - returns pretty JSON", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = () => {
     return Promise.resolve(new Response(mockXmlResponse, { status: 200 }));
@@ -96,16 +98,13 @@ Deno.test("gengi - returns pretty JSON", async () => {
     const res = await gengi(req, {});
 
     const text = await res.text();
-    assertStringIncludes(text, "\n");
+    assert.include(text, "\n");
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("gengi - has correct meta information", () => {
-  assertEquals(gengi.meta?.endpoint, "/x/gengi/{code}");
-  assertStringIncludes(
-    gengi.meta?.description || "",
-    "Currency exchange rates",
-  );
+test("gengi - has correct meta information", () => {
+  assert.deepEqual(gengi.meta?.endpoint, "/x/gengi/{code}");
+  assert.include(gengi.meta?.description || "", "Currency exchange rates");
 });

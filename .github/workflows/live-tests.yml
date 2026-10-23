@@ -19,15 +19,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          deno-version: v2.x
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run live integration tests
         id: live_tests
         run: |
-          deno test --allow-net --allow-env src/endpoints/live.test.ts
+          npm run test:live
         continue-on-error: true
 
       - name: Create issue if tests fail

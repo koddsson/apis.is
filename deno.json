@@ -1,8 +1,0 @@
-{
-  "nodeModulesDir": "none",
-  "imports": {
-    "@std/assert": "https://deno.land/std@0.224.0/assert/mod.ts",
-    "linkedom": "npm:linkedom@0.18.12",
-    "xml2js": "https://deno.land/x/xml2js@1.0.0/mod.ts"
-  }
-}

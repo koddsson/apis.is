@@ -103,13 +103,13 @@ The error monitoring system includes comprehensive tests:
 
 ```bash
 # Run all tests
-deno test --allow-env --allow-net
+npm test
 
 # Test error monitoring specifically
-deno test --allow-env src/error-monitor.test.ts
+npx vitest run src/error-monitor.test.ts
 
 # Test router error handling
-deno test --allow-env src/router.test.ts
+npx vitest run src/router.test.ts
 ```
 
 ## Disabling Error Monitoring
