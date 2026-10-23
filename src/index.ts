@@ -1,6 +1,7 @@
 import { busRoutes, busStops } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
 import earthquakes from "./endpoints/earthquakes.ts";
+import flights from "./endpoints/flights.ts";
 import gengi from "./endpoints/gengi.ts";
 import meetups from "./endpoints/meetups.ts";
 import meta from "./endpoints/meta.ts";
@@ -28,6 +29,7 @@ router.add("GET", "/x/earthquakes", earthquakes);
 router.add("GET", "/x/weather/{:station}?", weather);
 router.add("GET", "/x/bus/stops/{:id}?", busStops);
 router.add("GET", "/x/bus/routes", busRoutes);
+router.add("GET", "/x/flights/{:type}", flights);
 
 // Global unhandled rejection handler
 globalThis.addEventListener("unhandledrejection", (event) => {

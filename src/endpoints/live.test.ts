@@ -7,6 +7,7 @@ import { assert, test } from "vitest";
 import { busRoutes, busStops } from "./bus.ts";
 import car from "./car.ts";
 import earthquakes from "./earthquakes.ts";
+import flights from "./flights.ts";
 import gengi from "./gengi.ts";
 import raceCalendar from "./race-calendar.ts";
 import weather from "./weather.ts";
@@ -211,4 +212,25 @@ test("LIVE - bus endpoints read stops and routes from Strætó GTFS", async () =
   const routes = await busRoutes(new Request("http://localhost/x/bus/routes"));
   const routeList = await routes.json<Array<{ number: string }>>();
   assert.isTrue(routeList.some((route) => route.number === "1"));
+});
+
+test("LIVE - flights endpoint reads Keflavík and a domestic airport", async () => {
+  for (const [query, type] of [
+    ["", "arrivals"],
+    ["", "departures"],
+    ["?airport=RKV", "arrivals"],
+  ]) {
+    const res = await flights(
+      new Request(`http://localhost/x/flights/${type}${query}`),
+      { type },
+    );
+    assert.equal(res.status, 200, `${type}${query}`);
+    const data =
+      await res.json<Array<{ flightNumber: string; scheduled: string }>>();
+    assert.isArray(data);
+    for (const flight of data) {
+      assert.isString(flight.flightNumber);
+      assert.isFalse(Number.isNaN(Date.parse(flight.scheduled)));
+    }
+  }
 });
