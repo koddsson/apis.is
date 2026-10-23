@@ -40,20 +40,18 @@ async function createGitHubIssue(
   report: ErrorReport,
   fingerprint: string,
 ): Promise<void> {
-  const githubToken = Deno.env.get("GITHUB_TOKEN");
-  const githubRepo = Deno.env.get("GITHUB_REPOSITORY");
+  const githubToken = process.env.GITHUB_TOKEN;
+  const githubRepo = process.env.GITHUB_REPOSITORY;
+  const isProduction = process.env.ENVIRONMENT === "production";
 
   // Only report in production and when GitHub token is available
-  if (
-    !githubToken || !githubRepo ||
-    Deno.env.get("DENO_DEPLOYMENT_ID") === undefined
-  ) {
+  if (!githubToken || !githubRepo || !isProduction) {
     console.error(
       "Error monitoring: Not in production or missing configuration",
       {
         hasToken: !!githubToken,
         hasRepo: !!githubRepo,
-        hasDeploymentId: Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined,
+        isProduction,
       },
     );
     return;

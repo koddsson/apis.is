@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4.149.0/config-schema.json",
+  "name": "apis-is",
+  "main": "dist/worker.js",
+  "compatibility_date": "2026-10-01",
+  // Exposes vars and secrets on process.env, which error-monitor.ts reads.
+  "compatibility_flags": ["nodejs_compat"],
+  "build": {
+    "command": "deno bundle --platform browser -o dist/worker.js src/index.ts"
+  },
+  "observability": { "enabled": true },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "GITHUB_REPOSITORY": "koddsson/apis.is"
+  }
+}
