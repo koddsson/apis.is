@@ -10,138 +10,72 @@ type Offer = {
   link: string;
 };
 
-// The real Nova site renders all 7 days for every offer, using different CSS
-// classes on the day's parent div to mark active vs inactive days.  "bg-active"
-// and "bg-inactive" stand in for the obfuscated atomic-CSS class names.
-const mockCss = `.bg-active { background-color: #FE3C72; } .bg-inactive { background-color: #E0E0E0; } .shared { padding: 4px; }`;
+// Upstream days are ordered Sunday first.
+const mockOffers = [
+  {
+    name: "Vök Baths",
+    handle: "voek-baths",
+    description: "Fljótandi laugar á Urriðavatni.",
+    imageUrl: "https://images.ctfassets.net/example/voek.jpg",
+    days: [false, true, true, false, false, false, false],
+    locations: [{ streetAddress: null }, { streetAddress: "Vök, Egilsstaðir" }],
+  },
+  {
+    name: "Sunday only",
+    handle: "sunday-only",
+    description: null,
+    imageUrl: null,
+    days: [true, false, false, false, false, false, false],
+    locations: [],
+  },
+];
 
-const mockHtml = `<!DOCTYPE html><html><head>
-<link rel="stylesheet" href="/client/test.css"/>
-</head><body>
-<div class="as3s0o0">
-  <div>
-    <div>
-      <div>
-        <img src="https://images.ctfassets.net/example/image1.png" alt="Test Offer" style="aspect-ratio:16/9;object-fit:cover"/>
-      </div>
-      <div>
-        <h4>Test Offer</h4>
-        <div><div><p><strong>2f1 Buy one get one free.</strong> Great food!</p></div></div>
-        <div>
-          <div>
-            <div><div class="bg-active shared"><span>Mán</span></div></div>
-            <div><div class="bg-active shared"><span>Þri</span></div></div>
-            <div><div class="bg-active shared"><span>Mið</span></div></div>
-            <div><div class="bg-active shared"><span>Fim</span></div></div>
-            <div><div class="bg-active shared"><span>Fös</span></div></div>
-            <div><div class="bg-active shared"><span>Lau</span></div></div>
-            <div><div class="bg-active shared"><span>Sun</span></div></div>
-          </div>
-        </div>
-        <div>
-          <div>
-            <div><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M24"/></svg></div>
-            <div><p>Laugavegur 10</p></div>
-          </div>
-          <div>
-            <a href="/dansgolfid/fyrir-thig/2f1/test-offer"><span>Skoða nánar</span></a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div>
-    <div>
-      <div>
-        <img src="https://images.ctfassets.net/example/image2.png" alt="Another Place" style="aspect-ratio:16/9;object-fit:cover"/>
-      </div>
-      <div>
-        <h4>Another Place</h4>
-        <div><div><p><strong>2f1 on all main courses.</strong></p></div></div>
-        <div>
-          <div>
-            <div><div class="bg-active shared"><span>Mán</span></div></div>
-            <div><div class="bg-active shared"><span>Þri</span></div></div>
-            <div><div class="bg-active shared"><span>Mið</span></div></div>
-            <div><div class="bg-inactive shared"><span>Fim</span></div></div>
-            <div><div class="bg-inactive shared"><span>Fös</span></div></div>
-            <div><div class="bg-inactive shared"><span>Lau</span></div></div>
-            <div><div class="bg-inactive shared"><span>Sun</span></div></div>
-          </div>
-        </div>
-        <div>
-          <div>
-            <div><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M24"/></svg></div>
-            <div><p>Skólavörðustígur 5</p></div>
-          </div>
-          <div>
-            <a href="/dansgolfid/fyrir-thig/2f1/another-place"><span>Skoða nánar</span></a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-</body></html>`;
-
-function mockFetch(input: string | URL | Request): Promise<Response> {
-  const url = new URL(input instanceof Request ? input.url : input);
-  if (url.pathname.endsWith(".css")) {
-    return Promise.resolve(new Response(mockCss, { status: 200 }));
-  }
-  return Promise.resolve(new Response(mockHtml, { status: 200 }));
+function mockFetch(body: unknown, status = 200) {
+  const requests: Array<{ url: string; init?: RequestInit }> = [];
+  globalThis.fetch = (input: string | URL | Request, init?: RequestInit) => {
+    requests.push({ url: input.toString(), init });
+    return Promise.resolve(new Response(JSON.stringify(body), { status }));
+  };
+  return requests;
 }
 
-test("nova2f1 - fetches and returns offer data", async () => {
+test("nova2f1 - maps offers from Nova's GraphQL API", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = mockFetch as typeof globalThis.fetch;
+  const requests = mockFetch({
+    data: { twoForOne: { twoForOne: mockOffers } },
+  });
 
   try {
-    const req = new Request("http://localhost/x/nova-2f1");
-    const res = await nova2f1(req);
+    const res = await nova2f1(new Request("http://localhost/x/nova-2f1"));
 
-    assert.deepEqual(res.status, 200);
-    assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("Access-Control-Allow-Origin"), "*");
+    assert.equal(requests[0].url, "https://graphql.nova.is/graphql");
+    assert.equal(requests[0].init?.method, "POST");
+    const body = JSON.parse(requests[0].init?.body as string);
+    assert.deepEqual(body.variables, {
+      input: { filter: {}, pageSize: 200 },
+    });
 
     const data = await res.json<Offer[]>();
-    assert.deepEqual(Array.isArray(data), true);
-    assert.deepEqual(data.length, 2);
-
-    assert.deepEqual(data[0].name, "Test Offer");
-    assert.deepEqual(
-      data[0].image,
-      "https://images.ctfassets.net/example/image1.png",
-    );
-    assert.deepEqual(data[0].address, "Laugavegur 10");
-    assert.deepEqual(
-      data[0].link,
-      "https://www.nova.is/dansgolfid/fyrir-thig/2f1/test-offer",
-    );
-    assert.deepEqual(data[0].days.length, 7);
-    assert.deepEqual(data[0].days[0], "Mán");
-
-    assert.deepEqual(data[1].name, "Another Place");
-    assert.deepEqual(data[1].address, "Skólavörðustígur 5");
-    assert.deepEqual(data[1].days.length, 3);
-    assert.deepEqual(
-      data[1].link,
-      "https://www.nova.is/dansgolfid/fyrir-thig/2f1/another-place",
-    );
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test("nova2f1 - returns compact JSON by default", async () => {
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = mockFetch as typeof globalThis.fetch;
-
-  try {
-    const req = new Request("http://localhost/x/nova-2f1");
-    const res = await nova2f1(req);
-
-    const text = await res.text();
-    assert.deepEqual(text.includes("\n"), false);
+    assert.deepEqual(data, [
+      {
+        name: "Vök Baths",
+        description: "Fljótandi laugar á Urriðavatni.",
+        image: "https://images.ctfassets.net/example/voek.jpg",
+        address: "Vök, Egilsstaðir",
+        days: ["Mán", "Þri"],
+        link: "https://www.nova.is/dansgolfid/fyrir-thig/2f1/voek-baths",
+      },
+      {
+        name: "Sunday only",
+        description: "",
+        image: "",
+        address: "",
+        days: ["Sun"],
+        link: "https://www.nova.is/dansgolfid/fyrir-thig/2f1/sunday-only",
+      },
+    ]);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -149,145 +83,55 @@ test("nova2f1 - returns compact JSON by default", async () => {
 
 test("nova2f1 - returns pretty JSON when pretty=true", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = mockFetch as typeof globalThis.fetch;
+  mockFetch({ data: { twoForOne: { twoForOne: mockOffers } } });
 
   try {
-    const req = new Request("http://localhost/x/nova-2f1?pretty=true");
-    const res = await nova2f1(req);
+    const compact = await nova2f1(new Request("http://localhost/x/nova-2f1"));
+    assert.isFalse((await compact.text()).includes("\n"));
 
-    const text = await res.text();
-    assert.deepEqual(text.includes("\n"), true);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test("nova2f1 - handles card with missing elements", async () => {
-  const minimalHtml = `<!DOCTYPE html><html><body>
-<div>
-  <div>
-    <div>
-      <img alt="Bare Offer"/>
-      <div>
-        <h4>Bare Offer</h4>
-        <div>
-          <div>
-            <a href="/dansgolfid/fyrir-thig/2f1/bare-offer"><span>Skoða nánar</span></a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-</body></html>`;
-
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = () => {
-    return Promise.resolve(new Response(minimalHtml, { status: 200 }));
-  };
-
-  try {
-    const req = new Request("http://localhost/x/nova-2f1");
-    const res = await nova2f1(req);
-    const data = await res.json<Offer[]>();
-
-    assert.deepEqual(data.length, 1);
-    assert.deepEqual(data[0].name, "Bare Offer");
-    assert.deepEqual(data[0].image, "");
-    assert.deepEqual(data[0].address, "");
-    assert.deepEqual(data[0].days.length, 0);
-    assert.deepEqual(
-      data[0].link,
-      "https://www.nova.is/dansgolfid/fyrir-thig/2f1/bare-offer",
+    const pretty = await nova2f1(
+      new Request("http://localhost/x/nova-2f1?pretty=true"),
     );
+    assert.isTrue((await pretty.text()).includes("\n"));
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-test("nova2f1 - skips link with no card container", async () => {
-  const orphanLinkHtml = `<!DOCTYPE html><html><body>
-<a href="/dansgolfid/fyrir-thig/2f1/orphan">Orphan</a>
-</body></html>`;
-
+test("nova2f1 - throws when the API responds with an error status", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = () => {
-    return Promise.resolve(new Response(orphanLinkHtml, { status: 200 }));
-  };
+  mockFetch({}, 503);
 
   try {
-    const req = new Request("http://localhost/x/nova-2f1");
-    const res = await nova2f1(req);
-    const data = await res.json<Offer[]>();
-
-    assert.deepEqual(data.length, 0);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test("nova2f1 - handles card with non-location SVG only", async () => {
-  const noLocationSvgHtml = `<!DOCTYPE html><html><body>
-<div>
-  <div>
-    <div>
-      <img src="https://example.com/img.png" alt="SVG Test"/>
-      <div>
-        <h4>SVG Test</h4>
-        <div><div><p>Some description</p></div></div>
-        <div>
-          <div><div><span>Mán</span></div></div>
-        </div>
-        <div>
-          <div>
-            <div><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M15"/></svg></div>
-          </div>
-          <div>
-            <a href="/dansgolfid/fyrir-thig/2f1/svg-test"><span>Skoða nánar</span></a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-</body></html>`;
-
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = () => {
-    return Promise.resolve(new Response(noLocationSvgHtml, { status: 200 }));
-  };
-
-  try {
-    const req = new Request("http://localhost/x/nova-2f1");
-    const res = await nova2f1(req);
-    const data = await res.json<Offer[]>();
-
-    assert.deepEqual(data.length, 1);
-    assert.deepEqual(data[0].address, "");
-    assert.deepEqual(data[0].days, ["Mán"]);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test("nova2f1 - returns all days when CSS fetch fails", async () => {
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = ((input: string | URL | Request) => {
-    const url = new URL(input instanceof Request ? input.url : input);
-    if (url.pathname.endsWith(".css")) {
-      return Promise.reject(new Error("network error"));
+    let thrown: unknown;
+    try {
+      await nova2f1(new Request("http://localhost/x/nova-2f1"));
+    } catch (error) {
+      thrown = error;
     }
-    return Promise.resolve(new Response(mockHtml, { status: 200 }));
-  }) as typeof globalThis.fetch;
+    assert.instanceOf(thrown, Error);
+    assert.equal((thrown as Error).message, "Failed to fetch offers: 503");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("nova2f1 - throws on GraphQL errors", async () => {
+  const originalFetch = globalThis.fetch;
+  mockFetch({ errors: [{ message: "Cannot query field" }] });
 
   try {
-    const req = new Request("http://localhost/x/nova-2f1");
-    const res = await nova2f1(req);
-    const data = await res.json<Offer[]>();
-
-    // Without CSS info we can't distinguish active/inactive, so all 7 pass
-    assert.deepEqual(data[0].days.length, 7);
-    assert.deepEqual(data[1].days.length, 7);
+    let thrown: unknown;
+    try {
+      await nova2f1(new Request("http://localhost/x/nova-2f1"));
+    } catch (error) {
+      thrown = error;
+    }
+    assert.instanceOf(thrown, Error);
+    assert.equal(
+      (thrown as Error).message,
+      "Nova GraphQL error: Cannot query field",
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }

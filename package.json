@@ -14,8 +14,7 @@
     "test:live": "vitest run --config vitest.live.config.ts"
   },
   "dependencies": {
-    "fast-xml-parser": "5.11.2",
-    "linkedom": "0.18.13"
+    "fast-xml-parser": "5.11.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
