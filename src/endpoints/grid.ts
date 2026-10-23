@@ -23,7 +23,16 @@ interface GridMap {
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch grid data: ${res.status}`);
+  if (!res.ok) {
+    // Landsnet is behind Cloudflare; the ray's suffix names the blocked colo.
+    const ray = res.headers.get("cf-ray");
+    const body = (await res.text())
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ");
+    throw new Error(
+      `Failed to fetch grid data: ${res.status}${ray ? ` (cf-ray ${ray})` : ""} ${body.trim().slice(0, 200)}`.trim(),
+    );
+  }
   return res.json<T>();
 }
 
