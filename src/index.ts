@@ -7,6 +7,7 @@ import meetups from "./endpoints/meetups.ts";
 import meta from "./endpoints/meta.ts";
 import nova2f1 from "./endpoints/nova-2f1.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
+import { roadConditions, roadWeather } from "./endpoints/roads.ts";
 import weather from "./endpoints/weather.ts";
 import { reportError } from "./error-monitor.ts";
 import { checkEndpoints, reportHealth } from "./health.ts";
@@ -30,6 +31,8 @@ router.add("GET", "/x/weather/{:station}?", weather);
 router.add("GET", "/x/bus/stops/{:id}?", busStops);
 router.add("GET", "/x/bus/routes", busRoutes);
 router.add("GET", "/x/flights/{:type}", flights);
+router.add("GET", "/x/roads/conditions", roadConditions);
+router.add("GET", "/x/roads/weather", roadWeather);
 
 // Global unhandled rejection handler
 globalThis.addEventListener("unhandledrejection", (event) => {

@@ -10,6 +10,7 @@ import earthquakes from "./earthquakes.ts";
 import flights from "./flights.ts";
 import gengi from "./gengi.ts";
 import raceCalendar from "./race-calendar.ts";
+import { roadConditions, roadWeather } from "./roads.ts";
 import weather from "./weather.ts";
 
 type Rates = Record<string, { rate: number; description?: string }>;
@@ -233,4 +234,21 @@ test("LIVE - flights endpoint reads Keflavík and a domestic airport", async () 
       assert.isFalse(Number.isNaN(Date.parse(flight.scheduled)));
     }
   }
+});
+
+test("LIVE - roads endpoints read Vegagerðin feeds", async () => {
+  const conditions = await roadConditions(
+    new Request("http://localhost/x/roads/conditions"),
+  );
+  assert.equal(conditions.status, 200);
+  const segments = await conditions.json<Array<{ condition: string }>>();
+  assert.isAbove(segments.length, 100);
+  assert.isString(segments[0].condition);
+
+  const weather = await roadWeather(
+    new Request("http://localhost/x/roads/weather"),
+  );
+  const stations = await weather.json<Array<{ name: string; time: string }>>();
+  assert.isAbove(stations.length, 50);
+  assert.isTrue(stations.some((station) => station.time !== null));
 });

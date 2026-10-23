@@ -24,6 +24,8 @@ test("index - lists every registered endpoint", async () => {
         "/x/bus/stops/{id}",
         "/x/bus/routes",
         "/x/flights/{type}",
+        "/x/roads/conditions",
+        "/x/roads/weather",
       ],
     );
   } finally {
@@ -76,6 +78,8 @@ test("index - scheduled handler checks endpoint health", async () => {
         "/x/bus/stops/{id}",
         "/x/bus/routes",
         "/x/flights/{type}",
+        "/x/roads/conditions",
+        "/x/roads/weather",
       ],
     );
     assert.isUndefined(
