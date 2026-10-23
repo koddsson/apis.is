@@ -1,26 +1,76 @@
 import { assert, test } from "vitest";
 import raceCalendar from "./race-calendar.ts";
 
-const mockRaceCalendarResponse = {
-  dataItems: [
-    {
-      id: "1",
-      name: "Reykjavik Marathon",
-      date: "2024-08-24",
-      location: "Reykjavik",
-    },
-    {
-      id: "2",
-      name: "Laugavegur Ultra Marathon",
-      date: "2024-07-13",
-      location: "Highlands",
-    },
-  ],
+function upstreamEvent(overrides: Record<string, unknown>) {
+  return {
+    id: "id",
+    name: "Race",
+    slug: "race",
+    type: "Race",
+    activityType: "Running",
+    status: "Confirmed",
+    displayDate: null,
+    endDisplayDate: null,
+    locationName: "Reykjavík",
+    organizerName: null,
+    distances: [],
+    registrationUrl: null,
+    registrationStatus: null,
+    daysUntil: 1,
+    ...overrides,
+  };
+}
+
+const mockRaceCalendarResponse = [
+  upstreamEvent({
+    name: "Reykjavíkurmaraþon",
+    slug: "rvkmarathon",
+    displayDate: "2027-08-21",
+    distances: [{ label: "42.2 km", ticketStatus: "Open" }, { label: "10 km" }],
+    organizerName: "ÍBR",
+    registrationUrl: "https://example.com/register",
+    registrationStatus: "Open",
+  }),
+  upstreamEvent({ name: "Hlaupahópur", slug: "social", type: "Social" }),
+  upstreamEvent({
+    name: "Laugavegshlaupið",
+    slug: "laugavegur",
+    activityType: "TrailRunning",
+    displayDate: "2027-07-18",
+    endDisplayDate: "2027-07-18",
+    locationName: "Landmannalaugar",
+    distances: null,
+  }),
+  upstreamEvent({ name: "Ad", slug: "ad", type: "Advertisement" }),
+  upstreamEvent({
+    name: "Cancelled run",
+    slug: "cancelled",
+    status: "Cancelled",
+    displayDate: "2027-07-18",
+  }),
+  upstreamEvent({ name: "Undated", slug: "undated" }),
+];
+
+type Race = {
+  name: string;
+  date: string | null;
+  endDate: string | null;
+  location: string | null;
+  type: string;
+  activity: string | null;
+  status: string;
+  distances: string[];
+  organizer: string | null;
+  registrationUrl: string | null;
+  registrationStatus: string | null;
+  url: string;
 };
 
-test("raceCalendar - fetches and returns race data", async () => {
+test("raceCalendar - returns races sorted by date without ads", async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = () => {
+  let requested = "";
+  globalThis.fetch = (input: string | URL | Request) => {
+    requested = input.toString();
     return Promise.resolve(
       new Response(JSON.stringify(mockRaceCalendarResponse), {
         status: 200,
@@ -34,11 +84,38 @@ test("raceCalendar - fetches and returns race data", async () => {
 
     assert.deepEqual(res.status, 200);
     assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
+    assert.equal(
+      requested,
+      "https://backend-wispy-forest-1686.fly.dev/api/v1/events",
+    );
 
-    const data = await res.json<Array<{ name: string }>>();
-    assert.deepEqual(Array.isArray(data), true);
-    assert.deepEqual(data.length, 2);
-    assert.deepEqual(data[0].name, "Reykjavik Marathon");
+    const data = await res.json<Race[]>();
+    assert.deepEqual(
+      data.map((race) => race.name),
+      [
+        "Laugavegshlaupið",
+        "Cancelled run",
+        "Reykjavíkurmaraþon",
+        "Hlaupahópur",
+        "Undated",
+      ],
+    );
+    assert.deepEqual(data[2], {
+      name: "Reykjavíkurmaraþon",
+      date: "2027-08-21",
+      endDate: null,
+      location: "Reykjavík",
+      type: "Race",
+      activity: "Running",
+      status: "Confirmed",
+      distances: ["42.2 km", "10 km"],
+      organizer: "ÍBR",
+      registrationUrl: "https://example.com/register",
+      registrationStatus: "Open",
+      url: "https://www.hlaupadagskra.is/events/rvkmarathon",
+    });
+    assert.deepEqual(data[0].distances, []);
+    assert.equal(data[1].status, "Cancelled");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -115,5 +192,5 @@ test("raceCalendar - returns pretty JSON when pretty=true", async () => {
 
 test("raceCalendar - has correct meta information", () => {
   assert.deepEqual(raceCalendar.meta?.endpoint, "/x/race-calendar");
-  assert.include(raceCalendar.meta?.description || "", "Icelandic runs");
+  assert.include(raceCalendar.meta?.description || "", "hlaupadagskra.is");
 });
