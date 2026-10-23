@@ -61,3 +61,13 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --outdir dist --var GIT_SHA:${{ github.sha }}
+
+      # remap-error-trace.yml uses this to source-map stack traces in error issues.
+      - name: Save source map
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-sourcemap-${{ github.sha }}
+          path: dist/index.js.map
+          retention-days: 90
+          if-no-files-found: error

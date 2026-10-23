@@ -38,6 +38,21 @@ npx wrangler secret put GITHUB_TOKEN
 Generate a [personal access token](https://github.com/settings/tokens) with
 `repo` scope.
 
+## Source-Mapped Stack Traces
+
+The Worker runs a bundle, so `error.stack` points into `index.js`. To get
+source locations back into issues:
+
+1. The deploy job in `ci.yml` passes the commit SHA to the Worker as `GIT_SHA`
+   and saves `index.js.map` as a `worker-sourcemap-<sha>` artifact (kept 90
+   days).
+2. The error monitor writes that SHA into the issue as `- Commit: <sha>`.
+3. `remap-error-trace.yml` runs when the issue is opened, downloads the
+   matching source map, and rewrites the stack trace using
+   `scripts/remap-stack.ts`. The bundled trace is kept in a collapsed section.
+
+Errors from deployments whose artifact has expired keep the bundled trace.
+
 ## Issue Management
 
 Issues created by the error monitoring system:
@@ -49,6 +64,7 @@ Issues created by the error monitoring system:
   - Request method and URL
   - Timestamp
   - Cloudflare Ray ID, for finding the request in Workers Logs
+  - Commit SHA of the deployment, used to source-map the stack trace
   - Error fingerprint for tracking duplicates
 
 ### Duplicate Handling
