@@ -8,6 +8,7 @@ import car from "./car.ts";
 import earthquakes from "./earthquakes.ts";
 import gengi from "./gengi.ts";
 import raceCalendar from "./race-calendar.ts";
+import weather from "./weather.ts";
 
 type Rates = Record<string, { rate: number; description?: string }>;
 
@@ -170,4 +171,25 @@ test("LIVE - earthquakes endpoint parses vedur.is", async () => {
     assert.isNumber(quake.magnitude);
     assert.isFalse(Number.isNaN(quake.magnitude));
   }
+});
+
+test("LIVE - weather endpoint lists stations and reads Reykjavík", async () => {
+  const list = await weather(new Request("http://localhost/x/weather"), {});
+  assert.equal(list.status, 200);
+  const stations = await list.json<Array<{ id: number; name: string }>>();
+  assert.isTrue(stations.some((station) => station.id === 1));
+
+  const res = await weather(
+    new Request("http://localhost/x/weather/1?forecast=true"),
+    { station: "1" },
+  );
+  assert.equal(res.status, 200);
+  const data = await res.json<{
+    name: string;
+    time: string;
+    forecast: Array<{ time: string }>;
+  }>();
+  assert.equal(data.name, "Reykjavík");
+  assert.match(data.time, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  assert.isAbove(data.forecast.length, 0);
 });
