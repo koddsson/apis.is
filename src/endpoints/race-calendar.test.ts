@@ -1,4 +1,5 @@
 import { assert, test } from "vitest";
+import { validate } from "../health.ts";
 import raceCalendar from "./race-calendar.ts";
 
 function upstreamEvent(overrides: Record<string, unknown>) {
@@ -81,6 +82,9 @@ test("raceCalendar - returns races sorted by date without ads", async () => {
   try {
     const req = new Request("http://localhost/x/race-calendar");
     const res = await raceCalendar(req);
+    assert.isUndefined(
+      validate(raceCalendar.health.schema, await res.clone().json()),
+    );
 
     assert.deepEqual(res.status, 200);
     assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");

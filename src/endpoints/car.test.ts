@@ -1,4 +1,5 @@
 import { assert, test } from "vitest";
+import { validate } from "../health.ts";
 import car from "./car.ts";
 
 const mockCarResponse = {
@@ -23,6 +24,7 @@ test("car - fetches and returns vehicle data", async () => {
   try {
     const req = new Request("http://localhost/x/car/ABC12");
     const res = await car(req, { number: "ABC12" });
+    assert.isUndefined(validate(car.health.schema, await res.clone().json()));
 
     assert.deepEqual(res.status, 200);
     assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
@@ -100,10 +102,8 @@ test("car - has correct meta information", () => {
   assert.include(car.meta?.description || "", "Vehicle information");
 });
 
-test("car - health check requires vehicle data", () => {
-  const check = car.health?.check;
-  assert.isDefined(check);
-  assert.isUndefined(check?.({ permno: "ISE92" }));
-  assert.include(check?.(null) ?? "", "Expected vehicle data");
-  assert.include(check?.({}) ?? "", "Expected vehicle data");
+test("car - health schema requires vehicle data", () => {
+  assert.isUndefined(validate(car.health.schema, { permno: "ISE92", co2: 1 }));
+  assert.include(validate(car.health.schema, null) ?? "", "(root)");
+  assert.include(validate(car.health.schema, {}) ?? "", "permno");
 });

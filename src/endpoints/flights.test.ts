@@ -1,5 +1,6 @@
 import { afterEach, assert, beforeEach, test, vi } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import flights, { type Flight, parseIsavia, parseKef } from "./flights.ts";
 
 const KEF_FLIGHTS = [
@@ -158,6 +159,9 @@ test("flights - serves Keflavík from one cached page", async () => {
   const fetchMock = mockFetch(KEF_PAGE);
   try {
     const arrivals = await get("arrivals");
+    assert.isUndefined(
+      validate(flights.health.schema, await arrivals.clone().json()),
+    );
     assert.equal(arrivals.status, 200);
     assert.equal(arrivals.headers.get("Cache-Control"), "public, max-age=120");
     assert.equal((await arrivals.json<Flight[]>()).length, 1);
@@ -221,7 +225,7 @@ test("flights - throws when the source responds with an error", async () => {
   }
 });
 
-test("flights - health check expects Keflavík arrivals", () => {
-  assert.isUndefined(flights.health.check([{}]));
-  assert.include(flights.health.check([]) ?? "", "Keflavík");
+test("flights - health schema expects at least one flight", () => {
+  assert.include(validate(flights.health.schema, []) ?? "", "Too small");
+  assert.include(validate(flights.health.schema, [{}]) ?? "", "0.flightNumber");
 });

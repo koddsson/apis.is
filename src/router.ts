@@ -1,10 +1,11 @@
+import type { ZodType } from "zod";
 import { reportError } from "./error-monitor.ts";
 import { response } from "./utils.ts";
 
 export type HealthCheck = {
   params?: Record<string, string>;
-  // Returns why the response body is unhealthy, or undefined when it's fine.
-  check: (data: unknown) => string | undefined;
+  // The shape of a healthy response to the request made with `params`.
+  schema: ZodType;
 };
 
 export type CallbackHandler = {

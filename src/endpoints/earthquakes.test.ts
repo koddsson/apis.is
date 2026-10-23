@@ -1,5 +1,6 @@
 import { afterEach, assert, beforeEach, test, vi } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import earthquakes, { parseQuakes } from "./earthquakes.ts";
 
 type Quake = ReturnType<typeof parseQuakes>[number];
@@ -61,6 +62,9 @@ test("earthquakes - returns the last 48 hours by default", async () => {
   try {
     const res = await earthquakes(
       new Request("http://localhost/x/earthquakes"),
+    );
+    assert.isUndefined(
+      validate(earthquakes.health.schema, await res.clone().json()),
     );
 
     assert.equal(res.status, 200);
@@ -136,7 +140,7 @@ test("earthquakes - throws when vedur.is responds with an error", async () => {
   }
 });
 
-test("earthquakes - health check accepts any list", () => {
-  assert.isUndefined(earthquakes.health.check([]));
-  assert.equal(earthquakes.health.check({}), "Expected an array");
+test("earthquakes - health schema accepts an empty list", () => {
+  assert.isUndefined(validate(earthquakes.health.schema, []));
+  assert.include(validate(earthquakes.health.schema, {}) ?? "", "array");
 });

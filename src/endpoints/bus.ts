@@ -1,11 +1,25 @@
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
 import { parseCsv } from "../csv.ts";
-import { expectNonEmptyArray } from "../health.ts";
 import { response } from "../utils.ts";
 import { readZipFiles } from "../zip.ts";
 
 const GTFS_URL = "https://opendata.straeto.is/data/gtfs/gtfs.zip";
 const TTL_SECONDS = 24 * 60 * 60;
+
+const Stop = z.object({
+  id: z.string(),
+  name: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+});
+
+const Route = z.object({
+  id: z.string(),
+  number: z.string(),
+  name: z.string(),
+  color: z.string().nullable(),
+});
 
 async function fetchGtfs() {
   const files = await readZipFiles(GTFS_URL, ["stops.txt", "routes.txt"]);
@@ -57,7 +71,7 @@ busStops.meta = {
     "Strætó bus stops from its published GTFS schedule. Optional {id} returns a single stop.",
 };
 
-busStops.health = { check: expectNonEmptyArray };
+busStops.health = { schema: z.array(Stop).min(1) };
 
 export async function busRoutes(request: Request): Promise<Response> {
   const { routes } = await gtfs();
@@ -69,4 +83,4 @@ busRoutes.meta = {
   description: "Strætó bus routes from its published GTFS schedule.",
 };
 
-busRoutes.health = { check: expectNonEmptyArray };
+busRoutes.health = { schema: z.array(Route).min(1) };

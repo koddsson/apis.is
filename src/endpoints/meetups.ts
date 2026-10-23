@@ -1,7 +1,23 @@
+import * as z from "zod";
 import meetupData from "../data/meetups.json" with { type: "json" };
-import { expectNonEmptyArray } from "../health.ts";
 import { generateRSS } from "../rss.ts";
 import { response } from "../utils.ts";
+
+// Submitted times are stored as entered, so seconds are optional.
+const Timestamp = z.union([
+  z.iso.datetime({ offset: true }),
+  z.iso.datetime({ offset: true, precision: -1 }),
+]);
+
+const Meetup = z.object({
+  title: z.string(),
+  description: z.string().nullable(),
+  url: z.string(),
+  data: z.object({
+    start: Timestamp,
+    end: Timestamp.nullable(),
+  }),
+});
 
 function meetups(request: Request): Response {
   const url = new URL(request.url);
@@ -28,6 +44,6 @@ meetups.meta = {
     "List of Icelandic tech meetups and community groups. Supports RSS feed via ?format=rss query parameter.",
 };
 
-meetups.health = { check: expectNonEmptyArray };
+meetups.health = { schema: z.array(Meetup).min(1) };
 
 export default meetups;

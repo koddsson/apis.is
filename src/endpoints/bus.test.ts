@@ -1,5 +1,6 @@
 import { assert, beforeEach, test } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import { GTFS_ZIP, serveZip } from "../zip-fixture.test-helper.ts";
 import { busRoutes, busStops } from "./bus.ts";
 
@@ -11,6 +12,9 @@ test("busStops - lists stops from the GTFS zip", async () => {
   const server = serveZip(GTFS_ZIP);
   try {
     const res = await busStops(new Request("http://localhost/x/bus/stops"), {});
+    assert.isUndefined(
+      validate(busStops.health.schema, await res.clone().json()),
+    );
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("Cache-Control"), "public, max-age=86400");
     assert.deepEqual(await res.json(), [
@@ -61,6 +65,9 @@ test("busRoutes - lists routes and reuses the cached GTFS data", async () => {
     const requestsBefore = server.ranges.length;
 
     const res = await busRoutes(new Request("http://localhost/x/bus/routes"));
+    assert.isUndefined(
+      validate(busRoutes.health.schema, await res.clone().json()),
+    );
     assert.deepEqual(await res.json(), [
       {
         id: "1",

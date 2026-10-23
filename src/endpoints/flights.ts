@@ -1,3 +1,4 @@
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
 import { response } from "../utils.ts";
 
@@ -47,17 +48,18 @@ const KEF_STATUSES: Record<string, string> = {
 
 type Direction = "arrivals" | "departures";
 
-export interface Flight {
-  flightNumber: string;
-  airline: string;
-  airport: string;
-  airportCode: string | null;
-  scheduled: string;
-  status: string | null;
-  updated: string | null;
-  gate: string | null;
-  belt: string | null;
-}
+const Flight = z.object({
+  flightNumber: z.string(),
+  airline: z.string(),
+  airport: z.string(),
+  airportCode: z.string().nullable(),
+  scheduled: z.string(),
+  status: z.string().nullable(),
+  updated: z.string().nullable(),
+  gate: z.string().nullable(),
+  belt: z.string().nullable(),
+});
+export type Flight = z.infer<typeof Flight>;
 
 interface KefFlight {
   flightNumber: string;
@@ -190,10 +192,7 @@ flights.meta = {
 
 flights.health = {
   params: { type: "arrivals" },
-  check: (data: unknown) =>
-    Array.isArray(data) && data.length > 0
-      ? undefined
-      : "Expected at least one Keflavík arrival",
+  schema: z.array(Flight).min(1),
 };
 
 export default flights;

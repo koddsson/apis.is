@@ -1,4 +1,4 @@
-import { expectNonEmptyArray } from "../health.ts";
+import * as z from "zod";
 import { response } from "../utils.ts";
 
 // TODO: Implement caching
@@ -22,20 +22,21 @@ interface UpstreamEvent {
   registrationStatus: string | null;
 }
 
-interface Race {
-  name: string;
-  date: string | null;
-  endDate: string | null;
-  location: string | null;
-  type: string;
-  activity: string | null;
-  status: string;
-  distances: string[];
-  organizer: string | null;
-  registrationUrl: string | null;
-  registrationStatus: string | null;
-  url: string;
-}
+const Race = z.object({
+  name: z.string(),
+  date: z.string().nullable(),
+  endDate: z.string().nullable(),
+  location: z.string().nullable(),
+  type: z.string(),
+  activity: z.string().nullable(),
+  status: z.string(),
+  distances: z.array(z.string()),
+  organizer: z.string().nullable(),
+  registrationUrl: z.string().nullable(),
+  registrationStatus: z.string().nullable(),
+  url: z.string(),
+});
+type Race = z.infer<typeof Race>;
 
 function toRace(event: UpstreamEvent): Race {
   return {
@@ -88,6 +89,6 @@ raceCalendar.meta = {
     "Icelandic running races from hlaupadagskra.is, sorted by date. Undated races are listed last.",
 };
 
-raceCalendar.health = { check: expectNonEmptyArray };
+raceCalendar.health = { schema: z.array(Race).min(1) };
 
 export default raceCalendar;

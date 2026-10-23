@@ -1,5 +1,5 @@
+import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
-import { expectNonEmptyArray } from "../health.ts";
 import { response } from "../utils.ts";
 
 // Documented at https://api.ust.is/aq
@@ -32,12 +32,22 @@ interface UpstreamStation {
   longitude: string;
 }
 
-interface Reading {
-  value: number;
-  unit: string;
-  time: string;
-  verified: boolean;
-}
+const Reading = z.object({
+  value: z.number(),
+  unit: z.string(),
+  time: z.iso.datetime(),
+  verified: z.boolean(),
+});
+type Reading = z.infer<typeof Reading>;
+
+const Station = z.object({
+  id: z.string(),
+  name: z.string(),
+  municipality: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  readings: z.record(z.string(), Reading),
+});
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -109,6 +119,6 @@ airQuality.meta = {
     "Latest hourly air quality readings (PM10, PM2.5, NO2, SO2, H2S, …) per measurement station from Umhverfis- og orkustofnun. Optional ?station= id filter.",
 };
 
-airQuality.health = { check: expectNonEmptyArray };
+airQuality.health = { schema: z.array(Station).min(1) };
 
 export default airQuality;

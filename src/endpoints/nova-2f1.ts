@@ -1,14 +1,15 @@
-import { expectNonEmptyArray } from "../health.ts";
+import * as z from "zod";
 import { response } from "../utils.ts";
 
-interface Offer {
-  name: string;
-  description: string;
-  image: string;
-  address: string;
-  days: string[];
-  link: string;
-}
+const Offer = z.object({
+  name: z.string(),
+  description: z.string(),
+  image: z.string(),
+  address: z.string(),
+  days: z.array(z.string()),
+  link: z.string(),
+});
+type Offer = z.infer<typeof Offer>;
 
 interface UpstreamOffer {
   name: string;
@@ -88,6 +89,6 @@ nova2f1.meta = {
   description: "2-for-1 offers from Nova's FyrirÞig program.",
 };
 
-nova2f1.health = { check: expectNonEmptyArray };
+nova2f1.health = { schema: z.array(Offer).min(1) };
 
 export default nova2f1;

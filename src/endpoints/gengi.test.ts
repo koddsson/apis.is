@@ -1,5 +1,6 @@
 import { assert, beforeEach, test } from "vitest";
 import { clearCache } from "../cache.ts";
+import { validate } from "../health.ts";
 import gengi from "./gengi.ts";
 
 type Rates = Record<string, { rate: number; description?: string }>;
@@ -38,6 +39,7 @@ test("gengi - fetches and returns all currencies", async () => {
   try {
     const req = new Request("http://localhost/x/gengi");
     const res = await gengi(req, {});
+    assert.isUndefined(validate(gengi.health.schema, await res.clone().json()));
 
     assert.deepEqual(res.status, 200);
     assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
@@ -131,12 +133,11 @@ test("gengi - has correct meta information", () => {
   assert.include(gengi.meta?.description || "", "Currency exchange rates");
 });
 
-test("gengi - health check requires a positive USD rate", () => {
-  const check = gengi.health?.check;
-  assert.isDefined(check);
-  assert.isUndefined(check?.({ USD: { rate: 124.28 } }));
-  assert.include(check?.({ USD: { rate: 0 } }) ?? "", "positive USD rate");
-  assert.include(check?.({}) ?? "", "positive USD rate");
+test("gengi - health schema requires a positive USD rate", () => {
+  const { schema } = gengi.health;
+  assert.isUndefined(validate(schema, { USD: { rate: 124.28 } }));
+  assert.include(validate(schema, { USD: { rate: 0 } }) ?? "", "USD.rate");
+  assert.include(validate(schema, {}) ?? "", "USD");
 });
 
 test("gengi - caches rates and sets Cache-Control", async () => {

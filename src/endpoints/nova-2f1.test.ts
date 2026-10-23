@@ -1,4 +1,5 @@
 import { assert, test } from "vitest";
+import { validate } from "../health.ts";
 import nova2f1 from "./nova-2f1.ts";
 
 type Offer = {
@@ -47,6 +48,9 @@ test("nova2f1 - maps offers from Nova's GraphQL API", async () => {
 
   try {
     const res = await nova2f1(new Request("http://localhost/x/nova-2f1"));
+    assert.isUndefined(
+      validate(nova2f1.health.schema, await res.clone().json()),
+    );
 
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("Access-Control-Allow-Origin"), "*");
