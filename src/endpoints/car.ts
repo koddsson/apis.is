@@ -1,7 +1,8 @@
 import * as z from "zod";
+import { cacheControl, withCache } from "../cache.ts";
 import { response } from "../utils.ts";
 
-// TODO: Implement caching
+const TTL_SECONDS = 60 * 60;
 
 const VEHICLE_SEARCH_QUERY = `query publicVehicleSearch($input: GetPublicVehicleSearchInput!) {
   publicVehicleSearch(input: $input) {
@@ -26,30 +27,35 @@ const VEHICLE_SEARCH_QUERY = `query publicVehicleSearch($input: GetPublicVehicle
   }
 }`;
 
-/**
- * Pretty bog standard fetching the data from a existing endpoint and returining whatever it gives us.
- */
-async function car(
-  request: Request,
-  params: Record<string, string>,
-): Promise<Response> {
+async function fetchVehicle(number: string) {
   const serverResponse = await fetch("https://island.is/api/graphql", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       operationName: "publicVehicleSearch",
-      variables: { input: { search: params.number } },
+      variables: { input: { search: number } },
       query: VEHICLE_SEARCH_QUERY,
     }),
   });
   const json = await serverResponse.json<{
     data: { publicVehicleSearch: Record<string, unknown> };
   }>();
-  const url = new URL(request.url);
-  return response(
-    json.data.publicVehicleSearch,
-    url.searchParams.get("pretty") === "true",
+  return json.data.publicVehicleSearch;
+}
+
+async function car(
+  request: Request,
+  params: Record<string, string>,
+): Promise<Response> {
+  const vehicle = await withCache(`car-${params.number}`, TTL_SECONDS, () =>
+    fetchVehicle(params.number),
   );
+  const res = response(
+    vehicle,
+    new URL(request.url).searchParams.get("pretty") === "true",
+  );
+  res.headers.set("Cache-Control", cacheControl(TTL_SECONDS));
+  return res;
 }
 
 car.meta = {

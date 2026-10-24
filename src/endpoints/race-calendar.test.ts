@@ -1,4 +1,5 @@
-import { assert, test } from "vitest";
+import { assert, beforeEach, test } from "vitest";
+import { clearCache } from "../cache.ts";
 import { validate } from "../health.ts";
 import raceCalendar from "./race-calendar.ts";
 
@@ -66,6 +67,10 @@ type Race = {
   registrationStatus: string | null;
   url: string;
 };
+
+beforeEach(() => {
+  clearCache();
+});
 
 test("raceCalendar - returns races sorted by date without ads", async () => {
   const originalFetch = globalThis.fetch;
@@ -197,4 +202,26 @@ test("raceCalendar - returns pretty JSON when pretty=true", async () => {
 test("raceCalendar - has correct meta information", () => {
   assert.deepEqual(raceCalendar.meta?.endpoint, "/x/race-calendar");
   assert.include(raceCalendar.meta?.description || "", "hlaupadagskra.is");
+});
+
+test("raceCalendar - caches races and sets Cache-Control", async () => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = () => {
+    calls++;
+    return Promise.resolve(
+      new Response(JSON.stringify(mockRaceCalendarResponse)),
+    );
+  };
+
+  try {
+    const req = new Request("http://localhost/x/race-calendar");
+    const first = await raceCalendar(req);
+    await raceCalendar(req);
+
+    assert.equal(calls, 1);
+    assert.equal(first.headers.get("Cache-Control"), "public, max-age=3600");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

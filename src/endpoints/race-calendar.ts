@@ -1,11 +1,11 @@
 import * as z from "zod";
+import { cacheControl, withCache } from "../cache.ts";
 import { response } from "../utils.ts";
-
-// TODO: Implement caching
 
 // The backend behind hlaupadagskra.is's own frontend; not a documented API.
 const EVENTS_URL = "https://backend-wispy-forest-1686.fly.dev/api/v1/events";
 const SITE_URL = "https://www.hlaupadagskra.is";
+const TTL_SECONDS = 60 * 60;
 
 interface UpstreamEvent {
   name: string;
@@ -62,7 +62,7 @@ function byDate(a: Race, b: Race): number {
   return a.date < b.date ? -1 : 1;
 }
 
-async function raceCalendar(request: Request): Promise<Response> {
+async function fetchRaces(): Promise<Race[]> {
   const serverResponse = await fetch(EVENTS_URL);
 
   if (!serverResponse.ok) {
@@ -72,15 +72,20 @@ async function raceCalendar(request: Request): Promise<Response> {
   }
 
   const events = await serverResponse.json<UpstreamEvent[]>();
-  const races = events
+  return events
     .filter((event) => event.type !== "Advertisement")
     .map(toRace)
     .sort(byDate);
+}
 
-  return response(
+async function raceCalendar(request: Request): Promise<Response> {
+  const races = await withCache("race-calendar", TTL_SECONDS, fetchRaces);
+  const res = response(
     races,
     new URL(request.url).searchParams.get("pretty") === "true",
   );
+  res.headers.set("Cache-Control", cacheControl(TTL_SECONDS));
+  return res;
 }
 
 raceCalendar.meta = {

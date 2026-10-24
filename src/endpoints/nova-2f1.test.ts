@@ -1,4 +1,5 @@
-import { assert, test } from "vitest";
+import { assert, beforeEach, test } from "vitest";
+import { clearCache } from "../cache.ts";
 import { validate } from "../health.ts";
 import nova2f1 from "./nova-2f1.ts";
 
@@ -39,6 +40,10 @@ function mockFetch(body: unknown, status = 200) {
   };
   return requests;
 }
+
+beforeEach(() => {
+  clearCache();
+});
 
 test("nova2f1 - maps offers from Nova's GraphQL API", async () => {
   const originalFetch = globalThis.fetch;
@@ -144,4 +149,22 @@ test("nova2f1 - throws on GraphQL errors", async () => {
 test("nova2f1 - has correct meta information", () => {
   assert.deepEqual(nova2f1.meta?.endpoint, "/x/nova-2f1");
   assert.include(nova2f1.meta?.description || "", "2-for-1");
+});
+
+test("nova2f1 - caches offers and sets Cache-Control", async () => {
+  const originalFetch = globalThis.fetch;
+  const requests = mockFetch({
+    data: { twoForOne: { twoForOne: mockOffers } },
+  });
+
+  try {
+    const req = new Request("http://localhost/x/nova-2f1");
+    const first = await nova2f1(req);
+    await nova2f1(req);
+
+    assert.equal(requests.length, 1);
+    assert.equal(first.headers.get("Cache-Control"), "public, max-age=3600");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
