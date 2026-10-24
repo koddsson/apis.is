@@ -1,0 +1,46 @@
+name: New Endpoint
+description: Propose a new API endpoint
+title: "New endpoint: "
+labels: ["endpoint"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        apis.is only wraps a source when it adds something the source doesn't already offer. If the data is already available as clean JSON with CORS, link to it instead.
+
+  - type: textarea
+    id: data
+    attributes:
+      label: Data
+      description: What data would the endpoint serve, and how often does it change?
+      placeholder: e.g., "Live visitor counts per Reykjavík swimming pool, updated every few minutes"
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Source
+      description: Where the data comes from, with URLs. Mention any official API you found, even if we wouldn't use it.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: value
+    attributes:
+      label: What does wrapping it add?
+      description: At least one should apply.
+      options:
+        - label: The data has no API (scraped page, dashboard, embedded JS)
+        - label: "The upstream format is awkward: XML, CAP, Icelandic-only field names, or no CORS"
+        - label: It combines several sources into one response
+        - label: The upstream rate-limits or is slow, so caching helps
+
+  - type: textarea
+    id: shape
+    attributes:
+      label: Proposed endpoint
+      description: Path, query parameters, and an example response
+      placeholder: "`/x/pools`, optional `?pool=`"
+    validations:
+      required: false
