@@ -6,9 +6,9 @@
  * Usage: node add-meetup.js <issue-body>
  */
 
-const fs = require("node:fs");
-const path = require("node:path");
-const process = require("node:process");
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
 
 function parseIssueBody(issueBody) {
   const lines = issueBody.split("\n");
@@ -127,7 +127,10 @@ function validateMeetup(meetup) {
 }
 
 function addMeetupToJson(meetup) {
-  const jsonPath = path.join(__dirname, "../../src/data/meetups.json");
+  const jsonPath = path.join(
+    import.meta.dirname,
+    "../../src/data/meetups.json",
+  );
 
   // Read existing meetups
   let meetups = [];
