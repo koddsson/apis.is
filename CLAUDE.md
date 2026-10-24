@@ -6,9 +6,10 @@ code in this repository.
 ## Project Overview
 
 apis.is is a collection of Icelandic-specific public APIs written in
-TypeScript. It aggregates data from external sources (Borgun currency rates,
-island.is vehicle lookup, hlaupadagskra.is race calendar) and serves
-community-maintained meetup data. Deployed on **Cloudflare Workers**.
+TypeScript. It cleans up and serves data from Icelandic sources (scraped pages,
+XML feeds, undocumented APIs) as JSON, plus community-maintained meetup data.
+Deployed on **Cloudflare Workers**; `/` lists the endpoints, and serves an
+explorer page to browsers.
 
 ## Commands
 
@@ -57,8 +58,7 @@ Middleware chain → Endpoint handler → Response
   logger
 - `src/error-monitor.ts` — Auto-creates GitHub issues for uncaught errors in
   production (deduplicates via fingerprinting)
-- `src/endpoints/` — One file per API endpoint (gengi, meetups, car,
-  race-calendar, meta)
+- `src/endpoints/` — One file per API endpoint, registered in `src/index.ts`
 - `src/data/meetups.json` — Static meetup data (community-maintained via GitHub
   issues + automated workflow)
 - `src/explorer.ts` — HTML API explorer that `/` serves to browsers

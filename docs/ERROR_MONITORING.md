@@ -47,7 +47,9 @@ has an hourly Cron Trigger (`triggers.crons` in `wrangler.jsonc`) that runs
 
 - Every endpoint handler with a `health` property is called directly (not
   through the router, so failures don't also file `uncaught-error` issues)
-  with the declared `params`, and its JSON is passed to `health.check`.
+  with the declared `params`, and its JSON is validated against
+  `health.schema`, a Zod schema for a healthy response. Violations are
+  reported with the path of each failing field.
 - A failing endpoint gets one `endpoint-down` issue. It isn't commented on
   while it stays down, but if the failure message changes the issue's problem
   section is rewritten with the latest one. It is closed automatically once
@@ -104,32 +106,30 @@ During local development and testing:
 
 ## Example Error Issue
 
-```markdown
-🚨 Uncaught Error: Cannot read property 'data' of undefined
-
+````markdown
 **Error Message:**
 ```
-
-Cannot read property 'data' of undefined
-
+Cannot read properties of undefined (reading 'publicVehicleSearch')
 ```
+
 **Stack Trace:**
 ```
-
-Error: Cannot read property 'data' of undefined at gengi
-(file:///src/endpoints/gengi.ts:35:25) at Router.route
-(file:///src/router.ts:39:42)
-
+TypeError: Cannot read properties of undefined (reading 'publicVehicleSearch')
+    at car (src/endpoints/car.ts:48:15)
+    at handler (src/router.ts:62:32)
 ```
+
 **Request Details:**
 - Method: GET
-- URL: https://apis.is/x/gengi/USD
-- Timestamp: 2025-11-14T11:23:37.000Z
+- URL: https://apis.is/x/car/ABC12
+- Timestamp: 2026-10-23T11:23:37.000Z
+- Ray ID: <cf-ray of the request>
+- Commit: <full SHA of the deployed commit>
 
 **Fingerprint:** `error-a1b2c3d4`
 
 This issue was automatically created by the error monitoring system.
-```
+````
 
 ## Testing
 

@@ -37,54 +37,24 @@ Examples:
 
 You can use online tools to convert your local time to UTC/ISO 8601 format.
 
+## Proposing an Endpoint
+
+Open an issue with the "New Endpoint" template. apis.is only wraps a source
+when it adds something the source doesn't already offer:
+
+- The data has no API (scraped page, dashboard, embedded JS)
+- The upstream format is awkward: XML, CAP, Icelandic-only field names, or no
+  CORS
+- It combines several sources into one response
+- The upstream rate-limits or is slow, so caching helps
+
+If the data is already available as clean JSON with CORS, link to it instead.
+Real-time data that isn't available anywhere else is the most welcome.
+
 ## Questions?
 
-If you have any questions about adding a meetup, feel free to open a discussion
-or ask in the issue comments.
-
-## Workflow Diagram
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. User creates issue using "Add Meetup" template              │
-│    - Fills in: title, description, url, start date, end date   │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 2. Maintainer reviews the submission                           │
-│    - Checks if the meetup is appropriate                       │
-│    - Verifies the information is correct                       │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 3. Maintainer adds "approved-meetup" label to issue            │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 4. GitHub Action automatically triggers                        │
-│    - Parses the issue body                                     │
-│    - Validates the data                                        │
-│    - Adds meetup to src/data/meetups.json                      │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 5. GitHub Action creates a Pull Request                        │
-│    - PR contains the updated meetups.json                      │
-│    - PR title: "Add meetup: [meetup title]"                    │
-│    - PR automatically references the issue                     │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 6. Maintainer merges the Pull Request                          │
-│    - Issue is automatically closed                             │
-│    - Meetup is now live on the API!                            │
-└─────────────────────────────────────────────────────────────────┘
-```
+If you have any questions, feel free to open a discussion or ask in the issue
+comments.
 
 ## For Maintainers
 
