@@ -6,6 +6,8 @@
  * creating duplicate issues for the same error.
  */
 
+import { github } from "./github.ts";
+
 interface ErrorReport {
   message: string;
   stack?: string;
@@ -41,69 +43,42 @@ async function createGitHubIssue(
   report: ErrorReport,
   fingerprint: string,
 ): Promise<void> {
-  const githubToken = process.env.GITHUB_TOKEN;
-  const githubRepo = process.env.GITHUB_REPOSITORY;
-  const isProduction = process.env.ENVIRONMENT === "production";
-
-  // Only report in production and when GitHub token is available
-  if (!githubToken || !githubRepo || !isProduction) {
+  const request = github("apis.is-error-monitor");
+  if (!request) {
     console.error(
       "Error monitoring: Not in production or missing configuration",
-      {
-        hasToken: !!githubToken,
-        hasRepo: !!githubRepo,
-        isProduction,
-      },
     );
     return;
   }
 
-  const [owner, repo] = githubRepo.split("/");
-  const apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
-
   try {
     // Check if there's already an open issue with this fingerprint
-    const issuesResponse = await fetch(
-      `${apiUrl}/issues?state=open&labels=uncaught-error&per_page=100`,
-      {
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          Accept: "application/vnd.github.v3+json",
-          "User-Agent": "apis.is-error-monitor",
-        },
-      },
+    const issuesResponse = await request(
+      "/issues?state=open&labels=uncaught-error&per_page=100",
     );
 
     if (issuesResponse.ok) {
       const issues =
         await issuesResponse.json<Array<{ number: number; body: string }>>();
-      const existingIssue = issues.find((issue: { body: string }) =>
+      const existingIssue = issues.find((issue) =>
         issue.body?.includes(`**Fingerprint:** \`${fingerprint}\``),
       );
 
       if (existingIssue) {
-        // Add a comment to the existing issue
-        await fetch(`${apiUrl}/issues/${existingIssue.number}/comments`, {
+        await request(`/issues/${existingIssue.number}/comments`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${githubToken}`,
-            Accept: "application/vnd.github.v3+json",
-            "User-Agent": "apis.is-error-monitor",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+          body: {
             body:
               `Error occurred again at ${report.timestamp}\n\n` +
               `**Request:** ${report.method} ${report.url}\n\n` +
               `**Ray ID:** ${report.rayId || "N/A"}\n\n` +
               `See deployment logs for more details.`,
-          }),
+          },
         });
         return;
       }
     }
 
-    // Create a new issue
     const title = `🚨 Uncaught Error: ${report.message.substring(0, 80)}`;
     const body = `An uncaught error occurred in production.
 
@@ -128,19 +103,9 @@ ${report.stack || "No stack trace available"}
 
 This issue was automatically created by the error monitoring system.`;
 
-    await fetch(`${apiUrl}/issues`, {
+    await request("/issues", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${githubToken}`,
-        Accept: "application/vnd.github.v3+json",
-        "User-Agent": "apis.is-error-monitor",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title,
-        body,
-        labels: ["uncaught-error", "automated", "bug"],
-      }),
+      body: { title, body, labels: ["uncaught-error", "automated", "bug"] },
     });
   } catch (error) {
     // Don't let error reporting errors crash the app

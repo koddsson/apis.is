@@ -53,6 +53,8 @@ Endpoint handler → Response. Requests are logged by Workers observability.
   params (e.g., `/x/car/{number}?`)
 - `src/error-monitor.ts` — Auto-creates GitHub issues for uncaught errors in
   production (deduplicates via fingerprinting)
+- `src/github.ts` — GitHub API requests for the error monitor and health
+  check; only available in production with `GITHUB_TOKEN` set
 - `src/endpoints/` — One file per API endpoint, registered in `src/index.ts`
 - `src/data/meetups.json` — Static meetup data (community-maintained via GitHub
   issues + automated workflow)
