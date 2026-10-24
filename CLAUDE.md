@@ -74,6 +74,21 @@ Middleware chain → Endpoint handler → Response
 - `scripts/remap-stack.ts` — Source-maps stack traces in error issues; run by
   `.github/workflows/remap-error-trace.yml`
 
+## Adding Endpoints
+
+Only add an endpoint when it adds something the upstream doesn't already
+offer. Check for an official API first (e.g. https://api.vedur.is/ lists
+Veðurstofa's). Worth wrapping:
+
+- Data with no API (scraped pages, dashboards, embedded JS)
+- An awkward upstream format: XML, CAP, Icelandic-only field names, no CORS
+- Combining several sources into one response
+- Caching an upstream that rate-limits or is slow
+
+If the upstream already serves clean JSON with CORS, link to it instead of
+wrapping it, and say so on the endpoint's issue. Real-time data that isn't
+available anywhere else is the most valuable.
+
 ## Code Quality Requirements
 
 - TypeScript strict mode
