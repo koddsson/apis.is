@@ -66,6 +66,9 @@ Endpoint handler → Response. Requests are logged by Workers observability.
   endpoint's `health` check and opens/closes `endpoint-down` issues. New
   endpoints should set `handler.health` with a Zod `schema` for a healthy
   response (see `gengi.ts`); tests validate mocked responses against it.
+- `scripts/add-meetup.ts` — Adds a meetup from an "Add Meetup" issue
+  (`scripts/meetup.ts`, validated with the `/x/meetups` schema); run by
+  `.github/workflows/add-meetup.yml`
 - `scripts/remap-stack.ts` — Source-maps stack traces in error issues; run by
   `.github/workflows/remap-error-trace.yml`
 

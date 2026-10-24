@@ -9,15 +9,16 @@ const Timestamp = z.union([
   z.iso.datetime({ offset: true, precision: -1 }),
 ]);
 
-const Meetup = z.object({
-  title: z.string(),
+export const Meetup = z.object({
+  title: z.string().min(1),
   description: z.string().nullable(),
-  url: z.string(),
+  url: z.url({ protocol: /^https?$/ }),
   data: z.object({
     start: Timestamp,
     end: Timestamp.nullable(),
   }),
 });
+export type Meetup = z.infer<typeof Meetup>;
 
 function meetups(request: Request): Response {
   const url = new URL(request.url);

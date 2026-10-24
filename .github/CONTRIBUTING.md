@@ -86,5 +86,5 @@ If the GitHub Action fails:
   - Invalid URL format
 - You can manually run the script locally to test:
   ```bash
-  ISSUE_BODY="$(cat issue-body.txt)" node .github/scripts/add-meetup.js
+  ISSUE_BODY="$(cat issue-body.txt)" node scripts/add-meetup.ts
   ```
