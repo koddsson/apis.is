@@ -13,13 +13,9 @@ import { roadConditions, roadWeather } from "./endpoints/roads.ts";
 import weather from "./endpoints/weather.ts";
 import { reportError } from "./error-monitor.ts";
 import { checkEndpoints, reportHealth } from "./health.ts";
-import { commonLogMiddleware } from "./middleware.ts";
 import { Router } from "./router.ts";
 
 const router = new Router();
-
-// Add middleware
-router.use(commonLogMiddleware);
 
 router.add("GET", "/", meta(router));
 

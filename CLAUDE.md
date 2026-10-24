@@ -40,7 +40,7 @@ npm run test:coverage
 ## Architecture
 
 **Request flow:** default-exported `fetch` handler → Router (URLPattern-based) →
-Middleware chain → Endpoint handler → Response
+Endpoint handler → Response. Requests are logged by Workers observability.
 
 - `src/index.ts` — Entry point, registers routes and exports the `fetch`
   handler. Wrangler bundles it directly. Code runs on Cloudflare Workers, so it
@@ -51,8 +51,6 @@ Middleware chain → Endpoint handler → Response
   wrangler updates don't leave it stale.
 - `src/router.ts` — Custom router using native `URLPattern` API, supports path
   params (e.g., `/x/car/{number}?`)
-- `src/middleware.ts` — Middleware system; currently has Common Log Format
-  logger
 - `src/error-monitor.ts` — Auto-creates GitHub issues for uncaught errors in
   production (deduplicates via fingerprinting)
 - `src/endpoints/` — One file per API endpoint, registered in `src/index.ts`
