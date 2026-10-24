@@ -1,5 +1,5 @@
 import airQuality from "./endpoints/air-quality.ts";
-import { busRoutes, busStops } from "./endpoints/bus.ts";
+import { busRoutes, busStops, busVehicles } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
 import earthquakes from "./endpoints/earthquakes.ts";
 import flights from "./endpoints/flights.ts";
@@ -28,6 +28,7 @@ router.add("GET", "/x/earthquakes", earthquakes);
 router.add("GET", "/x/weather{/:station}?", weather);
 router.add("GET", "/x/bus/stops{/:id}?", busStops);
 router.add("GET", "/x/bus/routes", busRoutes);
+router.add("GET", "/x/bus/vehicles", busVehicles);
 router.add("GET", "/x/flights/{:type}", flights);
 router.add("GET", "/x/roads/conditions", roadConditions);
 router.add("GET", "/x/roads/weather", roadWeather);
