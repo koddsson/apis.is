@@ -10,8 +10,7 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:live": "vitest run --config vitest.live.config.ts"
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "fast-xml-parser": "5.11.2",

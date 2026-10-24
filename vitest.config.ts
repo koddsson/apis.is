@@ -10,7 +10,6 @@ export default defineConfig({
   ],
   test: {
     unstubEnvs: true,
-    exclude: ["**/node_modules/**", "src/endpoints/live.test.ts"],
     coverage: {
       provider: "istanbul",
       include: ["src/**/*.ts"],

@@ -30,9 +30,6 @@ npm test
 # Run a single test file
 npx vitest run src/endpoints/gengi.test.ts
 
-# Run live/integration tests (hits real external APIs)
-npm run test:live
-
 # Run locally in the Workers runtime
 npm run dev
 
