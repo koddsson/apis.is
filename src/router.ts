@@ -41,7 +41,9 @@ export class Router {
     const { pathname } = new URL(req.url);
     // "/x/gengi/" and "/x/gengi" are the same route.
     const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-    for (const route of this.#routes[req.method]) {
+    // Workers drops the body of a response to HEAD.
+    const method = req.method === "HEAD" ? "GET" : req.method;
+    for (const route of this.#routes[method] ?? []) {
       const match = route.pattern.exec({ pathname: path });
       if (match) {
         const params = (match.pathname.groups || {}) as Record<string, string>;

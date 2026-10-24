@@ -194,3 +194,25 @@ test("Router - handles async errors in handlers", async () => {
   const json = await res.json<{ error: string }>();
   assert.deepEqual(json.error, "Internal Server Error");
 });
+
+test("Router - answers HEAD like GET", async () => {
+  const router = new Router();
+  router.add("GET", "/test", () => new Response("ok"));
+
+  const res = await router.route(
+    new Request("http://localhost/test", { method: "HEAD" }),
+  );
+  assert.equal(res.status, 200);
+});
+
+test("Router - returns 404 for methods without routes", async () => {
+  const router = new Router();
+  router.add("GET", "/test", () => new Response("ok"));
+
+  for (const method of ["OPTIONS", "DELETE", "PATCH"]) {
+    const res = await router.route(
+      new Request("http://localhost/test", { method }),
+    );
+    assert.equal(res.status, 404, method);
+  }
+});
