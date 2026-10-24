@@ -1,95 +1,36 @@
 # apis.is
 
-A collection of Icelandic-specific APIs
+Icelandic data as clean JSON. apis.is serves data that is otherwise only
+available as web pages, XML feeds, or undocumented APIs: currency rates,
+weather, road conditions, flights, air quality, population figures, tech
+meetups, and more.
+
+Open [apis.is](https://apis.is) in a browser to explore the endpoints and try
+them out. Requested programmatically, `/` returns the endpoint list as JSON.
+Add `?pretty=true` to any request for indented output.
+
+## Contributing
+
+- **Add a meetup:** open an issue with the "Add Meetup" template. See the
+  [Contributing Guide](.github/CONTRIBUTING.md).
+- **Propose an endpoint:** open an issue with the "New Endpoint" template.
+  We only wrap a source when it adds something: data with no API, an awkward
+  format, several sources combined, or caching for a slow upstream.
 
 ## Development
 
-### Running Tests
-
-Tests use Vitest and run inside workerd, the Cloudflare Workers runtime:
+The API runs on Cloudflare Workers. Tests run in workerd, the Workers runtime.
 
 ```bash
 npm install
 
-# Run all unit tests
-npm test
-
-# Run tests with live API calls (integration tests)
-npm run test:live
-```
-
-### Test Structure
-
-- **Unit Tests**: Fast, isolated tests with mocked external dependencies
-  - `src/utils.test.ts` - Utility function tests
-  - `src/router.test.ts` - Router functionality tests
-  - `src/endpoints/*.test.ts` - Individual endpoint tests with mocked APIs
-
-- **Live Tests**: Integration tests that call real external APIs
-  - `src/endpoints/live.test.ts` - Validates external API availability and
-    format
-  - Run on demand from the "Live Tests" GitHub Actions workflow
-  - Not part of `npm test`; they have their own config, `vitest.live.config.ts`
-
-### Linting and Formatting
-
-```bash
-# Check linting and formatting (Biome)
-npm run lint
-
-# Fix formatting and safe lint issues
-npm run format
-
-# Type check
+npm run dev            # run locally
+npm run lint           # Biome lint and format check (npm run format to fix)
 npm run typecheck
+npm test               # unit tests, with upstream APIs mocked
+npm run test:coverage  # what CI runs; enforces coverage thresholds
 ```
 
-### Middleware System
-
-The router supports middleware for processing requests. Middleware functions are
-executed in order before the route handler.
-
-```typescript
-import { Router } from "./router.ts";
-import type { Middleware } from "./router.ts";
-
-const router = new Router();
-
-// Define middleware
-const myMiddleware: Middleware = async (req, next) => {
-  // Do something before the handler
-  console.log(`Request: ${req.method} ${req.url}`);
-
-  // Call next to continue the chain
-  const response = await next();
-
-  // Do something after the handler
-  console.log(`Response status: ${response.status}`);
-
-  return response;
-};
-
-// Add middleware to router
-router.use(myMiddleware);
-
-// Add routes
-router.add("GET", "/", () => new Response("Hello!"));
-```
-
-#### Built-in Middleware
-
-- **commonLogMiddleware**: Logs all requests in Common Log Format (CLF)
-
-## Contributing
-
-### Adding a Meetup
-
-You can submit a new meetup to be added to the meetups list! See our
-[Contributing Guide](.github/CONTRIBUTING.md) for details.
-
-In short:
-
-1. Create a new issue using the "Add Meetup" template
-2. Fill in the meetup details
-3. A maintainer will review and approve by adding the `approved-meetup` label
-4. The meetup will be automatically added via a pull request
+Every merge to `main` deploys. In production, uncaught errors and failing
+hourly endpoint health checks open GitHub issues automatically; see
+[docs/ERROR_MONITORING.md](docs/ERROR_MONITORING.md).

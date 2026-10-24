@@ -1,4 +1,5 @@
-import { assert, test } from "vitest";
+import { assert, beforeEach, test } from "vitest";
+import { clearCache } from "../cache.ts";
 import { validate } from "../health.ts";
 import car from "./car.ts";
 
@@ -12,6 +13,10 @@ const mockCarResponse = {
     },
   },
 };
+
+beforeEach(() => {
+  clearCache();
+});
 
 test("car - fetches and returns vehicle data", async () => {
   const originalFetch = globalThis.fetch;
@@ -106,4 +111,26 @@ test("car - health schema requires vehicle data", () => {
   assert.isUndefined(validate(car.health.schema, { permno: "ISE92", co2: 1 }));
   assert.include(validate(car.health.schema, null) ?? "", "(root)");
   assert.include(validate(car.health.schema, {}) ?? "", "permno");
+});
+
+test("car - caches each vehicle and sets Cache-Control", async () => {
+  const originalFetch = globalThis.fetch;
+  const searches: string[] = [];
+  globalThis.fetch = (_input: string | URL | Request, init?: RequestInit) => {
+    searches.push(JSON.parse(init?.body as string).variables.input.search);
+    return Promise.resolve(new Response(JSON.stringify(mockCarResponse)));
+  };
+
+  try {
+    const first = await car(new Request("http://localhost/x/car/ABC12"), {
+      number: "ABC12",
+    });
+    await car(new Request("http://localhost/x/car/ABC12"), { number: "ABC12" });
+    await car(new Request("http://localhost/x/car/XYZ99"), { number: "XYZ99" });
+
+    assert.deepEqual(searches, ["ABC12", "XYZ99"]);
+    assert.equal(first.headers.get("Cache-Control"), "public, max-age=3600");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

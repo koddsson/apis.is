@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { cacheControl, withCache } from "../cache.ts";
 import { response } from "../utils.ts";
 
 const Offer = z.object({
@@ -22,6 +23,7 @@ interface UpstreamOffer {
 
 const DAY_NAMES = ["Mán", "Þri", "Mið", "Fim", "Fös", "Lau", "Sun"];
 const BASE_URL = "https://www.nova.is";
+const TTL_SECONDS = 60 * 60;
 
 // The GraphQL API behind nova.is's own frontend; not a documented API.
 const GRAPHQL_URL = "https://graphql.nova.is/graphql";
@@ -54,7 +56,7 @@ function toOffer(offer: UpstreamOffer): Offer {
   };
 }
 
-async function nova2f1(request: Request): Promise<Response> {
+async function fetchOffers(): Promise<Offer[]> {
   const res = await fetch(GRAPHQL_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -78,10 +80,17 @@ async function nova2f1(request: Request): Promise<Response> {
     );
   }
 
-  return response(
-    json.data.twoForOne.twoForOne.map(toOffer),
+  return json.data.twoForOne.twoForOne.map(toOffer);
+}
+
+async function nova2f1(request: Request): Promise<Response> {
+  const offers = await withCache("nova-2f1", TTL_SECONDS, fetchOffers);
+  const res = response(
+    offers,
     new URL(request.url).searchParams.get("pretty") === "true",
   );
+  res.headers.set("Cache-Control", cacheControl(TTL_SECONDS));
+  return res;
 }
 
 nova2f1.meta = {

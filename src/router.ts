@@ -20,11 +20,6 @@ export type CallbackHandler = {
   health?: HealthCheck;
 };
 
-export type Middleware = (
-  req: Request,
-  next: () => Promise<Response>,
-) => Promise<Response>;
-
 export class Router {
   #routes: Record<
     string,
@@ -34,12 +29,6 @@ export class Router {
     POST: [],
     PUT: [],
   };
-  #middleware: Middleware[] = [];
-
-  use(middleware: Middleware) {
-    this.#middleware.push(middleware);
-  }
-
   add(method: string, pathname: string, handler: CallbackHandler) {
     this.#routes[method].push({
       pattern: new URLPattern({ pathname }),
@@ -52,51 +41,25 @@ export class Router {
     const { pathname } = new URL(req.url);
     // "/x/gengi/" and "/x/gengi" are the same route.
     const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-    for (const route of this.#routes[req.method]) {
+    // Workers drops the body of a response to HEAD.
+    const method = req.method === "HEAD" ? "GET" : req.method;
+    for (const route of this.#routes[method] ?? []) {
       const match = route.pattern.exec({ pathname: path });
       if (match) {
         const params = (match.pathname.groups || {}) as Record<string, string>;
 
-        // Create the handler function that will be called at the end of middleware chain
-        const handler = async () => {
-          try {
-            return await route.handler(req, params);
-          } catch (error) {
-            // Report the error to monitoring system
-            await reportError(error as Error, req);
-
-            // Return a 500 error response
-            return response({ error: "Internal Server Error" }, false, 500);
-          }
-        };
-
-        // Execute middleware chain
-        return await this.#executeMiddleware(req, handler);
+        try {
+          return await route.handler(req, params);
+        } catch (error) {
+          await reportError(error as Error, req);
+          return response({ error: "Internal Server Error" }, false, 500);
+        }
       }
     }
 
-    // No route matched, return 404
-    const notFoundHandler = () =>
-      Promise.resolve(new Response(null, { status: 404 }));
-    return await this.#executeMiddleware(req, notFoundHandler);
+    return new Response(null, { status: 404 });
   }
 
-  async #executeMiddleware(
-    req: Request,
-    handler: () => Promise<Response>,
-  ): Promise<Response> {
-    let index = 0;
-
-    const next = async (): Promise<Response> => {
-      if (index < this.#middleware.length) {
-        const middleware = this.#middleware[index++];
-        return await middleware(req, next);
-      }
-      return await handler();
-    };
-
-    return await next();
-  }
   getEndpoints() {
     const endpoints: Array<{ endpoint: string; description: string }> = [];
     for (const method in this.#routes) {

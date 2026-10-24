@@ -1,6 +1,6 @@
 import { assert, test } from "vitest";
 import { validate } from "../health.ts";
-import meetups from "./meetups.ts";
+import meetups, { type Meetup, upcoming } from "./meetups.ts";
 
 test("meetups - returns meetup data", async () => {
   const req = new Request("http://localhost/x/meetups");
@@ -78,4 +78,43 @@ test("meetups - has correct meta information", () => {
     "List of Icelandic tech meetups and community groups",
   );
   assert.include(meetups.meta?.description || "", "RSS");
+});
+
+function meetup(start: string, end: string | null): Meetup {
+  return {
+    title: start,
+    description: null,
+    url: "https://example.com",
+    data: { start, end },
+  };
+}
+
+test("upcoming - keeps meetups that haven't ended", () => {
+  const now = Date.parse("2026-11-01T18:00:00Z");
+  const list = [
+    meetup("2026-10-31T20:00:00Z", null),
+    meetup("2026-11-01T17:00:00Z", "2026-11-01T19:00:00Z"),
+    meetup("2026-11-01T17:00:00Z", "2026-11-01T17:30:00Z"),
+    meetup("2026-11-02T20:00:00Z", null),
+  ];
+  assert.deepEqual(
+    upcoming(list, now).map((m) => m.title),
+    ["2026-11-01T17:00:00Z", "2026-11-02T20:00:00Z"],
+  );
+});
+
+test("meetups - filters JSON and RSS with ?upcoming=true", async () => {
+  const all = await meetups(new Request("http://localhost/x/meetups")).json<
+    Meetup[]
+  >();
+  const res = meetups(new Request("http://localhost/x/meetups?upcoming=true"));
+  assert.deepEqual(await res.json(), upcoming(all, Date.now()));
+
+  const rss = await meetups(
+    new Request("http://localhost/x/meetups?upcoming=true&format=rss"),
+  ).text();
+  assert.equal(
+    rss.split("<item>").length - 1,
+    upcoming(all, Date.now()).length,
+  );
 });

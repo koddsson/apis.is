@@ -1,4 +1,5 @@
 import type { ZodType } from "zod";
+import { github } from "./github.ts";
 import type { Router } from "./router.ts";
 
 const LABEL = "endpoint-down";
@@ -77,24 +78,12 @@ This issue closes automatically once the health check passes again.`;
 
 export async function reportHealth(results: HealthResult[]): Promise<void> {
   console.log("Endpoint health:", results);
-  const githubToken = process.env.GITHUB_TOKEN;
-  const githubRepo = process.env.GITHUB_REPOSITORY;
-  if (!githubToken || !githubRepo || process.env.ENVIRONMENT !== "production") {
-    return;
-  }
-
-  const apiUrl = `https://api.github.com/repos/${githubRepo}`;
-  const headers = {
-    Authorization: `Bearer ${githubToken}`,
-    Accept: "application/vnd.github.v3+json",
-    "User-Agent": "apis.is-health-check",
-    "Content-Type": "application/json",
-  };
+  const request = github("apis.is-health-check");
+  if (!request) return;
 
   try {
-    const issuesResponse = await fetch(
-      `${apiUrl}/issues?state=open&labels=${LABEL}&per_page=100`,
-      { headers },
+    const issuesResponse = await request(
+      `/issues?state=open&labels=${LABEL}&per_page=100`,
     );
     if (!issuesResponse.ok) {
       throw new Error(`Listing issues failed: ${issuesResponse.status}`);
@@ -108,36 +97,30 @@ export async function reportHealth(results: HealthResult[]): Promise<void> {
       );
 
       if (problem && !existing) {
-        await fetch(`${apiUrl}/issues`, {
+        await request("/issues", {
           method: "POST",
-          headers,
-          body: JSON.stringify({
+          body: {
             title: `🔻 Endpoint down: ${endpoint}`,
             body: issueBody(endpoint, problem, new Date().toISOString()),
             labels: [LABEL, "automated", "bug"],
-          }),
+          },
         });
       } else if (problem && existing && !existing.body.includes(problem)) {
         // Keep the latest failure in the issue without commenting every hour.
-        await fetch(`${apiUrl}/issues/${existing.number}`, {
+        await request(`/issues/${existing.number}`, {
           method: "PATCH",
-          headers,
-          body: JSON.stringify({
+          body: {
             body: issueBody(endpoint, problem, new Date().toISOString()),
-          }),
+          },
         });
       } else if (!problem && existing) {
-        await fetch(`${apiUrl}/issues/${existing.number}/comments`, {
+        await request(`/issues/${existing.number}/comments`, {
           method: "POST",
-          headers,
-          body: JSON.stringify({
-            body: `Health check passed at ${new Date().toISOString()}.`,
-          }),
+          body: { body: `Health check passed at ${new Date().toISOString()}.` },
         });
-        await fetch(`${apiUrl}/issues/${existing.number}`, {
+        await request(`/issues/${existing.number}`, {
           method: "PATCH",
-          headers,
-          body: JSON.stringify({ state: "closed", state_reason: "completed" }),
+          body: { state: "closed", state_reason: "completed" },
         });
       }
     }

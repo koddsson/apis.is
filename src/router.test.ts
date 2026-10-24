@@ -195,164 +195,24 @@ test("Router - handles async errors in handlers", async () => {
   assert.deepEqual(json.error, "Internal Server Error");
 });
 
-test("Router - logs successful requests in Common Log Format", async () => {
+test("Router - answers HEAD like GET", async () => {
   const router = new Router();
+  router.add("GET", "/test", () => new Response("ok"));
 
-  // Add a simple logging middleware for the test
-  const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
-    const response = await next();
-    const responseClone = response.clone();
-    const body = await responseClone.text();
-    const responseSize = new TextEncoder().encode(body).length;
-    const url = new URL(req.url);
-    console.log(
-      `- - - [date] "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${response.status} ${responseSize}`,
-    );
-    return response;
-  };
-  router.use(logMiddleware);
-
-  const handler = () => new Response("test");
-  router.add("GET", "/test", handler);
-
-  // Capture console.log output
-  const originalLog = console.log;
-  let loggedMessage = "";
-  console.log = (msg: string) => {
-    loggedMessage = msg;
-  };
-
-  try {
-    const req = new Request("http://localhost/test");
-    await router.route(req);
-
-    // Verify Common Log Format: host - - [date] "method path protocol" status size
-    assert.include(loggedMessage, "GET /test HTTP/1.1");
-    assert.include(loggedMessage, "200");
-    assert.include(loggedMessage, "- - [");
-    assert.include(loggedMessage, "]");
-    assert.include(loggedMessage, '"');
-  } finally {
-    console.log = originalLog;
-  }
+  const res = await router.route(
+    new Request("http://localhost/test", { method: "HEAD" }),
+  );
+  assert.equal(res.status, 200);
 });
 
-test("Router - logs 404 responses in Common Log Format", async () => {
+test("Router - returns 404 for methods without routes", async () => {
   const router = new Router();
+  router.add("GET", "/test", () => new Response("ok"));
 
-  // Add a simple logging middleware for the test
-  const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
-    const response = await next();
-    const responseClone = response.clone();
-    const body = await responseClone.text();
-    const responseSize = new TextEncoder().encode(body).length;
-    const url = new URL(req.url);
-    console.log(
-      `- - - [date] "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${response.status} ${responseSize}`,
+  for (const method of ["OPTIONS", "DELETE", "PATCH"]) {
+    const res = await router.route(
+      new Request("http://localhost/test", { method }),
     );
-    return response;
-  };
-  router.use(logMiddleware);
-
-  const originalLog = console.log;
-  let loggedMessage = "";
-  console.log = (msg: string) => {
-    loggedMessage = msg;
-  };
-
-  try {
-    const req = new Request("http://localhost/nonexistent");
-    await router.route(req);
-
-    assert.include(loggedMessage, "GET /nonexistent HTTP/1.1");
-    assert.include(loggedMessage, "404");
-    assert.include(loggedMessage, "- - [");
-  } finally {
-    console.log = originalLog;
-  }
-});
-
-test("Router - logs error responses with 500 status in Common Log Format", async () => {
-  const router = new Router();
-
-  // Add a simple logging middleware for the test
-  const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
-    const response = await next();
-    const responseClone = response.clone();
-    const body = await responseClone.text();
-    const responseSize = new TextEncoder().encode(body).length;
-    const url = new URL(req.url);
-    console.log(
-      `- - - [date] "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${response.status} ${responseSize}`,
-    );
-    return response;
-  };
-  router.use(logMiddleware);
-
-  const handler = () => {
-    throw new Error("Test error");
-  };
-  router.add("GET", "/error", handler);
-
-  const originalLog = console.log;
-  let loggedMessage = "";
-  console.log = (msg: string) => {
-    loggedMessage = msg;
-  };
-
-  try {
-    const req = new Request("http://localhost/error");
-    await router.route(req);
-
-    assert.include(loggedMessage, "GET /error HTTP/1.1");
-    assert.include(loggedMessage, "500");
-    assert.include(loggedMessage, "- - [");
-  } finally {
-    console.log = originalLog;
-  }
-});
-
-test("Router - logs different HTTP methods", async () => {
-  const router = new Router();
-
-  // Add a simple logging middleware for the test
-  const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
-    const response = await next();
-    const responseClone = response.clone();
-    const body = await responseClone.text();
-    const responseSize = new TextEncoder().encode(body).length;
-    const url = new URL(req.url);
-    console.log(
-      `- - - [date] "${req.method} ${url.pathname}${url.search} HTTP/1.1" ${response.status} ${responseSize}`,
-    );
-    return response;
-  };
-  router.use(logMiddleware);
-
-  router.add("POST", "/api/data", () => new Response("posted"));
-  router.add("PUT", "/api/data", () => new Response("updated"));
-
-  const originalLog = console.log;
-  const loggedMessages: string[] = [];
-  console.log = (msg: string) => {
-    loggedMessages.push(msg);
-  };
-
-  try {
-    const postReq = new Request("http://localhost/api/data", {
-      method: "POST",
-    });
-    await router.route(postReq);
-
-    const putReq = new Request("http://localhost/api/data", { method: "PUT" });
-    await router.route(putReq);
-
-    assert.deepEqual(loggedMessages.length, 2);
-    assert.include(loggedMessages[0], "POST");
-    assert.include(loggedMessages[0], "/api/data");
-    assert.include(loggedMessages[1], "PUT");
-    assert.include(loggedMessages[1], "/api/data");
-  } finally {
-    console.log = originalLog;
+    assert.equal(res.status, 404, method);
   }
 });

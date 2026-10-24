@@ -6,9 +6,10 @@ code in this repository.
 ## Project Overview
 
 apis.is is a collection of Icelandic-specific public APIs written in
-TypeScript. It aggregates data from external sources (Borgun currency rates,
-island.is vehicle lookup, hlaupadagskra.is race calendar) and serves
-community-maintained meetup data. Deployed on **Cloudflare Workers**.
+TypeScript. It cleans up and serves data from Icelandic sources (scraped pages,
+XML feeds, undocumented APIs) as JSON, plus community-maintained meetup data.
+Deployed on **Cloudflare Workers**; `/` lists the endpoints, and serves an
+explorer page to browsers.
 
 ## Commands
 
@@ -29,9 +30,6 @@ npm test
 # Run a single test file
 npx vitest run src/endpoints/gengi.test.ts
 
-# Run live/integration tests (hits real external APIs)
-npm run test:live
-
 # Run locally in the Workers runtime
 npm run dev
 
@@ -42,7 +40,7 @@ npm run test:coverage
 ## Architecture
 
 **Request flow:** default-exported `fetch` handler → Router (URLPattern-based) →
-Middleware chain → Endpoint handler → Response
+Endpoint handler → Response. Requests are logged by Workers observability.
 
 - `src/index.ts` — Entry point, registers routes and exports the `fetch`
   handler. Wrangler bundles it directly. Code runs on Cloudflare Workers, so it
@@ -53,12 +51,11 @@ Middleware chain → Endpoint handler → Response
   wrangler updates don't leave it stale.
 - `src/router.ts` — Custom router using native `URLPattern` API, supports path
   params (e.g., `/x/car/{number}?`)
-- `src/middleware.ts` — Middleware system; currently has Common Log Format
-  logger
 - `src/error-monitor.ts` — Auto-creates GitHub issues for uncaught errors in
   production (deduplicates via fingerprinting)
-- `src/endpoints/` — One file per API endpoint (gengi, meetups, car,
-  race-calendar, meta)
+- `src/github.ts` — GitHub API requests for the error monitor and health
+  check; only available in production with `GITHUB_TOKEN` set
+- `src/endpoints/` — One file per API endpoint, registered in `src/index.ts`
 - `src/data/meetups.json` — Static meetup data (community-maintained via GitHub
   issues + automated workflow)
 - `src/explorer.ts` — HTML API explorer that `/` serves to browsers
@@ -71,6 +68,9 @@ Middleware chain → Endpoint handler → Response
   endpoint's `health` check and opens/closes `endpoint-down` issues. New
   endpoints should set `handler.health` with a Zod `schema` for a healthy
   response (see `gengi.ts`); tests validate mocked responses against it.
+- `scripts/add-meetup.ts` — Adds a meetup from an "Add Meetup" issue
+  (`scripts/meetup.ts`, validated with the `/x/meetups` schema); run by
+  `.github/workflows/add-meetup.yml`
 - `scripts/remap-stack.ts` — Source-maps stack traces in error issues; run by
   `.github/workflows/remap-error-trace.yml`
 
