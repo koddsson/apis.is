@@ -23,6 +23,7 @@ import {
 import roadCameras from "./endpoints/road-cameras.ts";
 import roadIncidents from "./endpoints/road-incidents.ts";
 import { roadConditions, roadWeather } from "./endpoints/roads.ts";
+import ski from "./endpoints/ski.ts";
 import traffic from "./endpoints/traffic.ts";
 import tv from "./endpoints/tv.ts";
 import uv from "./endpoints/uv.ts";
@@ -67,6 +68,7 @@ router.add("GET", "/x/traffic/reykjavik", reykjavikTraffic);
 router.add("GET", "/x/roads/closures", streetClosures);
 router.add("GET", "/x/roads/incidents", roadIncidents);
 router.add("GET", "/x/roads/cameras", roadCameras);
+router.add("GET", "/x/ski", ski);
 
 export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =
