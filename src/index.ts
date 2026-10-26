@@ -16,6 +16,10 @@ import { births, population } from "./endpoints/population.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
 import recalls from "./endpoints/recalls.ts";
 import reservoirs from "./endpoints/reservoirs.ts";
+import {
+  reykjavikTraffic,
+  streetClosures,
+} from "./endpoints/reykjavik-streets.ts";
 import { roadConditions, roadWeather } from "./endpoints/roads.ts";
 import traffic from "./endpoints/traffic.ts";
 import tv from "./endpoints/tv.ts";
@@ -57,6 +61,8 @@ router.add("GET", "/x/reservoirs", reservoirs);
 router.add("GET", "/x/lightning", lightning);
 router.add("GET", "/x/althingi/votes", althingiVotes);
 router.add("GET", "/x/aurora", aurora);
+router.add("GET", "/x/traffic/reykjavik", reykjavikTraffic);
+router.add("GET", "/x/roads/closures", streetClosures);
 
 export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =

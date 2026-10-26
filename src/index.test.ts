@@ -41,6 +41,8 @@ test("index - lists every registered endpoint", async () => {
         "/x/lightning",
         "/x/althingi/votes",
         "/x/aurora",
+        "/x/traffic/reykjavik",
+        "/x/roads/closures",
       ],
     );
   } finally {
@@ -136,6 +138,8 @@ test("index - scheduled handler checks endpoint health", async () => {
         "/x/lightning",
         "/x/althingi/votes",
         "/x/aurora",
+        "/x/traffic/reykjavik",
+        "/x/roads/closures",
       ],
     );
     assert.isUndefined(
