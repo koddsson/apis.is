@@ -25,6 +25,7 @@ import roadCameras from "./endpoints/road-cameras.ts";
 import roadIncidents from "./endpoints/road-incidents.ts";
 import { roadConditions, roadWeather } from "./endpoints/roads.ts";
 import seaIce from "./endpoints/sea-ice.ts";
+import ships from "./endpoints/ships.ts";
 import ski from "./endpoints/ski.ts";
 import traffic from "./endpoints/traffic.ts";
 import tv from "./endpoints/tv.ts";
@@ -73,6 +74,7 @@ router.add("GET", "/x/roads/cameras", roadCameras);
 router.add("GET", "/x/ski", ski);
 router.add("GET", "/x/sea-ice", seaIce);
 router.add("GET", "/x/food-inspections{/:query}?", foodInspections);
+router.add("GET", "/x/ships", ships);
 
 export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =
