@@ -23,6 +23,11 @@ const mockXmlResponse = `<?xml version="1.0" encoding="UTF-8"?>
     <CurrencyDescription>Pound, Great Britain</CurrencyDescription>
     <CurrencyRate>175.30</CurrencyRate>
   </Rate>
+  <Rate>
+    <CurrencyCode>ARX</CurrencyCode>
+    <CurrencyDescription />
+    <CurrencyRate>0.08669</CurrencyRate>
+  </Rate>
 </Rates>`;
 
 beforeEach(() => {
@@ -50,6 +55,7 @@ test("gengi - fetches and returns all currencies", async () => {
     assert.deepEqual(data.USD.description, "US Dollar");
     assert.deepEqual(data.EUR.rate, 151.2);
     assert.deepEqual(data.GBP.rate, 175.3);
+    assert.deepEqual(data.ARX, { rate: 0.08669 });
   } finally {
     globalThis.fetch = originalFetch;
   }

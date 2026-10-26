@@ -352,3 +352,46 @@ test("reportError should comment on existing issue with same fingerprint", async
     globalThis.fetch = originalFetch;
   }
 });
+
+test("reportError still files an issue when listing issues fails, and comments on it without a ray id", async () => {
+  const error = new Error("Listing failed");
+  const originalFetch = globalThis.fetch;
+  const calls: Array<{ url: string; method?: string; body?: string }> = [];
+  let existing: { number: number; body: string } | undefined;
+
+  try {
+    vi.stubEnv("ENVIRONMENT", "production");
+    vi.stubEnv("GITHUB_TOKEN", "test-token");
+    vi.stubEnv("GITHUB_REPOSITORY", "owner/repo");
+
+    globalThis.fetch = (input: string | URL | Request, init?: RequestInit) => {
+      const url = input.toString();
+      calls.push({ url, method: init?.method, body: init?.body as string });
+      if (url.includes("/issues?")) {
+        return Promise.resolve(
+          existing
+            ? new Response(JSON.stringify([existing]))
+            : new Response("unavailable", { status: 503 }),
+        );
+      }
+      if (url.endsWith("/issues")) {
+        existing = { number: 7, body: JSON.parse(init?.body as string).body };
+      }
+      return Promise.resolve(new Response("{}", { status: 201 }));
+    };
+
+    await reportError(error);
+    assert.deepEqual(
+      calls.map((call) => call.method ?? "GET"),
+      ["GET", "POST"],
+    );
+    assert.isTrue(calls[1].url.endsWith("/issues"));
+
+    calls.length = 0;
+    await reportError(error);
+    assert.include(calls[1].url, "/issues/7/comments");
+    assert.include(JSON.parse(calls[1].body ?? "").body, "**Ray ID:** N/A");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

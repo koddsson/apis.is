@@ -36,8 +36,8 @@ async function fetchCurrencies(): Promise<Record<string, Currency>> {
   for (const rate of json.Rates.Rate) {
     const code = rate.CurrencyCode;
     const description = rate.CurrencyDescription?.split(",")
-      ?.reverse()
-      ?.join(" ")
+      .reverse()
+      .join(" ")
       .trim();
     currencies[code] = {
       rate: parseFloat(rate.CurrencyRate),

@@ -79,7 +79,7 @@ async function fetchAirQuality() {
   return Object.values(latest).map((station) => {
     const info = stationsById.get(station.local_id);
     const readings: Record<string, Reading> = {};
-    for (const [name, parameter] of Object.entries(station.parameters ?? {})) {
+    for (const [name, parameter] of Object.entries(station.parameters)) {
       const reading = latestReading(parameter);
       if (reading) readings[name] = reading;
     }

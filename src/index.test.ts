@@ -49,6 +49,28 @@ test("index - returns 404 for unknown paths", async () => {
   }
 });
 
+test("index - reports unhandled rejections", () => {
+  const originalError = console.error;
+  const reported: string[] = [];
+  console.error = (label: string, report: { message: string }) => {
+    if (label === "Uncaught error:") reported.push(report.message);
+  };
+
+  try {
+    for (const reason of [new TypeError("boom"), "not an error"]) {
+      const event = Object.assign(
+        new Event("unhandledrejection", { cancelable: true }),
+        { reason, promise: Promise.resolve() },
+      );
+      globalThis.dispatchEvent(event);
+      assert.isTrue(event.defaultPrevented);
+    }
+    assert.deepEqual(reported, ["boom", "not an error"]);
+  } finally {
+    console.error = originalError;
+  }
+});
+
 test("index - scheduled handler checks endpoint health", async () => {
   const originalFetch = globalThis.fetch;
   const originalLog = console.log;
