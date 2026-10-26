@@ -193,7 +193,7 @@ async function ski(request: Request): Promise<Response> {
     return response(
       { error: `area must be one of ${AREA_IDS.join(", ")}` },
       false,
-      400,
+      404,
     );
   }
 

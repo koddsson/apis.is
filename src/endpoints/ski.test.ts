@@ -201,11 +201,11 @@ test("ski - filters by area and caches each area", async () => {
   }
 });
 
-test("ski - rejects an unknown area", async () => {
+test("ski - 404s an unknown area", async () => {
   const server = mockFetch({});
   try {
     const res = await get("?area=hlidarfjall");
-    assert.equal(res.status, 400);
+    assert.equal(res.status, 404);
     assert.deepEqual(await res.json(), {
       error: "area must be one of blafjoll, skalafell",
     });
