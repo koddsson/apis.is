@@ -1,7 +1,6 @@
 import airQuality from "./endpoints/air-quality.ts";
 import { busRoutes, busStops, busVehicles } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
-import earthquakes from "./endpoints/earthquakes.ts";
 import flights from "./endpoints/flights.ts";
 import gengi from "./endpoints/gengi.ts";
 import meetups from "./endpoints/meetups.ts";
@@ -25,7 +24,6 @@ router.add("GET", "/x/meetups", meetups);
 router.add("GET", "/x/car{/:number}?", car);
 router.add("GET", "/x/race-calendar", raceCalendar);
 router.add("GET", "/x/nova-2f1", nova2f1);
-router.add("GET", "/x/earthquakes", earthquakes);
 router.add("GET", "/x/weather{/:station}?", weather);
 router.add("GET", "/x/bus/stops{/:id}?", busStops);
 router.add("GET", "/x/bus/routes", busRoutes);
