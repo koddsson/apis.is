@@ -4,6 +4,7 @@ import { busRoutes, busStops, busVehicles } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
 import flights from "./endpoints/flights.ts";
 import gengi from "./endpoints/gengi.ts";
+import lightning from "./endpoints/lightning.ts";
 import meetups from "./endpoints/meetups.ts";
 import meta from "./endpoints/meta.ts";
 import nova2f1 from "./endpoints/nova-2f1.ts";
@@ -51,6 +52,7 @@ router.add("GET", "/x/tv", tv);
 router.add("GET", "/x/recalls", recalls);
 router.add("GET", "/x/uv", uv);
 router.add("GET", "/x/reservoirs", reservoirs);
+router.add("GET", "/x/lightning", lightning);
 
 export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =
