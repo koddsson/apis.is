@@ -9,9 +9,9 @@ const TTL_SECONDS = 5 * 60;
 const TYPES: Record<string, string> = {
   VEGAVINNA: "roadworks",
   ALLUR_AKSTUR_BANN: "closed",
-  TONN_ALLS: "axleWeightLimit",
+  TONN_ALLS: "axle-weight-limit",
   HOLUR_I_VEGI: "potholes",
-  OSLETTUR_VEGUR: "unevenRoad",
+  OSLETTUR_VEGUR: "uneven-road",
   GRJOTHRUN: "rockfall",
 };
 
@@ -85,7 +85,7 @@ async function roadIncidents(request: Request): Promise<Response> {
 roadIncidents.meta = {
   endpoint: "/x/roads/incidents",
   description:
-    "Current road incidents from Vegagerðin: roadworks, closures, axle weight limits, potholes, uneven road and rockfall warnings, with location and start/end times. Optional ?type= filter (roadworks, closed, axleWeightLimit, potholes, unevenRoad, rockfall).",
+    "Current road incidents from Vegagerðin: roadworks, closures, axle weight limits, potholes, uneven road and rockfall warnings, with location and start/end times. Optional ?type= filter (roadworks, closed, axle-weight-limit, potholes, uneven-road, rockfall).",
 };
 
 roadIncidents.health = { schema: z.array(Incident) };
