@@ -81,7 +81,7 @@ test("recalls - maps MAST's recalls feed to plain-text recalls", async () => {
         title: "Aðskotahlutur í hnetublöndu",
         description:
           "Matvælastofnun varar við neyslu á einni framleiðslulotu af Bónus Hnetublöndu með trönuberjum og pistasíum vegna trábita sem fannst í vörunni.",
-        date: "2026-10-16T15:21:00.000Z",
+        time: "2026-10-16T15:21:00.000Z",
         url: "https://www.mast.is/is/um-mast/frettir/frettir/adskotahlutur-i-hnetublondu",
         image: "https://www.mast.is/static/news/sm/bonus-hnetublanda.jpeg",
       },
@@ -89,14 +89,14 @@ test("recalls - maps MAST's recalls feed to plain-text recalls", async () => {
         title: "Vanmerktur ofnæmisvaldur í Voga ídýfu krydd (hveiti)",
         description:
           'Matvælastofnun varar neytendur við sem hafa ofnæmi fyrir hveiti við Voga ídýfu krydd. Mjólkursamlag KS & Matvælastofnun hafa innkallað "vörurnar" <2026> á.',
-        date: "2026-07-16T11:53:00.000Z",
+        time: "2026-07-16T11:53:00.000Z",
         url: "https://www.mast.is/is/um-mast/frettir/frettir/vanmerktur-ofnaemisvaldu-hveiti-i-voga-idyfu-krydd",
         image: null,
       },
       {
         title: "Salmonella í kryddi",
         description: "",
-        date: "2026-10-13T14:53:00.000Z",
+        time: "2026-10-13T14:53:00.000Z",
         url: "https://www.mast.is/is/um-mast/frettir/frettir/salmonella-i-kryddi",
         image: null,
       },

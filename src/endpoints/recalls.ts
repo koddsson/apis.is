@@ -9,7 +9,7 @@ const TTL_SECONDS = 30 * 60;
 const Recall = z.object({
   title: z.string().min(1),
   description: z.string(),
-  date: z.iso.datetime(),
+  time: z.iso.datetime(),
   url: z.url(),
   image: z.url().nullable(),
 });
@@ -49,7 +49,7 @@ function recall(item: FeedItem): Recall {
   return {
     title: item.title.trim(),
     description: text(description),
-    date: new Date(time).toISOString(),
+    time: new Date(time).toISOString(),
     url: item.link,
     image: /<img[^>]*\ssrc="([^"]+)"/.exec(description)?.[1] ?? null,
   };
@@ -77,7 +77,7 @@ async function recalls(request: Request): Promise<Response> {
 recalls.meta = {
   endpoint: "/x/recalls",
   description:
-    "Food recalls and consumption warnings announced by Matvælastofnun (MAST), newest first: title, plain-text description, date, link and image.",
+    "Food recalls and consumption warnings announced by Matvælastofnun (MAST), newest first: title, plain-text description, time, link and image.",
 };
 
 recalls.health = { schema: z.array(Recall).min(1) };
