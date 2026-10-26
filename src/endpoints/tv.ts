@@ -16,8 +16,8 @@ const Program = z.object({
   subtitle: z.string().nullable(),
   description: z.string().nullable(),
   category: z.string().nullable(),
-  startTime: z.iso.datetime(),
-  endTime: z.iso.datetime(),
+  start: z.iso.datetime(),
+  end: z.iso.datetime(),
   live: z.boolean(),
   episode: z.number().nullable(),
   episodes: z.number().nullable(),
@@ -79,8 +79,8 @@ async function fetchRuv(id: string, date: string): Promise<Program[]> {
       subtitle: event.original_title,
       description: (event.description ?? []).filter(Boolean).join("\n") || null,
       category: null,
-      startTime: ruvTime(event.start_time),
-      endTime: ruvTime(event.end_time),
+      start: ruvTime(event.start_time),
+      end: ruvTime(event.end_time),
       live: event.is_live,
       episode: event.episode_number,
       episodes: event.number_of_episodes,
@@ -113,8 +113,8 @@ function synProgram(program: SynProgram): Program {
     subtitle: subtitle && subtitle !== title ? subtitle : null,
     description: program.lysing?.trim() || null,
     category: program.flokkur || null,
-    startTime: start.toISOString(),
-    endTime: new Date(start.getTime() + program.slott * 60_000).toISOString(),
+    start: start.toISOString(),
+    end: new Date(start.getTime() + program.slott * 60_000).toISOString(),
     live: program.beint === 1,
     episode: numbered ? program.thattur : null,
     episodes:
@@ -156,9 +156,7 @@ async function fetchSchedule(date: string): Promise<Channel[]> {
     .filter((channel) => channel.programs.length > 0)
     .map((channel) => ({
       ...channel,
-      programs: channel.programs.sort((a, b) =>
-        a.startTime.localeCompare(b.startTime),
-      ),
+      programs: channel.programs.sort((a, b) => a.start.localeCompare(b.start)),
     }));
 }
 
