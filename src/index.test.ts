@@ -1,5 +1,5 @@
 import { assert, test, vi } from "vitest";
-import worker from "./index.ts";
+import worker, { onUnhandledRejection } from "./index.ts";
 
 test("index - lists every registered endpoint", async () => {
   const originalLog = console.log;
@@ -58,12 +58,14 @@ test("index - reports unhandled rejections", () => {
 
   try {
     for (const reason of [new TypeError("boom"), "not an error"]) {
-      const event = Object.assign(
-        new Event("unhandledrejection", { cancelable: true }),
-        { reason, promise: Promise.resolve() },
-      );
-      globalThis.dispatchEvent(event);
-      assert.isTrue(event.defaultPrevented);
+      let prevented = false;
+      onUnhandledRejection({
+        reason,
+        preventDefault: () => {
+          prevented = true;
+        },
+      } as PromiseRejectionEvent);
+      assert.isTrue(prevented);
     }
     assert.deepEqual(reported, ["boom", "not an error"]);
   } finally {

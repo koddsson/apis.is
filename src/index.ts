@@ -36,15 +36,16 @@ router.add("GET", "/x/air-quality", airQuality);
 router.add("GET", "/x/population", population);
 router.add("GET", "/x/population/births", births);
 
-// Global unhandled rejection handler
-globalThis.addEventListener("unhandledrejection", (event) => {
+export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =
     event.reason instanceof Error
       ? event.reason
       : new Error(String(event.reason));
   reportError(error);
   event.preventDefault();
-});
+}
+
+globalThis.addEventListener("unhandledrejection", onUnhandledRejection);
 
 export default {
   fetch: (req: Request) => router.route(req),
