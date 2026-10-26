@@ -210,7 +210,7 @@ test("althingi votes - maps votes newest first", async () => {
         typeCode: "bt",
         item: "2 (nýr kafli með nýrri grein)",
         referredTo: null,
-        method: "rollCall",
+        method: "roll-call",
         yes: 20,
         no: 34,
         abstained: 4,

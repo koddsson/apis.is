@@ -8,9 +8,9 @@ const TTL_SECONDS = 30 * 60;
 const DEFAULT_DAYS = 30;
 const MAX_DAYS = 90;
 
-const METHODS: Record<string, "electronic" | "rollCall" | "declaration"> = {
+const METHODS: Record<string, "electronic" | "roll-call" | "declaration"> = {
   atkvæðagreiðslukerfi: "electronic",
-  nafnakall: "rollCall",
+  nafnakall: "roll-call",
   "yfirlýsing forseta/mál gengur": "declaration",
 };
 
@@ -35,7 +35,7 @@ const Vote = z.object({
   typeCode: z.string(),
   item: z.string().nullable(),
   referredTo: z.string().nullable(),
-  method: z.enum(["electronic", "rollCall", "declaration"]),
+  method: z.enum(["electronic", "roll-call", "declaration"]),
   yes: z.number().int().nullable(),
   no: z.number().int().nullable(),
   abstained: z.number().int().nullable(),

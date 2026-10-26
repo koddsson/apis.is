@@ -1,6 +1,6 @@
 import airQuality from "./endpoints/air-quality.ts";
-import avalanche from "./endpoints/avalanche.ts";
 import althingiVotes from "./endpoints/althingi.ts";
+import avalanche from "./endpoints/avalanche.ts";
 import { busRoutes, busStops, busVehicles } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
 import flights from "./endpoints/flights.ts";
