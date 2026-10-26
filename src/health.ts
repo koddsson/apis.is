@@ -35,28 +35,48 @@ export function pathFor(
   return path.replace(/\/\{[^}]+\}/g, "");
 }
 
-export function checkEndpoints(router: Router): Promise<HealthResult[]> {
-  return Promise.all(
-    router.getHealthChecks().map(async ({ endpoint, handler, health }) => {
-      const params = health.params ?? {};
-      try {
-        const res = await handler(
-          new Request(`https://health.check${pathFor(endpoint, params)}`),
-          params,
-        );
-        if (!res.ok) return { endpoint, problem: `HTTP ${res.status}` };
-        return { endpoint, problem: validate(health.schema, await res.json()) };
-      } catch (error) {
-        return {
-          endpoint,
-          problem:
-            error instanceof Error
-              ? `${error.name}: ${error.message}`
-              : String(error),
-        };
-      }
-    }),
-  );
+type EndpointCheck = ReturnType<Router["getHealthChecks"]>[number];
+
+async function check({
+  endpoint,
+  handler,
+  health,
+}: EndpointCheck): Promise<HealthResult> {
+  const params = health.params ?? {};
+  try {
+    const res = await handler(
+      new Request(`https://health.check${pathFor(endpoint, params)}`),
+      params,
+    );
+    if (!res.ok) return { endpoint, problem: `HTTP ${res.status}` };
+    return { endpoint, problem: validate(health.schema, await res.json()) };
+  } catch (error) {
+    return {
+      endpoint,
+      problem:
+        error instanceof Error
+          ? `${error.name}: ${error.message}`
+          : String(error),
+    };
+  }
+}
+
+// Sequential so endpoints sharing an upstream don't rate-limit each other.
+export async function checkEndpoints(
+  router: Router,
+  retryDelayMs = 60_000,
+): Promise<HealthResult[]> {
+  const checks = router.getHealthChecks();
+  const results: HealthResult[] = [];
+  for (const healthCheck of checks) results.push(await check(healthCheck));
+
+  if (results.some((result) => result.problem)) {
+    await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+    for (const [i, result] of results.entries()) {
+      if (result.problem) results[i] = await check(checks[i]);
+    }
+  }
+  return results;
 }
 
 function marker(endpoint: string): string {
