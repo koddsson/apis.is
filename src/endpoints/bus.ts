@@ -36,8 +36,8 @@ const Vehicle = z.object({
   latitude: z.number(),
   longitude: z.number(),
   heading: z.number(),
-  lastStop: StopPlace,
-  nextStop: StopPlace,
+  lastStop: StopPlace.nullable(),
+  nextStop: StopPlace.nullable(),
   arrivals: z.array(
     z.object({
       stop: StopPlace,
@@ -53,10 +53,10 @@ interface UpstreamVehicle {
   lat: number;
   lon: number;
   head: number;
-  last_stopnum: string;
-  last_stopname: string;
-  next_stopnum: string;
-  next_stopname: string;
+  last_stopnum: string | null;
+  last_stopname: string | null;
+  next_stopnum: string | null;
+  next_stopname: string | null;
   komur: Array<{
     stopp: string;
     heiti: string;
@@ -123,6 +123,11 @@ async function fetchLive<T>(path: string): Promise<T | null> {
   return res.json<T>();
 }
 
+// Null before a bus reaches the first stop of its trip.
+function stopPlace(id: string | null, name: string | null) {
+  return id && name ? { id, name } : null;
+}
+
 async function fetchVehicles(): Promise<z.infer<typeof Vehicle>[]> {
   const live = await fetchLive<{
     sent: string;
@@ -137,8 +142,8 @@ async function fetchVehicles(): Promise<z.infer<typeof Vehicle>[]> {
       latitude: bus.lat,
       longitude: bus.lon,
       heading: bus.head,
-      lastStop: { id: bus.last_stopnum, name: bus.last_stopname },
-      nextStop: { id: bus.next_stopnum, name: bus.next_stopname },
+      lastStop: stopPlace(bus.last_stopnum, bus.last_stopname),
+      nextStop: stopPlace(bus.next_stopnum, bus.next_stopname),
       arrivals: bus.komur.map((stop) => ({
         stop: { id: stop.stopp, name: stop.heiti },
         destination: stop.til,

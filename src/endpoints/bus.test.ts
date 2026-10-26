@@ -56,10 +56,10 @@ const VEHICLES = {
           lat: 64.5,
           lon: -21.8,
           head: 10,
-          last_stopnum: "1",
-          last_stopname: "Borgarnes",
-          next_stopnum: "2",
-          next_stopname: "Akureyri",
+          last_stopnum: null,
+          last_stopname: null,
+          next_stopnum: null,
+          next_stopname: null,
           komur: [],
         },
       ],
@@ -305,6 +305,8 @@ test("busVehicles - maps live positions and upcoming stops", async () => {
       data.map((bus) => bus.route),
       ["1", "57"],
     );
+    assert.isNull(data[1].lastStop);
+    assert.isNull(data[1].nextStop);
   } finally {
     server.restore();
   }
