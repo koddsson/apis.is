@@ -102,7 +102,7 @@ test("checkEndpoints - runs each declared check with its params", async () => {
     withMeta(() => response([]), "/x/unchecked"),
   );
 
-  const results = await checkEndpoints(router);
+  const results = await checkEndpoints(router, 0);
 
   assert.deepEqual(results, [
     { endpoint: "/x/ok/{code}", problem: undefined },
@@ -114,7 +114,88 @@ test("checkEndpoints - runs each declared check with its params", async () => {
     { endpoint: "/x/throwing", problem: "TypeError: boom" },
     { endpoint: "/x/rejecting", problem: "not an error" },
   ]);
-  assert.deepEqual(seen, ['/x/ok/USD {"code":"USD"}', "/x/optional"]);
+  assert.deepEqual(seen, [
+    '/x/ok/USD {"code":"USD"}',
+    "/x/optional",
+    "/x/optional",
+  ]);
+});
+
+test("checkEndpoints - runs checks one at a time", async () => {
+  const router = new Router();
+  let running = 0;
+  let maxRunning = 0;
+  for (const name of ["a", "b", "c"]) {
+    const handler = withMeta(async () => {
+      maxRunning = Math.max(maxRunning, ++running);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      running--;
+      return response([1]);
+    }, `/x/${name}`);
+    router.add(
+      "GET",
+      `/x/${name}`,
+      Object.assign(handler, { health: { schema: nonEmpty } }),
+    );
+  }
+
+  await checkEndpoints(router, 0);
+  assert.equal(maxRunning, 1);
+});
+
+test("checkEndpoints - retries failed checks once after a delay", async () => {
+  vi.useFakeTimers();
+  const router = new Router();
+  const calls: string[] = [];
+
+  let flakyCalls = 0;
+  const flaky = withMeta(() => {
+    calls.push("flaky");
+    return ++flakyCalls === 1
+      ? new Response(null, { status: 530 })
+      : response([1]);
+  }, "/x/flaky");
+  router.add(
+    "GET",
+    "/x/flaky",
+    Object.assign(flaky, { health: { schema: nonEmpty } }),
+  );
+
+  const down = withMeta(() => {
+    calls.push("down");
+    return new Response(null, { status: 503 });
+  }, "/x/down");
+  router.add(
+    "GET",
+    "/x/down",
+    Object.assign(down, { health: { schema: nonEmpty } }),
+  );
+
+  const ok = withMeta(() => {
+    calls.push("ok");
+    return response([1]);
+  }, "/x/ok");
+  router.add(
+    "GET",
+    "/x/ok",
+    Object.assign(ok, { health: { schema: nonEmpty } }),
+  );
+
+  try {
+    const pending = checkEndpoints(router, 60_000);
+    await vi.advanceTimersByTimeAsync(59_999);
+    assert.deepEqual(calls, ["flaky", "down", "ok"]);
+
+    await vi.advanceTimersByTimeAsync(1);
+    assert.deepEqual(await pending, [
+      { endpoint: "/x/flaky", problem: undefined },
+      { endpoint: "/x/down", problem: "HTTP 503" },
+      { endpoint: "/x/ok", problem: undefined },
+    ]);
+    assert.deepEqual(calls, ["flaky", "down", "ok", "flaky", "down"]);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("reportHealth - only logs outside production", async () => {

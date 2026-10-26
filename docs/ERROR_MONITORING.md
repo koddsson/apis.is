@@ -50,6 +50,10 @@ has an hourly Cron Trigger (`triggers.crons` in `wrangler.jsonc`) that runs
   with the declared `params`, and its JSON is validated against
   `health.schema`, a Zod schema for a healthy response. Violations are
   reported with the path of each failing field.
+- Checks run one at a time, so endpoints that share an upstream (like the two
+  Hagstofa population endpoints) don't rate-limit each other. Failed checks are
+  retried once a minute later, and only failures that persist are reported, so
+  brief upstream blips (5xx, 429) don't open issues.
 - A failing endpoint gets one `endpoint-down` issue. It isn't commented on
   while it stays down, but if the failure message changes the issue's problem
   section is rewritten with the latest one. It is closed automatically once

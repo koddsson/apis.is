@@ -1,4 +1,4 @@
-import { assert, test } from "vitest";
+import { assert, test, vi } from "vitest";
 import worker from "./index.ts";
 
 test("index - lists every registered endpoint", async () => {
@@ -60,12 +60,14 @@ test("index - scheduled handler checks endpoint health", async () => {
     if (label === "Endpoint health:") logged = results;
   };
   console.error = () => {};
+  vi.useFakeTimers();
 
   try {
     const pending: Promise<unknown>[] = [];
     worker.scheduled({} as ScheduledController, {}, {
       waitUntil: (promise: Promise<unknown>) => pending.push(promise),
     } as unknown as ExecutionContext);
+    await vi.runAllTimersAsync();
     await Promise.all(pending);
 
     const results = logged as Array<{ endpoint: string; problem?: string }>;
@@ -97,6 +99,7 @@ test("index - scheduled handler checks endpoint health", async () => {
       results.find((r) => r.endpoint === "/x/gengi/{code}")?.problem,
     );
   } finally {
+    vi.useRealTimers();
     globalThis.fetch = originalFetch;
     console.log = originalLog;
     console.error = originalError;
