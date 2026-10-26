@@ -21,6 +21,7 @@ import {
   reykjavikTraffic,
   streetClosures,
 } from "./endpoints/reykjavik-streets.ts";
+import rivers from "./endpoints/rivers.ts";
 import roadCameras from "./endpoints/road-cameras.ts";
 import roadIncidents from "./endpoints/road-incidents.ts";
 import { roadConditions, roadWeather } from "./endpoints/roads.ts";
@@ -64,6 +65,7 @@ router.add("GET", "/x/tv", tv);
 router.add("GET", "/x/recalls", recalls);
 router.add("GET", "/x/uv", uv);
 router.add("GET", "/x/reservoirs", reservoirs);
+router.add("GET", "/x/rivers", rivers);
 router.add("GET", "/x/lightning", lightning);
 router.add("GET", "/x/althingi/votes", althingiVotes);
 router.add("GET", "/x/aurora", aurora);

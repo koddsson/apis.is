@@ -1,8 +1,8 @@
 import * as z from "zod";
 import { cacheControl, withCache } from "../cache.ts";
+import { date, fetchGraph, type Point } from "../landsvirkjun.ts";
 import { response } from "../utils.ts";
 
-const BASE_URL = "https://www.landsvirkjun.is/rauntimavoktun/";
 const TTL_SECONDS = 60 * 60;
 
 const RESERVOIRS: Record<string, string> = {
@@ -32,37 +32,12 @@ const Reservoir = z.object({
 });
 type Reservoir = z.infer<typeof Reservoir>;
 
-type Point = [number, number | null, (number | null)?];
-
-interface Graph {
-  title: string;
-  id: string;
-  series: Array<{ name: string; data: Point[] }>;
-}
-
-function date(timestamp: number): string {
-  return new Date(timestamp).toISOString().slice(0, 10);
-}
-
 function byDate(points: Point[] | undefined, index = 1) {
   return new Map(points?.map((point) => [date(point[0]), point[index]]));
 }
 
 async function fetchReservoir(id: string, slug: string): Promise<Reservoir> {
-  const url = BASE_URL + slug;
-  const res = await fetch(url, {
-    headers: { "User-Agent": "apis.is (+https://apis.is)" },
-  });
-  if (!res.ok) throw new Error(`Failed to fetch ${slug}: ${res.status}`);
-  const next = /<script id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s.exec(
-    await res.text(),
-  );
-  if (!next) throw new Error(`Page data not found on ${slug}`);
-  const body: Array<{ __typename: string; primary: { data: string } }> =
-    JSON.parse(next[1]).props.pageProps.page.body;
-  const slice = body.find((slice) => slice.__typename === "PageBodyGraph");
-  if (!slice) throw new Error(`Graph not found on ${slug}`);
-  const graph: Graph = JSON.parse(slice.primary.data);
+  const { url, graph } = await fetchGraph(slug);
 
   const series = new Map(graph.series.map((s) => [s.name, s.data]));
   // Þingvallavatn only has a single "Vatnshæð" series covering the past year.
