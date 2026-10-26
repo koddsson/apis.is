@@ -1,5 +1,5 @@
 import { assert, test, vi } from "vitest";
-import worker from "./index.ts";
+import worker, { onUnhandledRejection } from "./index.ts";
 
 test("index - lists every registered endpoint", async () => {
   const originalLog = console.log;
@@ -46,6 +46,30 @@ test("index - returns 404 for unknown paths", async () => {
     assert.deepEqual(res.status, 404);
   } finally {
     console.log = originalLog;
+  }
+});
+
+test("index - reports unhandled rejections", () => {
+  const originalError = console.error;
+  const reported: string[] = [];
+  console.error = (label: string, report: { message: string }) => {
+    if (label === "Uncaught error:") reported.push(report.message);
+  };
+
+  try {
+    for (const reason of [new TypeError("boom"), "not an error"]) {
+      let prevented = false;
+      onUnhandledRejection({
+        reason,
+        preventDefault: () => {
+          prevented = true;
+        },
+      } as PromiseRejectionEvent);
+      assert.isTrue(prevented);
+    }
+    assert.deepEqual(reported, ["boom", "not an error"]);
+  } finally {
+    console.error = originalError;
   }
 });
 

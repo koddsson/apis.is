@@ -13,7 +13,8 @@ export default defineConfig({
     coverage: {
       provider: "istanbul",
       include: ["src/**/*.ts"],
-      thresholds: { branches: 85, lines: 95 },
+      exclude: ["src/**/*.test-helper.ts"],
+      thresholds: { 100: true },
     },
   },
 });

@@ -162,6 +162,20 @@ test("weather - returns an empty forecast when there is none", async () => {
   }
 });
 
+test("weather - returns a null time when the station has none", async () => {
+  const fetchMock = mockFetch({
+    "type=obs": {
+      body: OBSERVATION.replace(/<time>.*<\/time>/, "<time></time>"),
+    },
+  });
+  try {
+    const res = await get("/x/weather/31392", "31392");
+    assert.isNull((await res.json<{ time: string | null }>()).time);
+  } finally {
+    fetchMock.restore();
+  }
+});
+
 test("weather - rejects bad and unknown stations", async () => {
   const fetchMock = mockFetch({ "type=obs": { body: EMPTY } });
   try {

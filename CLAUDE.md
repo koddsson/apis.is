@@ -33,7 +33,7 @@ npx vitest run src/endpoints/gengi.test.ts
 # Run locally in the Workers runtime
 npm run dev
 
-# Coverage (branch: 85%, line: 95% thresholds, enforced by vitest.config.ts)
+# Coverage (100% thresholds, enforced by vitest.config.ts)
 npm run test:coverage
 ```
 
@@ -94,6 +94,7 @@ available anywhere else is the most valuable.
 - TypeScript strict mode
 - All changes must pass: `npm run lint`, `npm run typecheck`, `npm test`
 - New features/fixes require tests
-- Coverage thresholds enforced in CI: 85% branch, 95% line
+- Coverage thresholds enforced in CI: 100% statements, branches, functions,
+  and lines
 - **Always verify coverage** after writing or modifying tests by running the
   coverage commands above. CI will fail if thresholds are not met.

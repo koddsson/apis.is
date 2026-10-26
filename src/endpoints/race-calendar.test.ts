@@ -51,6 +51,11 @@ const mockRaceCalendarResponse = [
     displayDate: "2027-07-18",
   }),
   upstreamEvent({ name: "Undated", slug: "undated" }),
+  upstreamEvent({
+    name: "Haustmaraþon",
+    slug: "haust",
+    displayDate: "2027-10-23",
+  }),
 ];
 
 type Race = {
@@ -105,6 +110,7 @@ test("raceCalendar - returns races sorted by date without ads", async () => {
         "Laugavegshlaupið",
         "Cancelled run",
         "Reykjavíkurmaraþon",
+        "Haustmaraþon",
         "Hlaupahópur",
         "Undated",
       ],

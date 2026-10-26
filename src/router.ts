@@ -46,7 +46,7 @@ export class Router {
     for (const route of this.#routes[method] ?? []) {
       const match = route.pattern.exec({ pathname: path });
       if (match) {
-        const params = (match.pathname.groups || {}) as Record<string, string>;
+        const params = match.pathname.groups as Record<string, string>;
 
         try {
           return await route.handler(req, params);

@@ -93,12 +93,13 @@ export function latestFullYear(
     const year = Number(period.slice(0, 4));
     byYear.set(year, [...(byYear.get(year) ?? []), value]);
   }
-  const year = [...byYear.keys()]
-    .filter((y) => byYear.get(y)?.length === 4)
-    .sort((a, b) => b - a)[0];
-  if (year === undefined) return null;
+  const latest = [...byYear]
+    .filter(([, values]) => values.length === 4)
+    .sort(([a], [b]) => b - a)[0];
+  if (!latest) return null;
 
-  const births = (byYear.get(year) ?? []).reduce((sum, n) => sum + n, 0);
+  const [year, values] = latest;
+  const births = values.reduce((sum, n) => sum + n, 0);
   const days = (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / 86_400_000;
   return { year, births, perDay: Math.round((births / days) * 100) / 100 };
 }
