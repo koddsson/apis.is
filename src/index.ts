@@ -1,5 +1,6 @@
 import airQuality from "./endpoints/air-quality.ts";
 import althingiVotes from "./endpoints/althingi.ts";
+import aurora from "./endpoints/aurora.ts";
 import avalanche from "./endpoints/avalanche.ts";
 import { busRoutes, busStops, busVehicles } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
@@ -55,6 +56,7 @@ router.add("GET", "/x/uv", uv);
 router.add("GET", "/x/reservoirs", reservoirs);
 router.add("GET", "/x/lightning", lightning);
 router.add("GET", "/x/althingi/votes", althingiVotes);
+router.add("GET", "/x/aurora", aurora);
 
 export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =
