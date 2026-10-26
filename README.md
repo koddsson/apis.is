@@ -14,6 +14,10 @@ of wrapping it:
 
 - **Earthquakes:** Veðurstofa Íslands'
   [quakes API](https://api.vedur.is/) (`https://api.vedur.is/quakes/events`)
+- **Weather warnings:** Veðurstofa Íslands'
+  [CAP API](https://api.vedur.is/)
+  (`https://api.vedur.is/cap/capbroker/active/detailed/all`), which returns
+  `204 No Content` when no warnings are active
 
 ## Contributing
 
