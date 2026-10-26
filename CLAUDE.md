@@ -89,6 +89,11 @@ If the upstream already serves clean JSON with CORS, link to it instead of
 wrapping it, and say so on the endpoint's issue. Real-time data that isn't
 available anywhere else is the most valuable.
 
+Before searching for new endpoints, check what's already been researched:
+`gh issue list --label endpoint --state all`. #192 logs sources that were
+checked and ruled out. Record new findings as issues (candidates as
+`endpoint` issues, rejections in #192) so they aren't researched again.
+
 ## Code Quality Requirements
 
 - TypeScript strict mode
