@@ -9,6 +9,12 @@ Open [apis.is](https://apis.is) in a browser to explore the endpoints and try
 them out. Requested programmatically, `/` returns the endpoint list as JSON.
 Add `?pretty=true` to any request for indented output.
 
+Some Icelandic data already has a good official API, so we link to it instead
+of wrapping it:
+
+- **Earthquakes:** Veðurstofa Íslands'
+  [quakes API](https://api.vedur.is/) (`https://api.vedur.is/quakes/events`)
+
 ## Contributing
 
 - **Add a meetup:** open an issue with the "Add Meetup" template. See the
