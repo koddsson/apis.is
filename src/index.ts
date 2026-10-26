@@ -12,6 +12,7 @@ import { births, population } from "./endpoints/population.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
 import { roadConditions, roadWeather } from "./endpoints/roads.ts";
 import traffic from "./endpoints/traffic.ts";
+import tv from "./endpoints/tv.ts";
 import waves from "./endpoints/waves.ts";
 import weather from "./endpoints/weather.ts";
 import { reportError } from "./error-monitor.ts";
@@ -41,6 +42,7 @@ router.add("GET", "/x/pools", pools);
 router.add("GET", "/x/air-quality", airQuality);
 router.add("GET", "/x/population", population);
 router.add("GET", "/x/population/births", births);
+router.add("GET", "/x/tv", tv);
 
 export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =
