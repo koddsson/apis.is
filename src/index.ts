@@ -5,6 +5,7 @@ import avalanche from "./endpoints/avalanche.ts";
 import { busRoutes, busStops, busVehicles } from "./endpoints/bus.ts";
 import car from "./endpoints/car.ts";
 import flights from "./endpoints/flights.ts";
+import foodInspections from "./endpoints/food-inspections.ts";
 import gengi from "./endpoints/gengi.ts";
 import lightning from "./endpoints/lightning.ts";
 import meetups from "./endpoints/meetups.ts";
@@ -71,6 +72,7 @@ router.add("GET", "/x/roads/incidents", roadIncidents);
 router.add("GET", "/x/roads/cameras", roadCameras);
 router.add("GET", "/x/ski", ski);
 router.add("GET", "/x/sea-ice", seaIce);
+router.add("GET", "/x/food-inspections{/:query}?", foodInspections);
 
 export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =
