@@ -1,5 +1,7 @@
 import airQuality from "./endpoints/air-quality.ts";
 import althingiVotes from "./endpoints/althingi.ts";
+import althingiAgenda from "./endpoints/althingi-agenda.ts";
+import { althingiBill, althingiBills } from "./endpoints/althingi-bills.ts";
 import aurora from "./endpoints/aurora.ts";
 import avalanche from "./endpoints/avalanche.ts";
 import { busRoutes, busStops, busVehicles } from "./endpoints/bus.ts";
@@ -68,6 +70,9 @@ router.add("GET", "/x/reservoirs", reservoirs);
 router.add("GET", "/x/rivers", rivers);
 router.add("GET", "/x/lightning", lightning);
 router.add("GET", "/x/althingi/votes", althingiVotes);
+router.add("GET", "/x/althingi/bills", althingiBills);
+router.add("GET", "/x/althingi/bills/:number", althingiBill);
+router.add("GET", "/x/althingi/agenda", althingiAgenda);
 router.add("GET", "/x/aurora", aurora);
 router.add("GET", "/x/traffic/reykjavik", reykjavikTraffic);
 router.add("GET", "/x/roads/closures", streetClosures);

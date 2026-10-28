@@ -3,7 +3,7 @@ export function capitalizeFirstLetter(val: string) {
 }
 
 export function response(
-  data: unknown[] | Record<string, unknown>,
+  data: unknown[] | Record<string, unknown> | null,
   pretty = false,
   status = 200,
 ) {
