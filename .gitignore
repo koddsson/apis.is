@@ -5,3 +5,4 @@ dist/
 .dev.vars
 node_modules/
 worker-configuration.d.ts
+.claude/
