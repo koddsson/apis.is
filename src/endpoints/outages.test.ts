@@ -1,7 +1,7 @@
-import { assert, beforeEach, test } from "vitest";
+import { assert, beforeEach, test, vi } from "vitest";
 import { clearCache } from "../cache.ts";
 import { validate } from "../health.ts";
-import outages, { parseRarik } from "./outages.ts";
+import outages, { parseNordurorka, parseRarik } from "./outages.ts";
 
 beforeEach(() => {
   clearCache();
@@ -103,7 +103,46 @@ const RARIK_CONTENT = [
   }),
 ].join(DIVIDER);
 
-function mockFetch(responses: { veitur?: Response; rarik?: Response }) {
+function nordurorkaItem(
+  id: string,
+  title: string,
+  when: string,
+  where?: string,
+  description = "Vegna vinnu við dreifikerfi verður lokað fyrir kalt vatn.&nbsp;",
+) {
+  return `<div class="item ${id} hasImage">
+    <div class="content">
+		<h2>${title}</h2>
+		<div class="description">
+				<p>${description}</p>								<div class="interuption__button">
+                    <p><a class="btn btn-primary" href="https://www.no.is/is/thjonusta/god-rad-komi-til-thjonusturofs">Góð ráð við þjónusturofi</a></p>
+				</div>
+				            </div>
+        <div class="details">
+${where ? `				<div class="where">${where}</div>\n` : ""}				<div class="when">${when}</div>
+		</div>
+    </div>
+	</div>`;
+}
+
+function nordurorkaPage(items: string[]) {
+  return `<div id="extras" class="box"><div class="boxTitle"><h1>Tilkynningar um þjónusturof</h1></div><div class="boxText"><div class="items">${items.join("\n")}</div></div></div>`;
+}
+
+const NORDURORKA_PAGE = nordurorkaPage([
+  nordurorkaItem(
+    "kaldavatnslokun",
+    "Kaldavatnslokun",
+    "Fimmtudaginn 29.10.2026 milli 08:00-12:00",
+    "Sundlaug Akureyrar og hótel Berjaya",
+  ),
+]);
+
+function mockFetch(responses: {
+  veitur?: Response;
+  rarik?: Response;
+  nordurorka?: Response;
+}) {
   const originalFetch = globalThis.fetch;
   const requested: string[] = [];
   const userAgents: Array<string | null> = [];
@@ -111,6 +150,11 @@ function mockFetch(responses: { veitur?: Response; rarik?: Response }) {
     const url = input.toString();
     requested.push(url);
     userAgents.push(new Headers(init?.headers).get("User-Agent"));
+    if (url.startsWith("https://www.no.is/")) {
+      return Promise.resolve(
+        responses.nordurorka ?? new Response(NORDURORKA_PAGE),
+      );
+    }
     if (url.startsWith("https://www.veitur.is/")) {
       return Promise.resolve(
         responses.veitur ?? new Response(veiturPage(VEITUR_HITS)),
@@ -139,19 +183,20 @@ function get(query = "") {
   return outages(new Request(`http://localhost/x/outages${query}`));
 }
 
-test("outages - combines Veitur and RARIK, newest first", async () => {
+test("outages - combines Veitur, RARIK and Norðurorka, newest first", async () => {
   const server = mockFetch({});
   try {
     const res = await get();
     const data = await res.json<Array<Record<string, unknown>>>();
     assert.isUndefined(validate(outages.health.schema, data));
     assert.equal(res.headers.get("Cache-Control"), "public, max-age=300");
-    assert.deepEqual(server.requested.length, 2);
+    assert.deepEqual(server.requested.length, 3);
     assert.include(server.userAgents, "apis.is (+https://apis.is)");
 
     assert.deepEqual(
       data.map((outage) => `${outage.source} ${outage.id}`),
       [
+        "Norðurorka kaldavatnslokun",
         "RARIK 6213",
         "Veitur blt37066decad285636",
         "RARIK 6222",
@@ -161,7 +206,7 @@ test("outages - combines Veitur and RARIK, newest first", async () => {
         "Veitur blt2",
       ],
     );
-    assert.deepEqual(data[1], {
+    assert.deepEqual(data[2], {
       source: "Veitur",
       id: "blt37066decad285636",
       type: "cold-water",
@@ -169,11 +214,12 @@ test("outages - combines Veitur and RARIK, newest first", async () => {
       title: "Kaldavatnslaust við Gautland 5-21 og Efstaland 26",
       description: "Kaldavatnslaust er vegna viðgerðar.",
       postcode: "108",
+      location: null,
       start: "2026-10-26T14:00:00.000Z",
       end: "2026-10-26T17:00:00.000Z",
       url: "https://www.veitur.is/bilanir/blt37066decad285636",
     });
-    assert.deepEqual(data[2], {
+    assert.deepEqual(data[3], {
       source: "RARIK",
       id: "6222",
       type: "power",
@@ -182,6 +228,7 @@ test("outages - combines Veitur and RARIK, newest first", async () => {
       description:
         "Rafmagnslaust er í Hamarsfirði og Álftafirði um kl. 11:37 þann 26.10.2026. Bilanaleit stendur yfir.",
       postcode: null,
+      location: null,
       start: "2026-10-26T11:37:00.000Z",
       end: "2026-10-26T18:00:00.000Z",
       url: "https://s-rek-arcgis-y1.rarik.is/tilkynning/?ANNOUNCEMENT_ID=6222",
@@ -223,7 +270,7 @@ test("outages - filters by type and status", async () => {
     assert.deepEqual(await ids("?type=power&status=in-progress&pretty=true"), [
       "6222",
     ]);
-    assert.deepEqual(server.requested.length, 2);
+    assert.deepEqual(server.requested.length, 3);
   } finally {
     server.restore();
   }
@@ -244,7 +291,7 @@ test("outages - allows RARIK to have no alerts", async () => {
     const data = await (await get()).json<Array<{ source: string }>>();
     assert.deepEqual(
       [...new Set(data.map((outage) => outage.source))],
-      ["Veitur"],
+      ["Norðurorka", "Veitur"],
     );
   } finally {
     server.restore();
@@ -252,13 +299,21 @@ test("outages - allows RARIK to have no alerts", async () => {
 });
 
 test("outages - throws when a source fails or changes", async () => {
-  const cases: Array<[{ veitur?: Response; rarik?: Response }, string]> = [
+  const cases: Array<[Parameters<typeof mockFetch>[0], string]> = [
     [{ veitur: new Response("", { status: 503 }) }, "Veitur outages: 503"],
     [{ veitur: new Response("<html></html>") }, "Veitur outage data not found"],
     [{ rarik: new Response("", { status: 502 }) }, "RARIK outages: 502"],
     [
       { rarik: new Response(JSON.stringify({ TOTAL: 5, CONTENT: "<p></p>" })) },
       "RARIK outages not found",
+    ],
+    [
+      { nordurorka: new Response("", { status: 500 }) },
+      "Norðurorka outages: 500",
+    ],
+    [
+      { nordurorka: new Response("<html></html>") },
+      "Norðurorka outage list not found",
     ],
   ];
   for (const [responses, message] of cases) {
@@ -283,4 +338,126 @@ test("parseRarik - rejects alerts without an id or time span", () => {
   ]) {
     assert.throws(() => parseRarik(row), "Unexpected RARIK alert");
   }
+});
+
+test("parseNordurorka - reads times, places and types from the notices", () => {
+  vi.useFakeTimers({ now: new Date("2026-09-01T12:00:00Z") });
+  try {
+    const parsed = parseNordurorka(
+      nordurorkaPage([
+        nordurorkaItem(
+          "kaldavatnslokun",
+          "Kaldavatnslokun",
+          "Fimmtudaginn 29.10.2026 milli 08:00-12:00",
+          "Sundlaug Akureyrar og hótel Berjaya",
+        ),
+        nordurorkaItem(
+          "straumrof",
+          "Straumrof",
+          "Laugardaginn 5. september milli kl. 7:00 og 10:45, eða á meðan vinnu stendur.",
+          "Hafnarstræti",
+          "Straumlaust verður vegna vinnu.",
+        ),
+        nordurorkaItem(
+          "gilsbakkavegur-hitaveiturof-27102026",
+          "Gilsbakkavegur hitaveiturof 27.10.26",
+          "frá klukkan 22 og til kl. 2 eða á meðan vinnu stendur.",
+          undefined,
+          "Heitt vatn tekið af.",
+        ),
+        nordurorkaItem(
+          "yfirfall-fraveitu",
+          "Yfirfall fráveitu",
+          "Frá miðvikudegi 28.10.2026 kl. 10 til fimmtudagsins 29.10.2026 kl. 12",
+          undefined,
+          "Hreinsistöð á yfirfalli.",
+        ),
+        nordurorkaItem(
+          "kaldavatnstruflanir",
+          "Kaldavatnstruflanir",
+          "Eftir hádegi í dag, miðvikudag 28.10.2026",
+        ),
+        nordurorkaItem(
+          "tilkynning",
+          "Tilkynning",
+          "Mánudaginn 4. janúar kl. 99",
+          undefined,
+          "Vinna við dreifikerfi.",
+        ),
+        nordurorkaItem("an-dags", "Lokun", "Í dag og fram eftir degi"),
+      ]),
+    );
+    assert.deepEqual(
+      parsed.map(({ id, type, location, start, end }) => ({
+        id,
+        type,
+        location,
+        start,
+        end,
+      })),
+      [
+        {
+          id: "kaldavatnslokun",
+          type: "cold-water",
+          location: "Sundlaug Akureyrar og hótel Berjaya",
+          start: "2026-10-29T08:00:00.000Z",
+          end: "2026-10-29T12:00:00.000Z",
+        },
+        {
+          id: "straumrof",
+          type: "power",
+          location: "Hafnarstræti",
+          start: "2026-09-05T07:00:00.000Z",
+          end: "2026-09-05T10:45:00.000Z",
+        },
+        {
+          id: "gilsbakkavegur-hitaveiturof-27102026",
+          type: "hot-water",
+          location: null,
+          start: "2026-10-27T22:00:00.000Z",
+          end: "2026-10-28T02:00:00.000Z",
+        },
+        {
+          id: "yfirfall-fraveitu",
+          type: "sewage",
+          location: null,
+          start: "2026-10-28T10:00:00.000Z",
+          end: "2026-10-29T12:00:00.000Z",
+        },
+        {
+          id: "kaldavatnstruflanir",
+          type: "cold-water",
+          location: null,
+          start: "2026-10-28T00:00:00.000Z",
+          end: null,
+        },
+        {
+          id: "tilkynning",
+          type: null,
+          location: null,
+          start: "2027-01-04T00:00:00.000Z",
+          end: null,
+        },
+      ],
+    );
+    assert.deepEqual(parsed[0], {
+      source: "Norðurorka",
+      id: "kaldavatnslokun",
+      type: "cold-water",
+      status: null,
+      title: "Kaldavatnslokun",
+      description: "Vegna vinnu við dreifikerfi verður lokað fyrir kalt vatn.",
+      postcode: null,
+      location: "Sundlaug Akureyrar og hótel Berjaya",
+      start: "2026-10-29T08:00:00.000Z",
+      end: "2026-10-29T12:00:00.000Z",
+      url: "https://www.no.is/is/thjonusta/tilkynningar-um-thjonusturof/kaldavatnslokun",
+    });
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("parseNordurorka - allows a page with no notices", () => {
+  assert.deepEqual(parseNordurorka(nordurorkaPage([])), []);
 });
