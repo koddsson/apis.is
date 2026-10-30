@@ -9,6 +9,7 @@ import car from "./endpoints/car.ts";
 import flights from "./endpoints/flights.ts";
 import foodInspections from "./endpoints/food-inspections.ts";
 import gengi from "./endpoints/gengi.ts";
+import inflation from "./endpoints/inflation.ts";
 import lightning from "./endpoints/lightning.ts";
 import meetups from "./endpoints/meetups.ts";
 import meta from "./endpoints/meta.ts";
@@ -17,6 +18,7 @@ import outages from "./endpoints/outages.ts";
 import pools from "./endpoints/pools.ts";
 import { births, population } from "./endpoints/population.ts";
 import raceCalendar from "./endpoints/race-calendar.ts";
+import rates from "./endpoints/rates.ts";
 import recalls from "./endpoints/recalls.ts";
 import reservoirs from "./endpoints/reservoirs.ts";
 import {
@@ -82,6 +84,8 @@ router.add("GET", "/x/ski", ski);
 router.add("GET", "/x/sea-ice", seaIce);
 router.add("GET", "/x/food-inspections{/:query}?", foodInspections);
 router.add("GET", "/x/ships", ships);
+router.add("GET", "/x/rates", rates);
+router.add("GET", "/x/inflation", inflation);
 
 export function onUnhandledRejection(event: PromiseRejectionEvent) {
   const error =

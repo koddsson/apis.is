@@ -2,8 +2,8 @@
 
 Icelandic data as clean JSON. apis.is serves data that is otherwise only
 available as web pages, XML feeds, or undocumented APIs: currency rates,
-weather, road conditions, flights, air quality, population figures, tech
-meetups, and more.
+weather, road conditions, flights, air quality, population figures,
+interest rates, inflation, tech meetups, and more.
 
 Open [apis.is](https://apis.is) in a browser to explore the endpoints and try
 them out. Requested programmatically, `/` returns the endpoint list as JSON.
