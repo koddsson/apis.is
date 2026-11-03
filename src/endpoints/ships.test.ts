@@ -127,7 +127,10 @@ test("ships - combines the coming year's calls from every calendar", async () =>
     const res = await ships(new Request("http://localhost/x/ships"));
     const data = await res.json();
     assert.isUndefined(validate(ships.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=3600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=3600, max-age=60",
+    );
 
     const today = new Date().toISOString().slice(0, 10);
     const end = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)

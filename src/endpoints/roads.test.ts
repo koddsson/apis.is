@@ -84,7 +84,10 @@ test("roadConditions - maps road segments", async () => {
       validate(roadConditions.health.schema, await res.clone().json()),
     );
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=300");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=300, max-age=60",
+    );
     assert.deepEqual(await res.json(), [
       {
         id: 910330037,

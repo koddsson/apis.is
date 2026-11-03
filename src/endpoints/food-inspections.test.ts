@@ -215,7 +215,10 @@ test("food-inspections - parses businesses and their inspection history", async 
     const res = await search("pizza");
     const data = await res.json();
     assert.isUndefined(validate(foodInspections.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=3600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=3600, max-age=60",
+    );
     const url = new URL(server.requested[0].url);
     assert.equal(url.origin, "https://her.reykjavik.is");
     assert.equal(url.searchParams.get("q"), "pizza");

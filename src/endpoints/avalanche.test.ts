@@ -101,7 +101,10 @@ test("avalanche - combines the summary and each region's forecast", async () => 
       regions: Array<Record<string, unknown>>;
     }>();
     assert.isUndefined(validate(avalanche.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=600, max-age=60",
+    );
     assert.lengthOf(server.requested, 6);
     assert.isTrue(server.requested.every((url) => url.endsWith("?lang=is")));
 

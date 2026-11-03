@@ -34,7 +34,10 @@ test("inflation - returns the last 12 months by default", async () => {
       validate(inflation.health.schema, await res.clone().json()),
     );
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=43200");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=43200, max-age=60",
+    );
 
     const data = await res.json<Inflation>();
     assert.deepEqual(data.latest, {

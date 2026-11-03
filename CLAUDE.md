@@ -62,8 +62,13 @@ Endpoint handler → Response. Requests are logged by Workers observability.
   (`Accept: text/html`); API clients still get the JSON endpoint list
 - `src/rss.ts` — RSS 2.0 feed generator used by meetups endpoint
 - `src/cache.ts` — `withCache(key, ttlSeconds, fetcher)` in-memory cache for
-  upstream data (per isolate); pair with `cacheControl(ttl)` for the
-  `Cache-Control` header
+  upstream data (per isolate; dedupes and shares upstream fetches across
+  URLs). Pair with `cacheControl(ttl)` for the `Cache-Control` header
+  (`public, s-maxage=<ttl>, max-age=<min(60, ttl)>`): `s-maxage` makes
+  Workers Cache (`cache` in `wrangler.jsonc`) serve the response from
+  Cloudflare's edge, keyed by path, query and deployed version. The router
+  marks responses without `Cache-Control` (errors, 404s, and `/`, whose
+  HTML/JSON variants the edge cache can't tell apart) `no-store`.
 - `src/health.ts` — Hourly Cron Trigger (`scheduled` handler) that runs each
   endpoint's `health` check and opens/closes `endpoint-down` issues. New
   endpoints should set `handler.health` with a Zod `schema` for a healthy

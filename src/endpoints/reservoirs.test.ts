@@ -130,7 +130,10 @@ test("reservoirs - combines the reservoir pages", async () => {
     const res = await reservoirs(new Request("http://localhost/x/reservoirs"));
     const data = await res.json<unknown[]>();
     assert.isUndefined(validate(reservoirs.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=3600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=3600, max-age=60",
+    );
     assert.equal(server.requested.length, 4);
     assert.equal(server.requested[0].userAgent, "apis.is (+https://apis.is)");
 

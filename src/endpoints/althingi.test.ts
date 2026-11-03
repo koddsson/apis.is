@@ -166,7 +166,10 @@ test("althingi votes - maps votes newest first", async () => {
     );
     const data = await res.json();
     assert.isUndefined(validate(althingiVotes.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=1800");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=1800, max-age=60",
+    );
     assert.deepEqual(server.requested, [
       "https://www.althingi.is/altext/xml/atkvaedagreidslur/?dagar=30",
     ]);

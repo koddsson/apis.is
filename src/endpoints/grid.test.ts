@@ -91,7 +91,10 @@ test("grid - combines measurements with map names", async () => {
     const res = await grid(new Request("http://localhost/x/grid"));
     assert.isUndefined(validate(grid.health.schema, await res.clone().json()));
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=60");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=60, max-age=60",
+    );
     assert.deepEqual(await res.json(), {
       time: "2026-10-23T13:35:00Z",
       totalPowerFlow: 2207.97,

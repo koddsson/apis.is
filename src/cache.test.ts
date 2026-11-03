@@ -1,5 +1,5 @@
 import { afterEach, assert, beforeEach, test, vi } from "vitest";
-import { cacheControl, clearCache, withCache } from "./cache.ts";
+import { cacheControl, clearCache, noStore, withCache } from "./cache.ts";
 
 beforeEach(() => {
   clearCache();
@@ -86,6 +86,26 @@ test("withCache - a failure does not evict a newer entry", async () => {
   );
 });
 
-test("cacheControl - formats a public max-age", () => {
-  assert.equal(cacheControl(900), "public, max-age=900");
+test("cacheControl - caches at the edge for the TTL and in browsers for a minute", () => {
+  assert.equal(cacheControl(900), "public, s-maxage=900, max-age=60");
+});
+
+test("cacheControl - keeps the browser max-age within a short TTL", () => {
+  assert.equal(cacheControl(30), "public, s-maxage=30, max-age=30");
+});
+
+test("cacheControl - takes an explicit browser max-age", () => {
+  assert.equal(cacheControl(3600, 300), "public, s-maxage=3600, max-age=300");
+});
+
+test("noStore - marks a response without Cache-Control as uncacheable", () => {
+  const res = noStore(new Response("ok"));
+  assert.equal(res.headers.get("Cache-Control"), "no-store");
+});
+
+test("noStore - keeps a Cache-Control the handler set", () => {
+  const res = noStore(
+    new Response("ok", { headers: { "Cache-Control": cacheControl(900) } }),
+  );
+  assert.equal(res.headers.get("Cache-Control"), cacheControl(900));
 });

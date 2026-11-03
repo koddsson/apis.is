@@ -151,7 +151,10 @@ test("reykjavikTraffic - maps segments with congestion levels and GeoJSON lines"
     );
     const data = await res.json();
     assert.isUndefined(validate(reykjavikTraffic.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=90");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=90, max-age=60",
+    );
     assert.include(server.requested[0], "LifandiGogn/MapServer/0/query");
     assert.include(server.requested[0], "outSR=4326");
     const geometry = {
@@ -278,7 +281,10 @@ test("streetClosures - groups links into deduplicated closures", async () => {
     );
     const data = await res.json();
     assert.isUndefined(validate(streetClosures.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=900");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=900, max-age=60",
+    );
     assert.include(server.requested[0], "Framkvaemdakort/MapServer/0/query");
     assert.include(server.requested[0], "where=ENDIR%3ECURRENT_TIMESTAMP");
     assert.deepEqual(data, [

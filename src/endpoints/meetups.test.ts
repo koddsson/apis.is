@@ -9,6 +9,10 @@ test("meetups - returns meetup data", async () => {
 
   assert.deepEqual(res.status, 200);
   assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
+  assert.equal(
+    res.headers.get("Cache-Control"),
+    "public, s-maxage=3600, max-age=60",
+  );
 
   const data = await res.json();
   assert.deepEqual(Array.isArray(data), true);
@@ -40,6 +44,10 @@ test("meetups - returns RSS feed when format=rss", async () => {
     "application/rss+xml; charset=utf-8",
   );
   assert.deepEqual(res.headers.get("Access-Control-Allow-Origin"), "*");
+  assert.equal(
+    res.headers.get("Cache-Control"),
+    "public, s-maxage=3600, max-age=60",
+  );
 
   const text = await res.text();
   assert.include(text, '<?xml version="1.0" encoding="UTF-8"?>');

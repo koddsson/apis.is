@@ -78,7 +78,10 @@ test("aurora - parses nights and cloud cover maps", async () => {
     const res = await aurora(new Request("http://localhost/x/aurora"));
     const data = await res.json<ReturnType<typeof parseAurora>>();
     assert.isUndefined(validate(aurora.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=1800");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=1800, max-age=60",
+    );
     assert.equal(
       server.requested[0].url,
       "https://www.vedur.is/vedur/spar/nordurljos/",

@@ -76,7 +76,10 @@ test("airQuality - returns the latest reading per pollutant and station", async 
       validate(airQuality.health.schema, await res.clone().json()),
     );
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=900");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=900, max-age=60",
+    );
     assert.deepEqual(await res.json(), [
       {
         id: "STA-IS0052A",

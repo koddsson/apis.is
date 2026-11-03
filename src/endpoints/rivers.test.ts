@@ -143,7 +143,10 @@ test("rivers - combines the river flow pages", async () => {
   try {
     const { res, data } = await get();
     assert.isUndefined(validate(rivers.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=3600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=3600, max-age=60",
+    );
     assert.equal(server.requested.length, 5);
     assert.equal(server.requested[0].userAgent, "apis.is (+https://apis.is)");
 

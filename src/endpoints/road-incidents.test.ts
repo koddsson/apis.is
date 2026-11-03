@@ -73,7 +73,10 @@ test("roadIncidents - maps incidents to types with WGS84 coordinates", async () 
     );
     const data = await res.json();
     assert.isUndefined(validate(roadIncidents.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=300");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=300, max-age=60",
+    );
     assert.include(
       server.requested[0],
       "typeName=gis:roadconditions_pointincident",

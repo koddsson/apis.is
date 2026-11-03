@@ -86,7 +86,10 @@ test("rates - returns central bank, penalty and interbank rates", async () => {
     assert.isUndefined(validate(rates.health.schema, await res.clone().json()));
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("Access-Control-Allow-Origin"), "*");
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=10800");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=10800, max-age=60",
+    );
 
     const data = await res.json<Rates>();
     assert.deepEqual(data.centralBank[0], {

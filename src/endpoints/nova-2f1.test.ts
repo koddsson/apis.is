@@ -163,7 +163,10 @@ test("nova2f1 - caches offers and sets Cache-Control", async () => {
     await nova2f1(req);
 
     assert.equal(requests.length, 1);
-    assert.equal(first.headers.get("Cache-Control"), "public, max-age=3600");
+    assert.equal(
+      first.headers.get("Cache-Control"),
+      "public, s-maxage=3600, max-age=60",
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }

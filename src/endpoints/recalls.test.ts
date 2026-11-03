@@ -73,7 +73,10 @@ test("recalls - maps MAST's recalls feed to plain-text recalls", async () => {
     const res = await recalls(new Request("http://localhost/x/recalls"));
     const data = await res.json();
     assert.isUndefined(validate(recalls.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=1800");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=1800, max-age=60",
+    );
     assert.equal(res.headers.get("Access-Control-Allow-Origin"), "*");
     assert.deepEqual(server.requested, ["https://www.mast.is/is/feed/2"]);
     assert.deepEqual(data, [

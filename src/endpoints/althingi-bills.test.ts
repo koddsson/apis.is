@@ -182,7 +182,10 @@ test("althingi bills - lists the session's A issues newest first", async () => {
     );
     const data = await res.json();
     assert.isUndefined(validate(althingiBills.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=1800");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=1800, max-age=60",
+    );
     assert.deepEqual(data, [
       {
         session: 158,
@@ -279,7 +282,10 @@ test("althingi bill - adds status and documents", async () => {
     );
     const data = await res.json();
     assert.isUndefined(validate(althingiBill.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=1800");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=1800, max-age=60",
+    );
     assert.deepEqual(data, {
       session: 158,
       number: 3,
