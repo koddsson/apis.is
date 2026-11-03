@@ -163,7 +163,10 @@ test("flights - serves Keflavík from one cached page", async () => {
       validate(flights.health.schema, await arrivals.clone().json()),
     );
     assert.equal(arrivals.status, 200);
-    assert.equal(arrivals.headers.get("Cache-Control"), "public, max-age=120");
+    assert.equal(
+      arrivals.headers.get("Cache-Control"),
+      "public, s-maxage=120, max-age=60",
+    );
     assert.equal((await arrivals.json<Flight[]>()).length, 1);
 
     const departures = await get("departures", "?airport=kef");

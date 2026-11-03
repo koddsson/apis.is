@@ -88,15 +88,17 @@ test("meta - serves the explorer page to browsers", async () => {
   router.add("GET", "/x/stops{/:id}?", withoutParams);
   router.add("GET", "/x/plain", unchecked);
 
-  const res = meta(router)(
+  router.add("GET", "/", meta(router));
+  const res = await router.route(
     new Request("http://localhost/", {
       headers: { Accept: "text/html,application/xhtml+xml,*/*;q=0.8" },
     }),
-    {},
   );
 
   assert.equal(res.headers.get("Content-Type"), "text/html; charset=utf-8");
   assert.equal(res.headers.get("Vary"), "Accept");
+  // Edge cache ignores Vary, so neither variant may be cached there.
+  assert.equal(res.headers.get("Cache-Control"), "no-store");
   const html = await res.text();
   assert.include(html, "<code>/x/rates/{code}</code>");
   assert.include(html, "Rates &lt;by&gt; code");
@@ -106,13 +108,16 @@ test("meta - serves the explorer page to browsers", async () => {
 });
 
 test("meta - returns JSON to API clients", async () => {
-  const res = meta(new Router())(
+  const router = new Router();
+  router.add("GET", "/", meta(router));
+  const res = await router.route(
     new Request("http://localhost/", { headers: { Accept: "*/*" } }),
-    {},
   );
   assert.equal(
     res.headers.get("Content-Type"),
     "application/json; charset=utf-8",
   );
   assert.equal(res.headers.get("Vary"), "Accept");
+  // Edge cache ignores Vary, so neither variant may be cached there.
+  assert.equal(res.headers.get("Cache-Control"), "no-store");
 });

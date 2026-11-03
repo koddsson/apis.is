@@ -87,7 +87,10 @@ test("ski - returns lifts and trails for both areas", async () => {
     const res = await get();
     const data = await res.json<Array<Record<string, unknown>>>();
     assert.isUndefined(validate(ski.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=300");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=300, max-age=60",
+    );
     assert.deepEqual(server.requested, [
       "https://skidasvaedi.is/",
       "https://skidasvaedi.is/skalafell/svaedi/",

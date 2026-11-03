@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { cacheControl } from "../cache.ts";
 import meetupData from "../data/meetups.json" with { type: "json" };
 import { generateRSS } from "../rss.ts";
 import { response } from "../utils.ts";
@@ -26,6 +27,10 @@ export function upcoming(list: Meetup[], now: number): Meetup[] {
   );
 }
 
+// The data ships with each deploy, which starts a fresh edge cache, but
+// ?upcoming=true still changes as meetups end.
+const TTL_SECONDS = 60 * 60;
+
 function meetups(request: Request): Response {
   const url = new URL(request.url);
   const format = url.searchParams.get("format");
@@ -41,12 +46,15 @@ function meetups(request: Request): Response {
       headers: {
         "Content-Type": "application/rss+xml; charset=utf-8",
         "Access-Control-Allow-Origin": "*",
+        "Cache-Control": cacheControl(TTL_SECONDS),
       },
     });
   }
 
   // Default JSON response
-  return response(data, url.searchParams.get("pretty") === "true");
+  const res = response(data, url.searchParams.get("pretty") === "true");
+  res.headers.set("Cache-Control", cacheControl(TTL_SECONDS));
+  return res;
 }
 
 meetups.meta = {

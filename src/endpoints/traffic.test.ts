@@ -96,7 +96,10 @@ test("traffic - groups each station's directions", async () => {
     const res = await traffic(new Request("http://localhost/x/traffic"));
     const data = await res.json();
     assert.isUndefined(validate(traffic.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=300");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=300, max-age=60",
+    );
     assert.include(server.requested[0], "srsName=EPSG:4326");
     assert.deepEqual(data, [
       {

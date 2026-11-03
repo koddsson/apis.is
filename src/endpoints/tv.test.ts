@@ -218,7 +218,10 @@ test("tv - combines RÚV and Sýn schedules for a day", async () => {
     const res = await tv(new Request("http://localhost/x/tv?date=2026-10-26"));
     const data = await res.json();
     assert.isUndefined(validate(tv.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=900");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=900, max-age=60",
+    );
     assert.sameMembers(server.requested, [
       "https://api.ruv.is/api/schedule/ruv/2026-10-26",
       "https://api.ruv.is/api/schedule/ruv2/2026-10-26",

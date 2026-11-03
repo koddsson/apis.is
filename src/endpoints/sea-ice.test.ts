@@ -72,7 +72,10 @@ test("sea-ice - parses the last 30 days of notices", async () => {
     const res = await seaIce(new Request("http://localhost/x/sea-ice"));
     const data = await res.json();
     assert.isUndefined(validate(seaIce.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=1800");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=1800, max-age=60",
+    );
     assert.deepEqual(server.requested, [
       "https://www.vedur.is/hafis/tilkynningar",
     ]);

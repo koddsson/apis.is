@@ -141,7 +141,10 @@ test("busStops - lists stops from the GTFS zip", async () => {
       validate(busStops.health.schema, await res.clone().json()),
     );
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=86400");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=86400, max-age=60",
+    );
     assert.deepEqual(await res.json(), [
       {
         id: "10000804",
@@ -215,7 +218,10 @@ test("busStops - includes live arrivals for one stop", async () => {
       new Request("http://localhost/x/bus/stops/90000295"),
       { id: "90000295" },
     );
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=30");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=30, max-age=30",
+    );
     assert.deepEqual(await res.json(), {
       id: "90000295",
       name: 'Hlemmur, "C"',
@@ -277,7 +283,10 @@ test("busVehicles - maps live positions and upcoming stops", async () => {
     );
     const data = await res.json<Array<Record<string, unknown>>>();
     assert.isUndefined(validate(busVehicles.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=30");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=30, max-age=30",
+    );
     assert.deepEqual(data[0], {
       route: "1",
       vehicle: "UO-J86",

@@ -216,3 +216,20 @@ test("Router - returns 404 for methods without routes", async () => {
     assert.equal(res.status, 404, method);
   }
 });
+
+test("Router - marks responses without Cache-Control as no-store", async () => {
+  const router = new Router();
+  router.add("GET", "/plain", () => new Response("ok"));
+  router.add(
+    "GET",
+    "/cached",
+    () => new Response("ok", { headers: { "Cache-Control": "public" } }),
+  );
+
+  const plain = await router.route(new Request("http://localhost/plain"));
+  assert.equal(plain.headers.get("Cache-Control"), "no-store");
+  const cached = await router.route(new Request("http://localhost/cached"));
+  assert.equal(cached.headers.get("Cache-Control"), "public");
+  const missing = await router.route(new Request("http://localhost/missing"));
+  assert.equal(missing.headers.get("Cache-Control"), "no-store");
+});

@@ -1,4 +1,5 @@
 import type { ZodType } from "zod";
+import { noStore } from "./cache.ts";
 import { reportError } from "./error-monitor.ts";
 import { response } from "./utils.ts";
 
@@ -36,7 +37,13 @@ export class Router {
     });
   }
 
+  // Workers Cache sits in front of this, so only responses that set
+  // `Cache-Control` themselves are cached.
   async route(req: Request): Promise<Response> {
+    return noStore(await this.#dispatch(req));
+  }
+
+  async #dispatch(req: Request): Promise<Response> {
     // Find matching route
     const { pathname } = new URL(req.url);
     // "/x/gengi/" and "/x/gengi" are the same route.

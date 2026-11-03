@@ -24,8 +24,24 @@ export function withCache<T>(
   return value;
 }
 
-export function cacheControl(ttlSeconds: number): string {
-  return `public, max-age=${ttlSeconds}`;
+// `s-maxage` drives Workers Cache (`cache` in wrangler.jsonc), which answers
+// repeat requests at Cloudflare's edge without running the Worker. `max-age`
+// stays short by default so browsers pick up fresh data soon after the edge
+// copy expires.
+export function cacheControl(
+  sMaxAge: number,
+  maxAge: number = Math.min(60, sMaxAge),
+): string {
+  return `public, s-maxage=${sMaxAge}, max-age=${maxAge}`;
+}
+
+// Workers Cache stores a 200 without `Cache-Control` for two hours (and a 404
+// for three minutes), so responses that don't opt in are marked uncacheable.
+export function noStore(response: Response): Response {
+  if (!response.headers.has("Cache-Control")) {
+    response.headers.set("Cache-Control", "no-store");
+  }
+  return response;
 }
 
 export function clearCache(): void {

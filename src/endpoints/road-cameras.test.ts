@@ -93,7 +93,10 @@ test("roadCameras - groups images per camera in order", async () => {
     );
     const data = await res.json();
     assert.isUndefined(validate(roadCameras.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=3600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=3600, max-age=60",
+    );
     assert.include(server.requested[0], "typeName=gis:vefmyndavel_2024_1");
     assert.include(server.requested[0], "srsName=EPSG:4326");
     assert.deepEqual(data, [

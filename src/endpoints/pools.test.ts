@@ -132,7 +132,10 @@ test("pools - reads capacity and today's counts from the dashboard", async () =>
     const res = await get();
     const data = await res.json();
     assert.isUndefined(validate(pools.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=300");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=300, max-age=60",
+    );
     assert.deepEqual(data, [
       {
         name: "Árbæjarlaug",

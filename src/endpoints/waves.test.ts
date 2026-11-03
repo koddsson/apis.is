@@ -84,7 +84,10 @@ test("waves - maps published buoys with coordinates from the geometry", async ()
     const res = await waves(new Request("http://localhost/x/waves"));
     const data = await res.json();
     assert.isUndefined(validate(waves.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=600, max-age=60",
+    );
     assert.include(server.requested[0], "typeName=gis:fa_dufl");
     assert.include(server.requested[0], "srsName=EPSG:4326");
     assert.deepEqual(data, [

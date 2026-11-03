@@ -129,7 +129,10 @@ test("car - caches each vehicle and sets Cache-Control", async () => {
     await car(new Request("http://localhost/x/car/XYZ99"), { number: "XYZ99" });
 
     assert.deepEqual(searches, ["ABC12", "XYZ99"]);
-    assert.equal(first.headers.get("Cache-Control"), "public, max-age=3600");
+    assert.equal(
+      first.headers.get("Cache-Control"),
+      "public, s-maxage=3600, max-age=60",
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }

@@ -43,7 +43,10 @@ test("uv - returns the latest measurement and the sorted 72-hour series", async 
     const res = await uv(new Request("http://localhost/x/uv"));
     const data = await res.json();
     assert.isUndefined(validate(uv.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=600, max-age=60",
+    );
     assert.deepEqual(data, {
       location: "Rauðarárstígur, Reykjavík",
       latest: { time: "2026-10-26T19:52:30.000Z", uvIndex: 0 },

@@ -59,7 +59,10 @@ test("population - returns the latest quarter's figure", async () => {
       validate(population.health.schema, await res.clone().json()),
     );
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=86400");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=86400, max-age=60",
+    );
     const data = await res.json<Record<string, unknown>>();
     assert.equal(data.population, 396500);
     assert.equal(data.period, "2026Q2");

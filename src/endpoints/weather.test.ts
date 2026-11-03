@@ -70,7 +70,10 @@ test("weather - lists active stations", async () => {
   try {
     const res = await get("/x/weather");
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=86400");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=86400, max-age=60",
+    );
     assert.deepEqual(await res.json(), [
       {
         id: 1,
@@ -94,7 +97,10 @@ test("weather - returns the latest observation for a station", async () => {
       validate(weather.health.schema, await res.clone().json()),
     );
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=600");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=600, max-age=60",
+    );
     assert.include(fetchMock.urls[0], "ids=31392");
     assert.deepEqual(await res.json(), {
       id: 31392,

@@ -163,7 +163,10 @@ test("gengi - caches rates and sets Cache-Control", async () => {
     });
 
     assert.equal(calls, 1);
-    assert.equal(first.headers.get("Cache-Control"), "public, max-age=900");
+    assert.equal(
+      first.headers.get("Cache-Control"),
+      "public, s-maxage=900, max-age=60",
+    );
     assert.deepEqual(Object.keys(await second.json<Rates>()), ["EUR"]);
   } finally {
     globalThis.fetch = originalFetch;

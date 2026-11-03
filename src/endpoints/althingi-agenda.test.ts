@@ -170,7 +170,10 @@ test("althingi agenda - maps the next sitting's agenda", async () => {
     );
     const data = await res.json();
     assert.isUndefined(validate(althingiAgenda.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=1800");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=1800, max-age=60",
+    );
     assert.deepEqual(data, {
       session: 158,
       meeting: 22,

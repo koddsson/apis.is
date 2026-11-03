@@ -49,7 +49,10 @@ test("lightning - parses strikes newest first with western longitudes", async ()
     const res = await lightning(new Request("http://localhost/x/lightning"));
     const data = await res.json();
     assert.isUndefined(validate(lightning.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=60");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=60, max-age=60",
+    );
     assert.equal(
       server.requests[0].url,
       "https://brunnur.vedur.is/athuganir/elding/elding.txt",

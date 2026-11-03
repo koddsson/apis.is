@@ -189,7 +189,10 @@ test("outages - combines Veitur, RARIK and Norðurorka, newest first", async () 
     const res = await get();
     const data = await res.json<Array<Record<string, unknown>>>();
     assert.isUndefined(validate(outages.health.schema, data));
-    assert.equal(res.headers.get("Cache-Control"), "public, max-age=300");
+    assert.equal(
+      res.headers.get("Cache-Control"),
+      "public, s-maxage=300, max-age=60",
+    );
     assert.deepEqual(server.requested.length, 3);
     assert.include(server.userAgents, "apis.is (+https://apis.is)");
 

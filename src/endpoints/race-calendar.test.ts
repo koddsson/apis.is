@@ -226,7 +226,10 @@ test("raceCalendar - caches races and sets Cache-Control", async () => {
     await raceCalendar(req);
 
     assert.equal(calls, 1);
-    assert.equal(first.headers.get("Cache-Control"), "public, max-age=3600");
+    assert.equal(
+      first.headers.get("Cache-Control"),
+      "public, s-maxage=3600, max-age=60",
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }
