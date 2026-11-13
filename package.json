@@ -13,17 +13,17 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "fast-xml-parser": "5.11.2",
+    "fast-xml-parser": "5.12.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.2",
-    "@cloudflare/vitest-plugin": "1.4.7",
-    "@types/node": "26.6.5",
-    "@vitest/coverage-istanbul": "5.0.5",
+    "@biomejs/biome": "2.6.6",
+    "@cloudflare/vitest-plugin": "1.6.0",
+    "@types/node": "26.6.6",
+    "@vitest/coverage-istanbul": "5.1.0",
     "source-map-js": "1.2.2",
     "typescript": "7.0.2",
-    "vitest": "5.0.5",
-    "wrangler": "4.152.0"
+    "vitest": "5.1.0",
+    "wrangler": "4.158.0"
   }
 }
